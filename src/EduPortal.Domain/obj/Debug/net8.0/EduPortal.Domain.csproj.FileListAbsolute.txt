@@ -1,0 +1,12 @@
+/home/user/EducationPortal/src/EduPortal.Domain/bin/Debug/net8.0/EduPortal.Domain.deps.json
+/home/user/EducationPortal/src/EduPortal.Domain/bin/Debug/net8.0/EduPortal.Domain.dll
+/home/user/EducationPortal/src/EduPortal.Domain/bin/Debug/net8.0/EduPortal.Domain.pdb
+/home/user/EducationPortal/src/EduPortal.Domain/obj/Debug/net8.0/EduPortal.Domain.csproj.AssemblyReference.cache
+/home/user/EducationPortal/src/EduPortal.Domain/obj/Debug/net8.0/EduPortal.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/home/user/EducationPortal/src/EduPortal.Domain/obj/Debug/net8.0/EduPortal.Domain.AssemblyInfoInputs.cache
+/home/user/EducationPortal/src/EduPortal.Domain/obj/Debug/net8.0/EduPortal.Domain.AssemblyInfo.cs
+/home/user/EducationPortal/src/EduPortal.Domain/obj/Debug/net8.0/EduPortal.Domain.csproj.CoreCompileInputs.cache
+/home/user/EducationPortal/src/EduPortal.Domain/obj/Debug/net8.0/EduPortal.Domain.dll
+/home/user/EducationPortal/src/EduPortal.Domain/obj/Debug/net8.0/refint/EduPortal.Domain.dll
+/home/user/EducationPortal/src/EduPortal.Domain/obj/Debug/net8.0/EduPortal.Domain.pdb
+/home/user/EducationPortal/src/EduPortal.Domain/obj/Debug/net8.0/ref/EduPortal.Domain.dll

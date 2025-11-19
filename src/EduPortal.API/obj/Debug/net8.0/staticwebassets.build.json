@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "Z0fLMCmyYtpyXiCkZOosqkx3tv/iAsC5wUhJlM3+tIg=",
+  "Source": "EduPortal.API",
+  "BasePath": "_content/EduPortal.API",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
