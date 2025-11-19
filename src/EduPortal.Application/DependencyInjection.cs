@@ -1,3 +1,5 @@
+using EduPortal.Application.Services.Implementations;
+using EduPortal.Application.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
@@ -9,6 +11,12 @@ public static class DependencyInjection
     {
         // Add AutoMapper
         services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+        // Add Services
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IStudentService, StudentService>();
+        services.AddScoped<IHomeworkService, HomeworkService>();
+        services.AddScoped<IAttendanceService, AttendanceService>();
 
         return services;
     }

@@ -13,7 +13,6 @@ public class HomeworkMappingProfile : Profile
             .ForMember(dest => dest.TotalSubmissions, opt => opt.MapFrom(src => src.Submissions.Count));
 
         CreateMap<HomeworkCreateDto, Homework>()
-            .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true))
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
         CreateMap<StudentHomeworkSubmission, HomeworkSubmissionDto>()

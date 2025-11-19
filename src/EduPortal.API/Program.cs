@@ -1,3 +1,4 @@
+using EduPortal.Application;
 using EduPortal.Domain.Entities;
 using EduPortal.Infrastructure;
 using EduPortal.Infrastructure.Data;
@@ -16,6 +17,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Add Infrastructure Services (Repositories)
 builder.Services.AddInfrastructure();
+
+// Add Application Services
+builder.Services.AddApplication();
 
 // Add Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
