@@ -2,10 +2,11 @@
 
 ## Database Bağlantı Detayları
 
-**Database Tipi**: SQLite
-**Dosya Yolu**: `/home/user/EducationPortal/src/EduPortal.API/eduportal.db`
-**Dosya Boyutu**: 476 KB
-**Connection String**: `Data Source=/home/user/EducationPortal/src/EduPortal.API/eduportal.db`
+**Database Tipi**: Microsoft SQL Server (SQL Express)
+**Server**: `localhost\SQLEXPRESS`
+**Database Adı**: `EduPortalDb`
+**Authentication**: Windows Authentication (Trusted_Connection)
+**Connection String**: `Server=localhost\SQLEXPRESS;Database=EduPortalDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true`
 
 ---
 
@@ -154,21 +155,37 @@
 
 ## Connection String Örnekleri
 
-### .NET/C#
+### .NET/C# (Entity Framework)
 ```csharp
-var connectionString = "Data Source=/home/user/EducationPortal/src/EduPortal.API/eduportal.db";
+var connectionString = "Server=localhost\\SQLEXPRESS;Database=EduPortalDb;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true";
 ```
 
-### Python
+### .NET/C# (ADO.NET)
+```csharp
+using (SqlConnection conn = new SqlConnection(connectionString))
+{
+    conn.Open();
+    // SQL komutları...
+}
+```
+
+### Python (pyodbc)
 ```python
-import sqlite3
-conn = sqlite3.connect('/home/user/EducationPortal/src/EduPortal.API/eduportal.db')
+import pyodbc
+conn = pyodbc.connect('DRIVER={SQL Server};SERVER=localhost\\SQLEXPRESS;DATABASE=EduPortalDb;Trusted_Connection=yes;')
 ```
 
-### Node.js
+### Node.js (mssql)
 ```javascript
-const sqlite3 = require('sqlite3');
-const db = new sqlite3.Database('/home/user/EducationPortal/src/EduPortal.API/eduportal.db');
+const sql = require('mssql');
+const config = {
+    server: 'localhost\\SQLEXPRESS',
+    database: 'EduPortalDb',
+    options: {
+        trustedConnection: true,
+        trustServerCertificate: true
+    }
+};
 ```
 
 ---
@@ -177,7 +194,10 @@ const db = new sqlite3.Database('/home/user/EducationPortal/src/EduPortal.API/ed
 
 ### Tüm Tabloları Listele
 ```sql
-SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
+SELECT TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_TYPE = 'BASE TABLE'
+ORDER BY TABLE_NAME;
 ```
 
 ### Admin Kullanıcıyı Getir
@@ -212,42 +232,79 @@ GROUP BY Status;
 
 ---
 
-## VS Code SQLite Extension Kullanımı
+## SQL Server'a Bağlanma Yöntemleri
 
-1. **Extension Kur**: SQLite (alexcvzz.vscode-sqlite)
-2. **Aç**: Ctrl+Shift+P → "SQLite: Open Database"
-3. **Dosya Seç**: eduportal.db
-4. **Kullan**:
-   - Sol panelde SQLITE EXPLORER görünür
-   - Tabloları genişlet
-   - Sağ tık → "Show Table" ile verileri gör
-   - SQL sorguları çalıştır
+### 1. SQL Server Management Studio (SSMS) - ÖNERİLEN
+1. SSMS'i aç
+2. Server name: `localhost\SQLEXPRESS`
+3. Authentication: Windows Authentication
+4. Connect'e tıkla
+5. Databases → EduPortalDb
+
+### 2. Visual Studio Server Explorer
+1. View → Server Explorer
+2. Add Connection
+3. Server name: `localhost\SQLEXPRESS`
+4. Database: EduPortalDb
+
+### 3. Azure Data Studio
+1. New Connection
+2. Server: `localhost\SQLEXPRESS`
+3. Database: EduPortalDb
+4. Authentication: Windows Authentication
+
+### 4. VS Code SQL Server Extension
+1. Extension: "SQL Server (mssql)"
+2. Connect to Server
+3. Server: `localhost\SQLEXPRESS`
 
 ---
 
 ## Güvenlik Notları
 
-- ⚠️ **Production'da SQLite kullanmayın** - SQL Server / PostgreSQL kullanın
-- 🔒 `.db` dosyasını `.gitignore`'a ekleyin (zaten ekli)
-- 🔐 Connection string'leri environment variable'larda tutun
-- 📊 Backup alın: `cp eduportal.db eduportal_backup_$(date +%Y%m%d).db`
+- 🔐 Connection string'leri **User Secrets** veya **Environment Variables**'da tutun
+- 🔒 Production'da SQL Authentication kullanıyorsanız güçlü şifre belirleyin
+- ⚠️ `appsettings.json` dosyasını git'e commit etmeyin (hassas bilgi içeriyorsa)
+- 📊 Düzenli backup alın (SSMS → Right Click Database → Tasks → Backup)
+- 🛡️ SQL Injection'a karşı her zaman parametreli sorgular kullanın
 
 ---
 
 ## Yararlı Komutlar
 
-### Backup Al
-```bash
-cp /home/user/EducationPortal/src/EduPortal.API/eduportal.db ~/eduportal_backup.db
+### Backup Al (SSMS)
+```sql
+BACKUP DATABASE EduPortalDb
+TO DISK = 'C:\Backup\EduPortalDb.bak'
+WITH FORMAT, INIT;
 ```
 
 ### Database Boyutunu Kontrol Et
-```bash
-ls -lh /home/user/EducationPortal/src/EduPortal.API/eduportal.db
+```sql
+EXEC sp_spaceused;
 ```
 
 ### Database'i Sıfırla (DİKKAT!)
 ```bash
-rm /home/user/EducationPortal/src/EduPortal.API/eduportal.db
-dotnet run  # Otomatik yeniden oluşturulur
+# .NET CLI ile
+dotnet ef database drop --force --project src/EduPortal.Infrastructure --startup-project src/EduPortal.API
+dotnet run --project src/EduPortal.API
+```
+
+```sql
+-- SSMS ile
+DROP DATABASE EduPortalDb;
+-- Sonra uygulamayı çalıştırın, otomatik oluşturulur
+```
+
+### Migration Komutları
+```bash
+# Yeni migration oluştur
+dotnet ef migrations add MigrationName --project src/EduPortal.Infrastructure --startup-project src/EduPortal.API
+
+# Migration uygula
+dotnet ef database update --project src/EduPortal.Infrastructure --startup-project src/EduPortal.API
+
+# Son migration'ı geri al
+dotnet ef migrations remove --project src/EduPortal.Infrastructure --startup-project src/EduPortal.API
 ```
