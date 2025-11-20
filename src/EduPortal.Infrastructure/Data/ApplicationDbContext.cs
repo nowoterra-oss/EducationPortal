@@ -97,6 +97,123 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // Fix multiple cascade paths for Student-related entities
+        builder.Entity<CounselingMeeting>(entity =>
+        {
+            entity.HasOne(cm => cm.Student)
+                .WithMany(s => s.CounselingMeetings)
+                .HasForeignKey(cm => cm.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<StudentCounselorAssignment>(entity =>
+        {
+            entity.HasOne(sca => sca.Student)
+                .WithMany(s => s.CounselorAssignments)
+                .HasForeignKey(sca => sca.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(sca => sca.Counselor)
+                .WithMany(c => c.StudentAssignments)
+                .HasForeignKey(sca => sca.CounselorId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<StudentTeacherAssignment>(entity =>
+        {
+            entity.HasOne(sta => sta.Student)
+                .WithMany(s => s.TeacherAssignments)
+                .HasForeignKey(sta => sta.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(sta => sta.Teacher)
+                .WithMany(t => t.StudentAssignments)
+                .HasForeignKey(sta => sta.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<AcademicDevelopmentPlan>(entity =>
+        {
+            entity.HasOne(adp => adp.Student)
+                .WithMany(s => s.AcademicDevelopmentPlans)
+                .HasForeignKey(adp => adp.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<UniversityApplication>(entity =>
+        {
+            entity.HasOne(ua => ua.Student)
+                .WithMany(s => s.UniversityApplications)
+                .HasForeignKey(ua => ua.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<PaymentPlan>(entity =>
+        {
+            entity.HasOne(pp => pp.Student)
+                .WithMany(s => s.PaymentPlans)
+                .HasForeignKey(pp => pp.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Attendance>(entity =>
+        {
+            entity.HasOne(a => a.Student)
+                .WithMany(s => s.Attendances)
+                .HasForeignKey(a => a.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(a => a.Course)
+                .WithMany(c => c.Attendances)
+                .HasForeignKey(a => a.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<ExamResult>(entity =>
+        {
+            entity.HasOne(er => er.Student)
+                .WithMany(s => s.ExamResults)
+                .HasForeignKey(er => er.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<InternationalExam>(entity =>
+        {
+            entity.HasOne(ie => ie.Student)
+                .WithMany(s => s.InternationalExams)
+                .HasForeignKey(ie => ie.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<CompetitionAndAward>(entity =>
+        {
+            entity.HasOne(ca => ca.Student)
+                .WithMany(s => s.CompetitionsAndAwards)
+                .HasForeignKey(ca => ca.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<StudentDocument>(entity =>
+        {
+            entity.HasOne(sd => sd.Student)
+                .WithMany(s => s.Documents)
+                .HasForeignKey(sd => sd.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<StudentHomeworkSubmission>(entity =>
+        {
+            entity.HasOne(shs => shs.Student)
+                .WithMany(s => s.HomeworkSubmissions)
+                .HasForeignKey(shs => shs.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(shs => shs.Homework)
+                .WithMany(h => h.Submissions)
+                .HasForeignKey(shs => shs.HomeworkId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         // Global query filter for soft delete
         builder.Entity<Student>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Parent>().HasQueryFilter(e => !e.IsDeleted);
