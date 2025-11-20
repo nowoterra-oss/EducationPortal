@@ -242,6 +242,32 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        builder.Entity<Homework>(entity =>
+        {
+            entity.HasOne(h => h.Course)
+                .WithMany(c => c.Homeworks)
+                .HasForeignKey(h => h.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(h => h.Teacher)
+                .WithMany(t => t.Homeworks)
+                .HasForeignKey(h => h.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<InternalExam>(entity =>
+        {
+            entity.HasOne(ie => ie.Course)
+                .WithMany(c => c.InternalExams)
+                .HasForeignKey(ie => ie.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ie => ie.Teacher)
+                .WithMany(t => t.InternalExams)
+                .HasForeignKey(ie => ie.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         builder.Entity<Parent>(entity =>
         {
             entity.HasOne(p => p.User)
