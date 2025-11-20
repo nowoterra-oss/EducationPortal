@@ -114,7 +114,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(sca => sca.Counselor)
-                .WithMany(c => c.StudentAssignments)
+                .WithMany(c => c.Students)
                 .HasForeignKey(sca => sca.CounselorId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
@@ -188,7 +188,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<CompetitionAndAward>(entity =>
         {
             entity.HasOne(ca => ca.Student)
-                .WithMany(s => s.CompetitionsAndAwards)
+                .WithMany(s => s.Competitions)
                 .HasForeignKey(ca => ca.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
@@ -204,7 +204,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<StudentHomeworkSubmission>(entity =>
         {
             entity.HasOne(shs => shs.Student)
-                .WithMany(s => s.HomeworkSubmissions)
+                .WithMany(s => s.Homeworks)
                 .HasForeignKey(shs => shs.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
