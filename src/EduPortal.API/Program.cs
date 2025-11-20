@@ -11,9 +11,16 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Get and log connection string
+var connectionString = builder.Configuration.GetConnectionString("ConnectionString");
+Console.WriteLine("=======================================================");
+Console.WriteLine($"[CONNECTION STRING] Using database connection:");
+Console.WriteLine($"[CONNECTION STRING] {connectionString}");
+Console.WriteLine("=======================================================");
+
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
 // Add Infrastructure Services (Repositories)
 builder.Services.AddInfrastructure();
