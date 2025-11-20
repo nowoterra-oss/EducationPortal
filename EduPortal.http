@@ -1,0 +1,1168 @@
+### EduPortal API - REST Client Test File
+### Base URL and Variables
+@baseUrl = http://localhost:5129
+@token = your-jwt-token-here
+
+###############################################################################
+# AUTHENTICATION ENDPOINTS
+###############################################################################
+
+### Register New User
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "email": "testuser@example.com",
+  "phoneNumber": "+905551234567",
+  "password": "Test@123456",
+  "confirmPassword": "Test@123456",
+  "role": "Ogrenci"
+}
+
+### Login
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@eduportal.com",
+  "password": "Admin@123"
+}
+
+### Change Password (Requires Auth)
+POST {{baseUrl}}/api/auth/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "Admin@123",
+  "newPassword": "NewPassword@123",
+  "confirmNewPassword": "NewPassword@123"
+}
+
+### Get Current User Info (Requires Auth)
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+###############################################################################
+# STUDENTS ENDPOINTS
+###############################################################################
+
+### Get All Students (Paginated)
+GET {{baseUrl}}/api/students?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### Get Student By ID
+GET {{baseUrl}}/api/students/1
+Authorization: Bearer {{token}}
+
+### Get Student By Student Number
+GET {{baseUrl}}/api/students/student-no/STU001
+Authorization: Bearer {{token}}
+
+### Search Students
+GET {{baseUrl}}/api/students/search?term=ahmet&pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### Create New Student
+POST {{baseUrl}}/api/students
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "firstName": "Ahmet",
+  "lastName": "Yılmaz",
+  "email": "ahmet.yilmaz@example.com",
+  "phoneNumber": "+905551234567",
+  "studentNo": "STU2024001",
+  "schoolName": "Ankara Fen Lisesi",
+  "currentGrade": 9,
+  "gender": 0,
+  "dateOfBirth": "2008-05-15T00:00:00Z",
+  "address": "Çankaya, Ankara",
+  "lgsPercentile": 95.5,
+  "isBilsem": true,
+  "bilsemField": "Matematik",
+  "languageLevel": "B2",
+  "targetMajor": "Computer Science",
+  "targetCountry": "USA",
+  "referenceSource": "Arkadaş Tavsiyesi",
+  "enrollmentDate": "2024-09-01T00:00:00Z"
+}
+
+### Update Student
+PUT {{baseUrl}}/api/students/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "id": 1,
+  "studentNo": "STU2024001",
+  "schoolName": "İstanbul Fen Lisesi",
+  "currentGrade": 10,
+  "gender": 0,
+  "dateOfBirth": "2008-05-15T00:00:00Z",
+  "address": "Kadıköy, İstanbul",
+  "lgsPercentile": 96.0,
+  "isBilsem": true,
+  "bilsemField": "Fizik",
+  "languageLevel": "C1",
+  "targetMajor": "Physics",
+  "targetCountry": "UK",
+  "phoneNumber": "+905559876543"
+}
+
+### Delete Student
+DELETE {{baseUrl}}/api/students/1
+Authorization: Bearer {{token}}
+
+###############################################################################
+# HOMEWORK ENDPOINTS
+###############################################################################
+
+### Get All Homework (Paginated)
+GET {{baseUrl}}/api/homework?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### Get Homework By ID
+GET {{baseUrl}}/api/homework/1
+Authorization: Bearer {{token}}
+
+### Create New Homework
+POST {{baseUrl}}/api/homework
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "courseId": 1,
+  "title": "Matematik - Türev Çalışması",
+  "description": "1. bölümdeki türev sorularını çözünüz",
+  "assignedDate": "2024-11-20T10:00:00Z",
+  "dueDate": "2024-11-27T23:59:59Z",
+  "maxScore": 100,
+  "attachmentUrl": "https://example.com/homework1.pdf"
+}
+
+### Get Homework Submissions
+GET {{baseUrl}}/api/homework/1/submissions?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### Submit Homework
+POST {{baseUrl}}/api/homework/1/submit
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "homeworkId": 1,
+  "studentId": 1,
+  "submissionUrl": "https://example.com/submissions/student1_hw1.pdf",
+  "comment": "Tüm soruları çözdüm",
+  "status": 1,
+  "submissionDate": "2024-11-25T15:30:00Z"
+}
+
+### Evaluate Submission
+PUT {{baseUrl}}/api/homework/submissions/1/evaluate?score=85
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+"Çok iyi çalışma. Birkaç küçük hata var, onları gözden geçir."
+
+###############################################################################
+# ATTENDANCE ENDPOINTS
+###############################################################################
+
+### Get All Attendance Records (Paginated)
+GET {{baseUrl}}/api/attendance?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+###############################################################################
+# AGP (Academic Growth Plan) ENDPOINTS
+###############################################################################
+
+### Get All AGP Records
+GET {{baseUrl}}/api/agp?pageNumber=1&pageSize=10
+
+### Get AGP By ID
+GET {{baseUrl}}/api/agp/1
+
+### Get AGP By Student ID
+GET {{baseUrl}}/api/agp/student/1
+
+### Create New AGP
+POST {{baseUrl}}/api/agp
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "planName": "2024-2025 Akademik Gelişim Planı",
+  "targetGPA": 4.0,
+  "notes": "Matematik ve fizik odaklı çalışma planı"
+}
+
+### Update AGP
+PUT {{baseUrl}}/api/agp/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "planName": "Güncellenen Plan",
+  "targetGPA": 3.8
+}
+
+### Delete AGP
+DELETE {{baseUrl}}/api/agp/1
+
+### Get AGP Goals
+GET {{baseUrl}}/api/agp/1/goals
+
+### Add Goal to AGP
+POST {{baseUrl}}/api/agp/1/goals
+Content-Type: application/json
+
+{
+  "goalName": "SAT Hedefi",
+  "targetScore": 1500,
+  "deadline": "2025-06-01T00:00:00Z"
+}
+
+### Update AGP Goal
+PUT {{baseUrl}}/api/agp/1/goals/1
+Content-Type: application/json
+
+{
+  "goalName": "SAT Hedefi - Revize",
+  "targetScore": 1550
+}
+
+### Delete AGP Goal
+DELETE {{baseUrl}}/api/agp/1/goals/1
+
+### Get AGP Progress
+GET {{baseUrl}}/api/agp/1/progress
+
+###############################################################################
+# CALENDAR ENDPOINTS
+###############################################################################
+
+### Get All Calendar Events
+GET {{baseUrl}}/api/calendar?pageNumber=1&pageSize=10
+
+### Get Calendar Event By ID
+GET {{baseUrl}}/api/calendar/1
+
+### Get Events in Date Range
+GET {{baseUrl}}/api/calendar/range?startDate=2024-11-01T00:00:00Z&endDate=2024-11-30T23:59:59Z
+
+### Get Student Calendar
+GET {{baseUrl}}/api/calendar/student/1
+
+### Get Upcoming Events
+GET {{baseUrl}}/api/calendar/upcoming?days=7
+
+### Create Calendar Event
+POST {{baseUrl}}/api/calendar
+Content-Type: application/json
+
+{
+  "title": "Matematik Sınavı",
+  "description": "1. Dönem Ara Sınavı",
+  "startDate": "2024-11-25T09:00:00Z",
+  "endDate": "2024-11-25T11:00:00Z",
+  "location": "A101 Sınıfı",
+  "eventType": "Exam"
+}
+
+### Update Calendar Event
+PUT {{baseUrl}}/api/calendar/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "title": "Matematik Final Sınavı",
+  "startDate": "2024-12-20T09:00:00Z"
+}
+
+### Delete Calendar Event
+DELETE {{baseUrl}}/api/calendar/1
+
+###############################################################################
+# CLUBS ENDPOINTS
+###############################################################################
+
+### Get All Clubs
+GET {{baseUrl}}/api/clubs
+
+### Get Club By ID
+GET {{baseUrl}}/api/clubs/1
+
+### Create New Club
+POST {{baseUrl}}/api/clubs
+Content-Type: application/json
+
+{
+  "clubName": "Robotik Kulübü",
+  "description": "Robot tasarım ve programlama kulübü",
+  "advisorId": 1
+}
+
+### Delete Club
+DELETE {{baseUrl}}/api/clubs/1
+
+###############################################################################
+# COMPETITIONS ENDPOINTS
+###############################################################################
+
+### Get All Competitions
+GET {{baseUrl}}/api/competitions?pageNumber=1&pageSize=10
+
+### Get Competition By ID
+GET {{baseUrl}}/api/competitions/1
+
+### Get Student Competitions
+GET {{baseUrl}}/api/competitions/student/1
+
+### Create Competition Entry
+POST {{baseUrl}}/api/competitions
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "competitionName": "TÜBİTAK Bilim Olimpiyatları",
+  "category": "Fizik",
+  "date": "2024-12-15T00:00:00Z",
+  "rank": 3,
+  "award": "Bronz Madalya"
+}
+
+### Update Competition
+PUT {{baseUrl}}/api/competitions/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "rank": 2,
+  "award": "Gümüş Madalya"
+}
+
+### Delete Competition
+DELETE {{baseUrl}}/api/competitions/1
+
+###############################################################################
+# COUNSELING ENDPOINTS
+###############################################################################
+
+### Get All Counseling Sessions
+GET {{baseUrl}}/api/counseling?pageNumber=1&pageSize=10
+
+### Get Counseling Session By ID
+GET {{baseUrl}}/api/counseling/1
+
+### Get Student Counseling Sessions
+GET {{baseUrl}}/api/counseling/student/1?pageNumber=1&pageSize=10
+
+### Get Counselor Sessions
+GET {{baseUrl}}/api/counseling/counselor/1?pageNumber=1&pageSize=10
+
+### Get Upcoming Sessions
+GET {{baseUrl}}/api/counseling/upcoming
+
+### Create Counseling Session
+POST {{baseUrl}}/api/counseling
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "counselorId": 1,
+  "sessionDate": "2024-11-22T14:00:00Z",
+  "topic": "Üniversite Tercihi",
+  "notes": "İngiltere üniversiteleri hakkında görüşme"
+}
+
+### Update Counseling Session
+PUT {{baseUrl}}/api/counseling/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "topic": "Üniversite Tercihi - Detaylı",
+  "sessionDate": "2024-11-23T14:00:00Z"
+}
+
+### Delete Counseling Session
+DELETE {{baseUrl}}/api/counseling/1
+
+###############################################################################
+# COUNSELORS ENDPOINTS
+###############################################################################
+
+### Get All Counselors
+GET {{baseUrl}}/api/counselors?pageNumber=1&pageSize=10
+
+### Get Counselor By ID
+GET {{baseUrl}}/api/counselors/1
+
+### Get Counselor's Students
+GET {{baseUrl}}/api/counselors/1/students
+
+### Get Counselor's Sessions
+GET {{baseUrl}}/api/counselors/1/sessions?pageNumber=1&pageSize=10
+
+### Create Counselor
+POST {{baseUrl}}/api/counselors
+Content-Type: application/json
+
+{
+  "userId": "user-guid-here",
+  "specialization": "Kariyer Danışmanlığı",
+  "yearsOfExperience": 5
+}
+
+### Update Counselor
+PUT {{baseUrl}}/api/counselors/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "specialization": "Üniversite Danışmanlığı",
+  "yearsOfExperience": 6
+}
+
+### Delete Counselor
+DELETE {{baseUrl}}/api/counselors/1
+
+###############################################################################
+# COURSES ENDPOINTS
+###############################################################################
+
+### Get All Courses
+GET {{baseUrl}}/api/courses?pageNumber=1&pageSize=10
+
+### Get Course By ID
+GET {{baseUrl}}/api/courses/1
+
+### Get Course Students
+GET {{baseUrl}}/api/courses/1/students?pageNumber=1&pageSize=10
+
+### Get Course Teacher
+GET {{baseUrl}}/api/courses/1/teacher
+
+### Get Course Schedule
+GET {{baseUrl}}/api/courses/1/schedule
+
+### Get Course Curriculum
+GET {{baseUrl}}/api/courses/1/curriculum
+
+### Get Course Resources
+GET {{baseUrl}}/api/courses/1/resources
+
+### Create Course
+POST {{baseUrl}}/api/courses
+Content-Type: application/json
+
+{
+  "courseName": "İleri Matematik",
+  "courseCode": "MAT301",
+  "teacherId": 1,
+  "grade": 11,
+  "credits": 4
+}
+
+### Update Course
+PUT {{baseUrl}}/api/courses/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "courseName": "İleri Matematik - Türev",
+  "credits": 5
+}
+
+### Update Course Curriculum
+PUT {{baseUrl}}/api/courses/1/curriculum
+Content-Type: application/json
+
+{
+  "topics": ["Limit", "Türev", "İntegral"],
+  "learningObjectives": "Türev kavramını öğrenmek"
+}
+
+### Add Course Resource
+POST {{baseUrl}}/api/courses/1/resources
+Content-Type: application/json
+
+{
+  "resourceName": "Türev Konu Anlatımı",
+  "resourceUrl": "https://example.com/resource1.pdf",
+  "resourceType": "PDF"
+}
+
+### Delete Course Resource
+DELETE {{baseUrl}}/api/courses/1/resources/1
+
+### Delete Course
+DELETE {{baseUrl}}/api/courses/1
+
+###############################################################################
+# DOCUMENTS ENDPOINTS
+###############################################################################
+
+### Get All Documents
+GET {{baseUrl}}/api/documents?pageNumber=1&pageSize=10
+
+### Get Document By ID
+GET {{baseUrl}}/api/documents/1
+
+### Get Student Documents
+GET {{baseUrl}}/api/documents/student/1
+
+### Get Documents By Type
+GET {{baseUrl}}/api/documents/type/Transcript?pageNumber=1&pageSize=10
+
+### Download Document
+GET {{baseUrl}}/api/documents/1/download
+
+### Create Document Entry
+POST {{baseUrl}}/api/documents
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "documentName": "Transkript 2023-2024",
+  "documentType": "Transcript",
+  "fileUrl": "https://example.com/docs/transcript.pdf",
+  "uploadDate": "2024-11-20T00:00:00Z"
+}
+
+### Update Document
+PUT {{baseUrl}}/api/documents/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "documentName": "Transkript 2023-2024 (Güncel)",
+  "documentType": "Transcript"
+}
+
+### Share Document
+POST {{baseUrl}}/api/documents/1/share
+Content-Type: application/json
+
+{
+  "sharedWithUserId": "user-guid",
+  "expirationDate": "2024-12-31T23:59:59Z"
+}
+
+### Delete Document
+DELETE {{baseUrl}}/api/documents/1
+
+###############################################################################
+# FILES ENDPOINTS
+###############################################################################
+
+### Upload File
+POST {{baseUrl}}/api/files/upload?category=homework
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="file"; filename="document.pdf"
+Content-Type: application/pdf
+
+< ./path/to/your/file.pdf
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Download File
+GET {{baseUrl}}/api/files/download/1
+Authorization: Bearer {{token}}
+
+### Delete File
+DELETE {{baseUrl}}/api/files/1
+Authorization: Bearer {{token}}
+
+###############################################################################
+# HOBBIES ENDPOINTS
+###############################################################################
+
+### Get All Hobbies
+GET {{baseUrl}}/api/hobbies
+
+### Get Hobby By ID
+GET {{baseUrl}}/api/hobbies/1
+
+### Create Hobby
+POST {{baseUrl}}/api/hobbies
+Content-Type: application/json
+
+{
+  "hobbyName": "Satranç",
+  "category": "Strategy Games"
+}
+
+### Delete Hobby
+DELETE {{baseUrl}}/api/hobbies/1
+
+###############################################################################
+# INTERNAL EXAMS ENDPOINTS
+###############################################################################
+
+### Get All Internal Exams
+GET {{baseUrl}}/api/exams/internal?pageNumber=1&pageSize=10
+
+### Get Internal Exam By ID
+GET {{baseUrl}}/api/exams/internal/1
+
+### Get Student Internal Exams
+GET {{baseUrl}}/api/exams/internal/student/1?pageNumber=1&pageSize=10
+
+### Get Course Internal Exams
+GET {{baseUrl}}/api/exams/internal/course/1?pageNumber=1&pageSize=10
+
+### Get Exam Results
+GET {{baseUrl}}/api/exams/internal/1/results?pageNumber=1&pageSize=10
+
+### Get Exam Statistics
+GET {{baseUrl}}/api/exams/internal/1/statistics
+
+### Get Student Exam Analytics
+GET {{baseUrl}}/api/exams/internal/student/1/analytics
+
+### Create Internal Exam
+POST {{baseUrl}}/api/exams/internal
+Content-Type: application/json
+
+{
+  "courseId": 1,
+  "examName": "1. Dönem Ara Sınavı",
+  "examDate": "2024-11-25T09:00:00Z",
+  "duration": 90,
+  "totalPoints": 100
+}
+
+### Add Exam Result
+POST {{baseUrl}}/api/exams/internal/1/results
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "score": 85,
+  "answers": "1:A,2:B,3:C"
+}
+
+### Update Internal Exam
+PUT {{baseUrl}}/api/exams/internal/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "examName": "1. Dönem Final Sınavı",
+  "totalPoints": 150
+}
+
+### Delete Internal Exam
+DELETE {{baseUrl}}/api/exams/internal/1
+
+###############################################################################
+# INTERNATIONAL EXAMS ENDPOINTS
+###############################################################################
+
+### Get All International Exams
+GET {{baseUrl}}/api/exams/international?pageNumber=1&pageSize=10
+
+### Get International Exam By ID
+GET {{baseUrl}}/api/exams/international/1
+
+### Get Student International Exams
+GET {{baseUrl}}/api/exams/international/student/1
+
+### Get Exams By Type
+GET {{baseUrl}}/api/exams/international/type/SAT?pageNumber=1&pageSize=10
+
+### Create International Exam Record
+POST {{baseUrl}}/api/exams/international
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "examType": "SAT",
+  "examDate": "2024-12-07T00:00:00Z",
+  "score": 1450,
+  "maxScore": 1600,
+  "readingWritingScore": 720,
+  "mathScore": 730
+}
+
+### Update International Exam
+PUT {{baseUrl}}/api/exams/international/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "score": 1500,
+  "mathScore": 750
+}
+
+### Delete International Exam
+DELETE {{baseUrl}}/api/exams/international/1
+
+###############################################################################
+# MESSAGES ENDPOINTS
+###############################################################################
+
+### Get All Messages
+GET {{baseUrl}}/api/messages?pageNumber=1&pageSize=10
+
+### Get Message By ID
+GET {{baseUrl}}/api/messages/1
+
+### Get Inbox
+GET {{baseUrl}}/api/messages/inbox?pageNumber=1&pageSize=10
+
+### Get Sent Messages
+GET {{baseUrl}}/api/messages/sent?pageNumber=1&pageSize=10
+
+### Get Unread Messages
+GET {{baseUrl}}/api/messages/unread?pageNumber=1&pageSize=10
+
+### Get Unread Count
+GET {{baseUrl}}/api/messages/unread/count
+
+### Get Conversation with User
+GET {{baseUrl}}/api/messages/conversation/user-guid-here?pageNumber=1&pageSize=10
+
+### Search Messages
+GET {{baseUrl}}/api/messages/search?term=matematik&pageNumber=1&pageSize=10
+
+### Get Archived Messages
+GET {{baseUrl}}/api/messages/archived?pageNumber=1&pageSize=10
+
+### Send Message
+POST {{baseUrl}}/api/messages
+Content-Type: application/json
+
+{
+  "recipientId": "user-guid-here",
+  "subject": "Ödev Hakkında",
+  "body": "Matematik ödevinin son teslim tarihi ne zaman?",
+  "priority": "Normal"
+}
+
+### Reply to Message
+POST {{baseUrl}}/api/messages/1/reply
+Content-Type: application/json
+
+{
+  "body": "Cevap mesajı içeriği"
+}
+
+### Send Bulk Message
+POST {{baseUrl}}/api/messages/bulk
+Content-Type: application/json
+
+{
+  "recipientIds": ["user-guid-1", "user-guid-2"],
+  "subject": "Genel Duyuru",
+  "body": "Duyuru içeriği"
+}
+
+### Add Attachment to Message
+POST {{baseUrl}}/api/messages/1/attachments
+Content-Type: application/json
+
+{
+  "fileName": "document.pdf",
+  "fileUrl": "https://example.com/files/document.pdf"
+}
+
+### Mark as Read
+PATCH {{baseUrl}}/api/messages/1/read
+
+### Mark as Unread
+PATCH {{baseUrl}}/api/messages/1/unread
+
+### Archive Message
+PATCH {{baseUrl}}/api/messages/1/archive
+
+### Delete Message
+DELETE {{baseUrl}}/api/messages/1
+
+###############################################################################
+# NOTIFICATIONS ENDPOINTS
+###############################################################################
+
+### Get All Notifications
+GET {{baseUrl}}/api/notifications?pageNumber=1&pageSize=10
+
+### Get Notification By ID
+GET {{baseUrl}}/api/notifications/1
+
+### Get Unread Notifications Count
+GET {{baseUrl}}/api/notifications/unread/count
+
+### Mark Notification as Read
+PATCH {{baseUrl}}/api/notifications/1/read
+
+### Mark All as Read
+PATCH {{baseUrl}}/api/notifications/read-all
+
+### Delete Notification
+DELETE {{baseUrl}}/api/notifications/1
+
+###############################################################################
+# PARENTS ENDPOINTS
+###############################################################################
+
+### Get All Parents
+GET {{baseUrl}}/api/parents?pageNumber=1&pageSize=10
+
+### Get Parent By ID
+GET {{baseUrl}}/api/parents/1
+
+### Create Parent
+POST {{baseUrl}}/api/parents
+Content-Type: application/json
+
+{
+  "userId": "user-guid-here",
+  "studentId": 1,
+  "relationship": "Anne",
+  "occupation": "Doktor",
+  "workPhone": "+905551234567"
+}
+
+### Update Parent
+PUT {{baseUrl}}/api/parents/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "occupation": "Mühendis",
+  "workPhone": "+905559876543"
+}
+
+### Delete Parent
+DELETE {{baseUrl}}/api/parents/1
+
+###############################################################################
+# PAYMENTS ENDPOINTS
+###############################################################################
+
+### Get All Payments
+GET {{baseUrl}}/api/payments?pageNumber=1&pageSize=10
+
+### Get Payment By ID
+GET {{baseUrl}}/api/payments/1
+
+### Get Student Payments
+GET {{baseUrl}}/api/payments/student/1?pageNumber=1&pageSize=10
+
+### Get Payments By Status
+GET {{baseUrl}}/api/payments/status/Pending?pageNumber=1&pageSize=10
+
+### Get Pending Payments
+GET {{baseUrl}}/api/payments/pending?pageNumber=1&pageSize=10
+
+### Get Payment Statistics
+GET {{baseUrl}}/api/payments/statistics
+
+### Download Invoice
+GET {{baseUrl}}/api/payments/1/invoice
+
+### Create Payment
+POST {{baseUrl}}/api/payments
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "amount": 5000.00,
+  "paymentType": "Tuition",
+  "dueDate": "2024-12-31T00:00:00Z",
+  "description": "Aralık Ayı Öğrenim Ücreti"
+}
+
+### Process Payment
+POST {{baseUrl}}/api/payments/1/process
+
+### Update Payment
+PUT {{baseUrl}}/api/payments/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "amount": 4500.00,
+  "status": "Paid",
+  "paidDate": "2024-11-20T10:30:00Z"
+}
+
+### Delete Payment
+DELETE {{baseUrl}}/api/payments/1
+
+###############################################################################
+# PERFORMANCE ENDPOINTS
+###############################################################################
+
+### Get All Performance Records
+GET {{baseUrl}}/api/performance?pageNumber=1&pageSize=10
+
+### Get Performance By ID
+GET {{baseUrl}}/api/performance/1
+
+### Get Student Performance
+GET {{baseUrl}}/api/performance/student/1
+
+### Get Course Performance
+GET {{baseUrl}}/api/performance/course/1
+
+### Create Performance Record
+POST {{baseUrl}}/api/performance
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "courseId": 1,
+  "grade": "A",
+  "gpa": 3.8,
+  "term": "2024-Fall"
+}
+
+### Update Performance
+PUT {{baseUrl}}/api/performance/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "grade": "A+",
+  "gpa": 4.0
+}
+
+### Delete Performance Record
+DELETE {{baseUrl}}/api/performance/1
+
+###############################################################################
+# REPORTS ENDPOINTS
+###############################################################################
+
+### Get Student Progress Report
+GET {{baseUrl}}/api/reports/student/1/progress
+
+### Get Student Academic Report
+GET {{baseUrl}}/api/reports/student/1/academic
+
+### Get Student Attendance Report
+GET {{baseUrl}}/api/reports/student/1/attendance
+
+### Get Course Performance Report
+GET {{baseUrl}}/api/reports/course/1/performance
+
+### Get Financial Report
+GET {{baseUrl}}/api/reports/financial?startDate=2024-01-01T00:00:00Z&endDate=2024-12-31T23:59:59Z
+
+### Get Teacher Performance Report
+GET {{baseUrl}}/api/reports/teacher/1/performance
+
+### Get Enrollment Report
+GET {{baseUrl}}/api/reports/enrollment?startDate=2024-01-01T00:00:00Z&endDate=2024-12-31T23:59:59Z
+
+### Export Report to PDF
+POST {{baseUrl}}/api/reports/export/pdf
+Content-Type: application/json
+
+{
+  "reportType": "StudentProgress",
+  "studentId": 1,
+  "term": "2024-Fall"
+}
+
+### Export Report to Excel
+POST {{baseUrl}}/api/reports/export/excel
+Content-Type: application/json
+
+{
+  "reportType": "FinancialSummary",
+  "startDate": "2024-01-01T00:00:00Z",
+  "endDate": "2024-12-31T23:59:59Z"
+}
+
+###############################################################################
+# SCHEDULES ENDPOINTS
+###############################################################################
+
+### Get All Schedules
+GET {{baseUrl}}/api/schedules?pageNumber=1&pageSize=10
+
+### Get Schedule By ID
+GET {{baseUrl}}/api/schedules/1
+
+### Create Schedule
+POST {{baseUrl}}/api/schedules
+Content-Type: application/json
+
+{
+  "courseId": 1,
+  "dayOfWeek": "Monday",
+  "startTime": "09:00:00",
+  "endTime": "10:30:00",
+  "classroom": "A101"
+}
+
+### Update Schedule
+PUT {{baseUrl}}/api/schedules/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "startTime": "10:00:00",
+  "endTime": "11:30:00",
+  "classroom": "B202"
+}
+
+### Delete Schedule
+DELETE {{baseUrl}}/api/schedules/1
+
+###############################################################################
+# TEACHERS ENDPOINTS
+###############################################################################
+
+### Get All Teachers
+GET {{baseUrl}}/api/teachers?pageNumber=1&pageSize=10
+
+### Get Teacher By ID
+GET {{baseUrl}}/api/teachers/1
+
+### Search Teachers
+GET {{baseUrl}}/api/teachers/search?term=ahmet&pageNumber=1&pageSize=10
+
+### Get Teacher Courses
+GET {{baseUrl}}/api/teachers/1/courses
+
+### Create Teacher
+POST {{baseUrl}}/api/teachers
+Content-Type: application/json
+
+{
+  "userId": "user-guid-here",
+  "subject": "Matematik",
+  "yearsOfExperience": 10,
+  "qualifications": "PhD Matematik"
+}
+
+### Update Teacher
+PUT {{baseUrl}}/api/teachers/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "subject": "İleri Matematik",
+  "yearsOfExperience": 11
+}
+
+### Delete Teacher
+DELETE {{baseUrl}}/api/teachers/1
+
+###############################################################################
+# UNIVERSITY APPLICATIONS ENDPOINTS
+###############################################################################
+
+### Get All University Applications
+GET {{baseUrl}}/api/university-applications?pageNumber=1&pageSize=10
+
+### Get Application By ID
+GET {{baseUrl}}/api/university-applications/1
+
+### Get Student Applications
+GET {{baseUrl}}/api/university-applications/student/1
+
+### Get Applications By Status
+GET {{baseUrl}}/api/university-applications/status/Pending?pageNumber=1&pageSize=10
+
+### Get Application Timeline
+GET {{baseUrl}}/api/university-applications/1/timeline
+
+### Get Application Statistics
+GET {{baseUrl}}/api/university-applications/statistics
+
+### Create University Application
+POST {{baseUrl}}/api/university-applications
+Content-Type: application/json
+
+{
+  "studentId": 1,
+  "universityName": "Harvard University",
+  "program": "Computer Science",
+  "country": "USA",
+  "applicationDate": "2024-11-15T00:00:00Z",
+  "deadline": "2025-01-01T00:00:00Z",
+  "status": "Pending",
+  "applicationFee": 75.00
+}
+
+### Update Application Status
+PATCH {{baseUrl}}/api/university-applications/1/status
+Content-Type: application/json
+
+{
+  "status": "Accepted",
+  "notes": "Scholarship awarded"
+}
+
+### Add Documents to Application
+POST {{baseUrl}}/api/university-applications/1/documents
+Content-Type: application/json
+
+{
+  "documentType": "Transcript",
+  "documentUrl": "https://example.com/docs/transcript.pdf"
+}
+
+### Update Application
+PUT {{baseUrl}}/api/university-applications/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "status": "Accepted",
+  "scholarshipAmount": 10000.00
+}
+
+### Delete Application
+DELETE {{baseUrl}}/api/university-applications/1
+
+###############################################################################
+# EXAMPLE SCENARIOS
+###############################################################################
+
+### SCENARIO 1: Complete Student Registration Flow
+# 1. Register new student user
+# 2. Login to get token
+# 3. Create student profile
+# 4. Enroll in courses
+# 5. View student dashboard
+
+### SCENARIO 2: Teacher Creates and Grades Homework
+# 1. Teacher login
+# 2. Create homework assignment
+# 3. Students submit homework
+# 4. Teacher reviews submissions
+# 5. Teacher grades and provides feedback
+
+### SCENARIO 3: Counselor Session Workflow
+# 1. Counselor login
+# 2. View assigned students
+# 3. Schedule counseling session
+# 4. Add session notes
+# 5. Generate progress report
+
+###############################################################################
+# NOTES
+###############################################################################
+# - Replace {{token}} with actual JWT token from login response
+# - Replace IDs (1, 2, etc.) with actual IDs from your database
+# - Replace user-guid-here with actual user GUIDs
+# - Adjust dates to current/future dates as needed
+# - Some endpoints require specific roles (Admin, Teacher, Student, etc.)
+# - File upload endpoints require actual file paths
+# - Base URL can be changed in @baseUrl variable at the top
+
+###############################################################################
