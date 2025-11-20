@@ -219,6 +219,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        builder.Entity<Parent>(entity =>
+        {
+            entity.HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.Student)
+                .WithMany(s => s.Parents)
+                .HasForeignKey(p => p.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         // Global query filter for soft delete
         builder.Entity<Student>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Parent>().HasQueryFilter(e => !e.IsDeleted);
