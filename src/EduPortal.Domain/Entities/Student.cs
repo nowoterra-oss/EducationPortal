@@ -68,7 +68,7 @@ public class Student : BaseAuditableEntity
     public virtual ICollection<StudentDocument> Documents { get; set; } = new List<StudentDocument>();
     public virtual ICollection<StudentHomeworkSubmission> Homeworks { get; set; } = new List<StudentHomeworkSubmission>();
     public virtual ICollection<Attendance> Attendances { get; set; } = new List<Attendance>();
-    public virtual ICollection<ClassPerformance> Performances { get; set; } = new List<ClassPerformance>();
+    public virtual ICollection<ClassPerformance> ClassPerformances { get; set; } = new List<ClassPerformance>();
     public virtual ICollection<StudentTeacherAssignment> TeacherAssignments { get; set; } = new List<StudentTeacherAssignment>();
     public virtual ICollection<StudentCounselorAssignment> CounselorAssignments { get; set; } = new List<StudentCounselorAssignment>();
     public virtual ICollection<CounselingMeeting> CounselingMeetings { get; set; } = new List<CounselingMeeting>();
