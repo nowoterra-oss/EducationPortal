@@ -104,6 +104,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(s => s.CounselingMeetings)
                 .HasForeignKey(cm => cm.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(cm => cm.Counselor)
+                .WithMany(c => c.CounselingMeetings)
+                .HasForeignKey(cm => cm.CounselorId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<StudentCounselorAssignment>(entity =>
