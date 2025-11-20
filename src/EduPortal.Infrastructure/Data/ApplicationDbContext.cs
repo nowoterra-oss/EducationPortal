@@ -179,6 +179,24 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        builder.Entity<ClassPerformance>(entity =>
+        {
+            entity.HasOne(cp => cp.Student)
+                .WithMany(s => s.ClassPerformances)
+                .HasForeignKey(cp => cp.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(cp => cp.Course)
+                .WithMany(c => c.ClassPerformances)
+                .HasForeignKey(cp => cp.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(cp => cp.Teacher)
+                .WithMany(t => t.ClassPerformances)
+                .HasForeignKey(cp => cp.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         builder.Entity<ExamResult>(entity =>
         {
             entity.HasOne(er => er.Student)
