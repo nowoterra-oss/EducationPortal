@@ -172,6 +172,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(c => c.Attendances)
                 .HasForeignKey(a => a.CourseId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(a => a.Teacher)
+                .WithMany(t => t.Attendances)
+                .HasForeignKey(a => a.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<ExamResult>(entity =>
