@@ -15,10 +15,10 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -29,27 +29,27 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
-                    FirstName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    LastName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    ProfilePhotoUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LastLoginAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    ProfilePhotoUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    LastLoginAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -60,20 +60,20 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "Courses",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CourseName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    CourseCode = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    Subject = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Level = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    Credits = table.Column<int>(type: "INTEGER", nullable: true),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CourseName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    CourseCode = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Subject = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Level = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Credits = table.Column<int>(type: "int", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -84,15 +84,15 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "MessageGroups",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    GroupName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GroupName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -103,11 +103,11 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    RoleId = table.Column<string>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -124,11 +124,11 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    ClaimType = table.Column<string>(type: "TEXT", nullable: true),
-                    ClaimValue = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -145,10 +145,10 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "AspNetUserLogins",
                 columns: table => new
                 {
-                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
-                    ProviderKey = table.Column<string>(type: "TEXT", nullable: false),
-                    ProviderDisplayName = table.Column<string>(type: "TEXT", nullable: true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false)
+                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProviderKey = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -165,8 +165,8 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    RoleId = table.Column<string>(type: "TEXT", nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -189,10 +189,10 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    LoginProvider = table.Column<string>(type: "TEXT", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", nullable: false),
-                    Value = table.Column<string>(type: "TEXT", nullable: true)
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    LoginProvider = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -209,14 +209,14 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "Counselors",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    Specialization = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Specialization = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -233,20 +233,20 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "Messages",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    SenderId = table.Column<string>(type: "TEXT", nullable: false),
-                    RecipientId = table.Column<string>(type: "TEXT", nullable: false),
-                    Subject = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    Body = table.Column<string>(type: "TEXT", maxLength: 5000, nullable: false),
-                    IsRead = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AttachmentUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    ParentMessageId = table.Column<int>(type: "INTEGER", nullable: true),
-                    SentAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ReadAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SenderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    RecipientId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Subject = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Body = table.Column<string>(type: "nvarchar(max)", maxLength: 5000, nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    AttachmentUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ParentMessageId = table.Column<int>(type: "int", nullable: true),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReadAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -275,28 +275,28 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "Students",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    StudentNo = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    SchoolName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    CurrentGrade = table.Column<int>(type: "INTEGER", nullable: false),
-                    Gender = table.Column<int>(type: "INTEGER", nullable: false),
-                    DateOfBirth = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Address = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    StudentNo = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    SchoolName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    CurrentGrade = table.Column<int>(type: "int", nullable: false),
+                    Gender = table.Column<int>(type: "int", nullable: false),
+                    DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
                     LGSPercentile = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
-                    IsBilsem = table.Column<bool>(type: "INTEGER", nullable: false),
-                    BilsemField = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    LanguageLevel = table.Column<string>(type: "TEXT", maxLength: 10, nullable: true),
-                    TargetMajor = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    TargetCountry = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    ReferenceSource = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    EnrollmentDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    IsBilsem = table.Column<bool>(type: "bit", nullable: false),
+                    BilsemField = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    LanguageLevel = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
+                    TargetMajor = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    TargetCountry = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    ReferenceSource = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    EnrollmentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -313,15 +313,15 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "Teachers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    Specialization = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    Experience = table.Column<int>(type: "INTEGER", nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Specialization = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    Experience = table.Column<int>(type: "int", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -338,17 +338,17 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "Curricula",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CourseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TopicName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    TopicOrder = table.Column<int>(type: "INTEGER", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    EstimatedHours = table.Column<int>(type: "INTEGER", nullable: true),
-                    IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    TopicName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    TopicOrder = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    EstimatedHours = table.Column<int>(type: "int", nullable: true),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -365,16 +365,16 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "GroupMessages",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    GroupId = table.Column<int>(type: "INTEGER", nullable: false),
-                    SenderId = table.Column<string>(type: "TEXT", nullable: false),
-                    Body = table.Column<string>(type: "TEXT", maxLength: 5000, nullable: false),
-                    AttachmentUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    SentAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GroupId = table.Column<int>(type: "int", nullable: false),
+                    SenderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Body = table.Column<string>(type: "nvarchar(max)", maxLength: 5000, nullable: false),
+                    AttachmentUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -397,14 +397,14 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "MessageGroupMembers",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    GroupId = table.Column<int>(type: "INTEGER", nullable: false),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    JoinedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GroupId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -427,19 +427,19 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "AcademicDevelopmentPlans",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    AcademicYear = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    PlanDocumentUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    AcademicYear = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PlanDocumentUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -456,24 +456,24 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "CalendarEvents",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
-                    EventType = table.Column<int>(type: "INTEGER", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    AllDayEvent = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Location = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    Priority = table.Column<int>(type: "INTEGER", nullable: false),
-                    Reminder = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: true),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    EventType = table.Column<int>(type: "int", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    AllDayEvent = table.Column<bool>(type: "bit", nullable: false),
+                    Location = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
+                    Priority = table.Column<int>(type: "int", nullable: false),
+                    Reminder = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -489,19 +489,19 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "CompetitionsAndAwards",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Category = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    Level = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    Achievement = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    Date = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    DocumentUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Level = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Achievement = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DocumentUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -518,22 +518,22 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "CounselingMeetings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CounselorId = table.Column<int>(type: "INTEGER", nullable: false),
-                    MeetingDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Duration = table.Column<int>(type: "INTEGER", nullable: true),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 5000, nullable: false),
-                    Assignments = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
-                    NextMeetingDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    SendEmailToParent = table.Column<bool>(type: "INTEGER", nullable: false),
-                    SendSMSToParent = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    CounselorId = table.Column<int>(type: "int", nullable: false),
+                    MeetingDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Duration = table.Column<int>(type: "int", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(max)", maxLength: 5000, nullable: false),
+                    Assignments = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    NextMeetingDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SendEmailToParent = table.Column<bool>(type: "bit", nullable: false),
+                    SendSMSToParent = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -556,23 +556,23 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "InternationalExams",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ExamType = table.Column<int>(type: "INTEGER", nullable: false),
-                    ExamName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Grade = table.Column<int>(type: "INTEGER", nullable: true),
-                    AcademicYear = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    Score = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    MaxScore = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    ApplicationStartDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    ApplicationEndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    ExamDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ResultDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CertificateUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    ExamType = table.Column<int>(type: "int", nullable: false),
+                    ExamName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Grade = table.Column<int>(type: "int", nullable: true),
+                    AcademicYear = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Score = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    MaxScore = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    ApplicationStartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ApplicationEndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ExamDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ResultDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CertificateUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -589,16 +589,16 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "Parents",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: false),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ParentType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Occupation = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    IsParentsSeparated = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    ParentType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Occupation = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    IsParentsSeparated = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -621,20 +621,20 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "PaymentPlans",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    AcademicYear = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    AcademicYear = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     TotalAmount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Currency = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false),
-                    InstallmentCount = table.Column<int>(type: "INTEGER", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Currency = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    InstallmentCount = table.Column<int>(type: "int", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -651,18 +651,18 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "StudentClubMemberships",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ClubType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    ClubName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Role = table.Column<string>(type: "TEXT", maxLength: 100, nullable: true),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    MembershipDocumentUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    ClubType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ClubName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    MembershipDocumentUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -679,16 +679,16 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "StudentCounselorAssignments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CounselorId = table.Column<int>(type: "INTEGER", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    CounselorId = table.Column<int>(type: "int", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -711,20 +711,20 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "StudentDocuments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    DocumentType = table.Column<int>(type: "INTEGER", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    AcademicYear = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false),
-                    DocumentUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    ReviewNotes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    DocumentType = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    AcademicYear = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    DocumentUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    ReviewNotes = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -741,19 +741,19 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "StudentHobbies",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Category = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Name = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    HasLicense = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LicenseLevel = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    LicenseDocumentUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    Achievements = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    HasLicense = table.Column<bool>(type: "bit", nullable: false),
+                    LicenseLevel = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    LicenseDocumentUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    Achievements = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -770,15 +770,15 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "StudentSiblings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    SiblingName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Grade = table.Column<int>(type: "INTEGER", nullable: true),
-                    School = table.Column<string>(type: "TEXT", maxLength: 200, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    SiblingName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Grade = table.Column<int>(type: "int", nullable: true),
+                    School = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -795,23 +795,23 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "UniversityApplications",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Country = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    UniversityName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Department = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    RequirementsUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    ApplicationStartDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    ApplicationDeadline = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DecisionDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    Country = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    UniversityName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Department = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    RequirementsUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    ApplicationStartDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ApplicationDeadline = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DecisionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -828,19 +828,19 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "Attendances",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CourseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TeacherId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Date = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    TeacherId = table.Column<int>(type: "int", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -869,19 +869,19 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "ClassPerformances",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CourseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TeacherId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Date = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    PerformancePercentage = table.Column<int>(type: "INTEGER", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    TeacherId = table.Column<int>(type: "int", nullable: false),
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PerformancePercentage = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -910,8 +910,8 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "CourseTeacher",
                 columns: table => new
                 {
-                    CoursesId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TeachersId = table.Column<int>(type: "INTEGER", nullable: false)
+                    CoursesId = table.Column<int>(type: "int", nullable: false),
+                    TeachersId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -934,21 +934,21 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "Homeworks",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CourseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TeacherId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
-                    AssignedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    ResourceUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    MaxScore = table.Column<int>(type: "INTEGER", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    TeacherId = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    AssignedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ResourceUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    MaxScore = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -971,21 +971,21 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "InternalExams",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CourseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TeacherId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ExamType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    ExamDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Duration = table.Column<int>(type: "INTEGER", nullable: true),
-                    MaxScore = table.Column<int>(type: "INTEGER", nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    TeacherId = table.Column<int>(type: "int", nullable: false),
+                    ExamType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ExamDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Duration = table.Column<int>(type: "int", nullable: true),
+                    MaxScore = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1008,17 +1008,17 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "StudentTeacherAssignments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    TeacherId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CourseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    TeacherId = table.Column<int>(type: "int", nullable: false),
+                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1047,20 +1047,20 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "CourseResources",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CourseId = table.Column<int>(type: "INTEGER", nullable: false),
-                    CurriculumId = table.Column<int>(type: "INTEGER", nullable: true),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    ResourceType = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    ResourceUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    IsVisible = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CourseId = table.Column<int>(type: "int", nullable: false),
+                    CurriculumId = table.Column<int>(type: "int", nullable: true),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ResourceType = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    ResourceUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    IsVisible = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1082,20 +1082,20 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "AGPMilestones",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    AGPId = table.Column<int>(type: "INTEGER", nullable: false),
-                    Month = table.Column<int>(type: "INTEGER", nullable: false),
-                    Title = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Description = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    StartDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    CompletionPercentage = table.Column<int>(type: "INTEGER", nullable: false),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AGPId = table.Column<int>(type: "int", nullable: false),
+                    Month = table.Column<int>(type: "int", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CompletionPercentage = table.Column<int>(type: "int", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1112,19 +1112,19 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "PaymentInstallments",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    PaymentPlanId = table.Column<int>(type: "INTEGER", nullable: false),
-                    InstallmentNumber = table.Column<int>(type: "INTEGER", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PaymentPlanId = table.Column<int>(type: "int", nullable: false),
+                    InstallmentNumber = table.Column<int>(type: "int", nullable: false),
                     Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    PaymentDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    PaymentMethod = table.Column<int>(type: "INTEGER", nullable: true),
-                    ReceiptUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PaymentDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    PaymentMethod = table.Column<int>(type: "int", nullable: true),
+                    ReceiptUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1141,16 +1141,16 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "UniversitySpecificExams",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ApplicationId = table.Column<int>(type: "INTEGER", nullable: false),
-                    ExamName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    ExamDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    Score = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
-                    Status = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApplicationId = table.Column<int>(type: "int", nullable: false),
+                    ExamName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    ExamDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Score = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1167,21 +1167,21 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "StudentHomeworkSubmissions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    HomeworkId = table.Column<int>(type: "INTEGER", nullable: false),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
-                    SubmissionDate = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    SubmissionUrl = table.Column<string>(type: "TEXT", maxLength: 500, nullable: true),
-                    CompletionPercentage = table.Column<int>(type: "INTEGER", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    HomeworkId = table.Column<int>(type: "int", nullable: false),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
+                    SubmissionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    SubmissionUrl = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CompletionPercentage = table.Column<int>(type: "int", nullable: false),
                     Score = table.Column<decimal>(type: "decimal(5,2)", nullable: true),
-                    TeacherFeedback = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: true),
-                    Status = table.Column<int>(type: "INTEGER", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CreatedBy = table.Column<string>(type: "TEXT", nullable: true),
-                    UpdatedBy = table.Column<string>(type: "TEXT", nullable: true)
+                    TeacherFeedback = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdatedBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -1204,17 +1204,17 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "ExamResults",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    ExamId = table.Column<int>(type: "INTEGER", nullable: false),
-                    StudentId = table.Column<int>(type: "INTEGER", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ExamId = table.Column<int>(type: "int", nullable: false),
+                    StudentId = table.Column<int>(type: "int", nullable: false),
                     Score = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
                     Percentage = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
-                    Rank = table.Column<int>(type: "INTEGER", nullable: true),
-                    Notes = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false)
+                    Rank = table.Column<int>(type: "int", nullable: true),
+                    Notes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1252,7 +1252,8 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "RoleNameIndex",
                 table: "AspNetRoles",
                 column: "NormalizedName",
-                unique: true);
+                unique: true,
+                filter: "[NormalizedName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetUserClaims_UserId",
@@ -1278,7 +1279,8 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
-                unique: true);
+                unique: true,
+                filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Attendances_CourseId",
