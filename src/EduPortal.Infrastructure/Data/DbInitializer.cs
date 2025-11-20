@@ -1,5 +1,6 @@
 using EduPortal.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EduPortal.Infrastructure.Data;
@@ -8,8 +9,12 @@ public static class DbInitializer
 {
     public static async Task InitializeAsync(IServiceProvider serviceProvider)
     {
+        var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+        // Otomatik migration uygula
+        await context.Database.MigrateAsync();
 
         await SeedRolesAsync(roleManager);
         await SeedAdminUserAsync(userManager);
