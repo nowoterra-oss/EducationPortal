@@ -6,7 +6,7 @@ using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace EduPortal.Infrastructure.Services;
+namespace EduPortal.Application.Services;
 
 public class CoachService : ICoachService
 {
@@ -23,7 +23,6 @@ public class CoachService : ICoachService
             .Include(c => c.User)
             .Include(c => c.Branch)
             .Include(c => c.TeacherProfile)
-                .ThenInclude(t => t!.User)
             .Where(c => !c.IsDeleted)
             .ToListAsync();
 
@@ -56,7 +55,6 @@ public class CoachService : ICoachService
             .Include(c => c.User)
             .Include(c => c.Branch)
             .Include(c => c.TeacherProfile)
-                .ThenInclude(t => t!.User)
             .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
 
         return coach != null ? MapToDto(coach) : null;
@@ -174,8 +172,6 @@ public class CoachService : ICoachService
         var coaches = await _context.Coaches
             .Include(c => c.User)
             .Include(c => c.Branch)
-            .Include(c => c.TeacherProfile)
-                .ThenInclude(t => t!.User)
             .Where(c => c.BranchId == branchId && !c.IsDeleted)
             .ToListAsync();
 

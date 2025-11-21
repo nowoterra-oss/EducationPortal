@@ -5,7 +5,7 @@ using EduPortal.Domain.Enums;
 using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace EduPortal.Infrastructure.Services;
+namespace EduPortal.Application.Services;
 
 public class BranchService : IBranchService
 {
@@ -109,7 +109,6 @@ public class BranchService : IBranchService
             Capacity = branch.Capacity
         };
 
-        // Student statistics
         stats.TotalStudents = await _context.Students
             .CountAsync(s => s.BranchId == id && !s.IsDeleted);
 
@@ -120,21 +119,18 @@ public class BranchService : IBranchService
         stats.NewStudentsThisMonth = await _context.Students
             .CountAsync(s => s.BranchId == id && !s.IsDeleted && s.CreatedDate >= firstDayOfMonth);
 
-        // Staff statistics
         stats.TotalTeachers = await _context.Teachers
             .CountAsync(t => t.BranchId == id && !t.IsDeleted);
 
         stats.TotalCoaches = await _context.Coaches
             .CountAsync(c => c.BranchId == id && !c.IsDeleted);
 
-        // Academic statistics
         stats.TotalClasses = await _context.Classes
             .CountAsync(c => c.BranchId == id && !c.IsDeleted);
 
         stats.TotalClassrooms = await _context.Classrooms
             .CountAsync(c => c.BranchId == id && !c.IsDeleted);
 
-        // Coaching statistics
         stats.ActiveCoachingPrograms = await _context.StudentCoachAssignments
             .CountAsync(sca => sca.Coach.BranchId == id && sca.IsActive && !sca.IsDeleted);
 
@@ -144,7 +140,6 @@ public class BranchService : IBranchService
                              cs.SessionDate >= firstDayOfMonth &&
                              !cs.IsDeleted);
 
-        // Capacity utilization
         stats.CapacityUtilization = branch.Capacity > 0
             ? (decimal)stats.TotalStudents / branch.Capacity * 100
             : 0;
@@ -182,15 +177,12 @@ public class BranchService : IBranchService
             TransferDate = dto.TransferDate,
             Reason = (TransferReason)dto.Reason,
             Notes = dto.Notes,
-            ApprovedBy = "system", // TODO: Get from current user
+            ApprovedBy = "system",
             Status = TransferStatus.Completed
         };
 
         _context.StudentBranchTransfers.Add(transfer);
-
-        // Update student branch
         student.BranchId = dto.ToBranchId;
-
         await _context.SaveChangesAsync();
 
         return true;
@@ -199,7 +191,7 @@ public class BranchService : IBranchService
     private BranchDto MapToDto(Branch branch)
     {
         var studentCount = _context.Students.Count(s => s.BranchId == branch.Id && !s.IsDeleted);
-        var teacherCount = _context.Teachers.Count(t => t.BranchId == branch.Id && !t.IsDeleted);
+        var teacherCount = _context.Teachers.Count(t => t.BranchId == branch.Id && !s.IsDeleted);
         var coachCount = _context.Coaches.Count(c => c.BranchId == branch.Id && !c.IsDeleted);
 
         return new BranchDto
