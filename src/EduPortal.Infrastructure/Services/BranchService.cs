@@ -5,7 +5,7 @@ using EduPortal.Domain.Enums;
 using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace EduPortal.Application.Services;
+namespace EduPortal.Infrastructure.Services;
 
 public class BranchService : IBranchService
 {
@@ -191,7 +191,7 @@ public class BranchService : IBranchService
     private BranchDto MapToDto(Branch branch)
     {
         var studentCount = _context.Students.Count(s => s.BranchId == branch.Id && !s.IsDeleted);
-        var teacherCount = _context.Teachers.Count(t => t.BranchId == branch.Id && !s.IsDeleted);
+        var teacherCount = _context.Teachers.Count(t => t.BranchId == branch.Id && !t.IsDeleted);
         var coachCount = _context.Coaches.Count(c => c.BranchId == branch.Id && !c.IsDeleted);
 
         return new BranchDto

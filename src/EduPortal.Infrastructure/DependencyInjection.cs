@@ -1,6 +1,6 @@
 using EduPortal.Application.Interfaces;
-using EduPortal.Application.Services;
 using EduPortal.Infrastructure.Repositories;
+using EduPortal.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EduPortal.Infrastructure;
@@ -15,7 +15,7 @@ public static class DependencyInjection
         services.AddScoped<IHomeworkRepository, HomeworkRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 
-        // Register Application Services
+        // Register Infrastructure Services
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<ICoachService, CoachService>();
 

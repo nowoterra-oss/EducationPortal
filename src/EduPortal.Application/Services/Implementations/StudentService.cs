@@ -1,9 +1,9 @@
 using AutoMapper;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Student;
+using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using EduPortal.Domain.Entities;
-using EduPortal.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 
 namespace EduPortal.Application.Services.Implementations;

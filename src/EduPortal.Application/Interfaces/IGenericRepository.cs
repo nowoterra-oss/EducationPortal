@@ -1,7 +1,7 @@
 using EduPortal.Domain.Common;
 using System.Linq.Expressions;
 
-namespace EduPortal.Infrastructure.Repositories;
+namespace EduPortal.Application.Interfaces;
 
 public interface IGenericRepository<T> where T : BaseEntity
 {

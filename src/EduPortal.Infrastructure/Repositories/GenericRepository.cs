@@ -1,3 +1,4 @@
+using EduPortal.Application.Interfaces;
 using EduPortal.Domain.Common;
 using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

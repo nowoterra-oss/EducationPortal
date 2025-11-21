@@ -1,10 +1,10 @@
 using AutoMapper;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Homework;
+using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using EduPortal.Domain.Entities;
 using EduPortal.Domain.Enums;
-using EduPortal.Infrastructure.Repositories;
 
 namespace EduPortal.Application.Services.Implementations;
 

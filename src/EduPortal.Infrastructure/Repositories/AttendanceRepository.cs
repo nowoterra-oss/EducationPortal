@@ -1,3 +1,4 @@
+using EduPortal.Application.Interfaces;
 using EduPortal.Domain.Entities;
 using EduPortal.Domain.Enums;
 using EduPortal.Infrastructure.Data;

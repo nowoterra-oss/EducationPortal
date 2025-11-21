@@ -1,6 +1,6 @@
 using EduPortal.Domain.Entities;
 
-namespace EduPortal.Infrastructure.Repositories;
+namespace EduPortal.Application.Interfaces;
 
 public interface IAttendanceRepository : IGenericRepository<Attendance>
 {
