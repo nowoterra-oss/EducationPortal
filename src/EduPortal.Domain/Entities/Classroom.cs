@@ -1,5 +1,6 @@
 using EduPortal.Domain.Common;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EduPortal.Domain.Entities;
 
@@ -32,6 +33,12 @@ public class Classroom : BaseAuditableEntity
 
     public bool IsLab { get; set; } = false;
 
+    public int? BranchId { get; set; }
+
     [MaxLength(500)]
     public string? Notes { get; set; }
+
+    // Navigation Properties
+    [ForeignKey(nameof(BranchId))]
+    public virtual Branch? Branch { get; set; }
 }

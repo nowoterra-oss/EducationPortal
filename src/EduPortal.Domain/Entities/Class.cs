@@ -26,10 +26,15 @@ public class Class : BaseAuditableEntity
     [MaxLength(20)]
     public string AcademicYear { get; set; } = string.Empty; // "2024-2025"
 
+    public int? BranchId { get; set; } // Kampüs/Şube
+
     public bool IsActive { get; set; } = true;
 
     [ForeignKey(nameof(ClassTeacherId))]
     public virtual Teacher? ClassTeacher { get; set; }
+
+    [ForeignKey(nameof(BranchId))]
+    public virtual Branch? BranchLocation { get; set; }
 
     public virtual ICollection<StudentClassAssignment> Students { get; set; } = new List<StudentClassAssignment>();
     public virtual ICollection<WeeklySchedule> Schedules { get; set; } = new List<WeeklySchedule>();

@@ -75,6 +75,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ServicePackage> ServicePackages => Set<ServicePackage>();
     public DbSet<StudentPackagePurchase> StudentPackagePurchases => Set<StudentPackagePurchase>();
 
+    // Branch
+    public DbSet<Branch> Branches => Set<Branch>();
+    public DbSet<StudentBranchTransfer> StudentBranchTransfers => Set<StudentBranchTransfer>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -640,6 +644,95 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(p => p.PackagePurchase)
                 .WithMany()
                 .HasForeignKey(p => p.PackagePurchaseId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ===============================================
+        // BRANCH MODULE RELATIONSHIPS
+        // ===============================================
+
+        // Branch relationships
+        builder.Entity<Branch>(entity =>
+        {
+            entity.HasOne(b => b.Manager)
+                .WithMany()
+                .HasForeignKey(b => b.ManagerId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(b => b.BranchCode)
+                .IsUnique();
+        });
+
+        // StudentBranchTransfer relationships
+        builder.Entity<StudentBranchTransfer>(entity =>
+        {
+            entity.HasOne(sbt => sbt.Student)
+                .WithMany()
+                .HasForeignKey(sbt => sbt.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(sbt => sbt.FromBranch)
+                .WithMany()
+                .HasForeignKey(sbt => sbt.FromBranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(sbt => sbt.ToBranch)
+                .WithMany()
+                .HasForeignKey(sbt => sbt.ToBranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(sbt => sbt.Approver)
+                .WithMany()
+                .HasForeignKey(sbt => sbt.ApprovedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Branch relationships with other entities
+        builder.Entity<Student>(entity =>
+        {
+            entity.HasOne(s => s.Branch)
+                .WithMany(b => b.Students)
+                .HasForeignKey(s => s.BranchId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Teacher>(entity =>
+        {
+            entity.HasOne(t => t.Branch)
+                .WithMany(b => b.Teachers)
+                .HasForeignKey(t => t.BranchId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Coach>(entity =>
+        {
+            entity.HasOne(c => c.Branch)
+                .WithMany(b => b.Coaches)
+                .HasForeignKey(c => c.BranchId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<CoachingSession>(entity =>
+        {
+            entity.HasOne(cs => cs.Branch)
+                .WithMany(b => b.CoachingSessions)
+                .HasForeignKey(cs => cs.BranchId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Class>(entity =>
+        {
+            entity.HasOne(c => c.BranchLocation)
+                .WithMany(b => b.Classes)
+                .HasForeignKey(c => c.BranchId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Classroom>(entity =>
+        {
+            entity.HasOne(c => c.Branch)
+                .WithMany(b => b.Classrooms)
+                .HasForeignKey(c => c.BranchId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
