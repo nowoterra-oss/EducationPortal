@@ -126,6 +126,21 @@ public class PaymentsController : ControllerBase
     }
 
     /// <summary>
+    /// Get overdue payments
+    /// </summary>
+    [HttpGet("overdue")]
+    [Authorize(Roles = "Admin,Muhasebe")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetOverdue(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        // TODO: Implement service
+        _logger.LogWarning("PaymentsController.GetOverdue called but service not implemented yet");
+        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+    }
+
+    /// <summary>
     /// Process payment
     /// </summary>
     [HttpPost("{id}/process")]
@@ -138,13 +153,14 @@ public class PaymentsController : ControllerBase
     }
 
     /// <summary>
-    /// Generate payment invoice
+    /// Download payment receipt
     /// </summary>
-    [HttpGet("{id}/invoice")]
+    [HttpGet("{id}/receipt")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GenerateInvoice(int id)
+    public async Task<IActionResult> DownloadReceipt(int id)
     {
         // TODO: Implement service
+        _logger.LogWarning("PaymentsController.DownloadReceipt called but service not implemented yet");
         return BadRequest(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
     }
 

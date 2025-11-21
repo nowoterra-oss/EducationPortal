@@ -88,4 +88,36 @@ public class NotificationsController : ControllerBase
         // TODO: Implement service
         return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
     }
+
+    /// <summary>
+    /// Send notification to a user (Admin only)
+    /// </summary>
+    /// <param name="notificationDto">Notification details</param>
+    /// <returns>Created notification</returns>
+    [HttpPost("send")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<object>>> Send([FromBody] object notificationDto)
+    {
+        // TODO: Implement service
+        _logger.LogWarning("NotificationsController.Send called but service not implemented yet");
+        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+    }
+
+    /// <summary>
+    /// Send bulk notifications (Admin only)
+    /// </summary>
+    /// <param name="bulkDto">Bulk notification details</param>
+    /// <returns>Number of notifications sent</returns>
+    [HttpPost("bulk")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<int>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<int>>> SendBulk([FromBody] object bulkDto)
+    {
+        // TODO: Implement service
+        _logger.LogWarning("NotificationsController.SendBulk called but service not implemented yet");
+        return Ok(ApiResponse<int>.ErrorResponse("Servis henüz implement edilmedi"));
+    }
 }
