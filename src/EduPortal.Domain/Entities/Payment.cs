@@ -14,6 +14,12 @@ public class Payment : BaseAuditableEntity
 
     public int? PaymentPlanId { get; set; }
 
+    public int? BranchId { get; set; }
+
+    public int? CoachingSessionId { get; set; }
+
+    public int? PackagePurchaseId { get; set; }
+
     [Required]
     [Column(TypeName = "decimal(18,2)")]
     public decimal Amount { get; set; }
@@ -51,4 +57,13 @@ public class Payment : BaseAuditableEntity
 
     [ForeignKey(nameof(PaymentPlanId))]
     public virtual PaymentPlan? PaymentPlan { get; set; }
+
+    [ForeignKey(nameof(BranchId))]
+    public virtual Branch? Branch { get; set; }
+
+    [ForeignKey(nameof(CoachingSessionId))]
+    public virtual CoachingSession? CoachingSession { get; set; }
+
+    [ForeignKey(nameof(PackagePurchaseId))]
+    public virtual StudentPackagePurchase? PackagePurchase { get; set; }
 }

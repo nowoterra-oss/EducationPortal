@@ -55,7 +55,11 @@ public class Student : BaseAuditableEntity
     [Required]
     public DateTime EnrollmentDate { get; set; } = DateTime.UtcNow;
 
+    public int? BranchId { get; set; }
+
     // Navigation Properties
+    [ForeignKey(nameof(BranchId))]
+    public virtual Branch? Branch { get; set; }
     [ForeignKey(nameof(UserId))]
     public virtual ApplicationUser User { get; set; } = null!;
 
@@ -77,4 +81,13 @@ public class Student : BaseAuditableEntity
     public virtual ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
     public virtual ICollection<PaymentPlan> PaymentPlans { get; set; } = new List<PaymentPlan>();
     public virtual ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
+
+    // Coaching relationships
+    public virtual ICollection<StudentCoachAssignment> CoachAssignments { get; set; } = new List<StudentCoachAssignment>();
+    public virtual ICollection<CoachingSession> CoachingSessions { get; set; } = new List<CoachingSession>();
+    public virtual ICollection<CareerAssessment> CareerAssessments { get; set; } = new List<CareerAssessment>();
+    public virtual ICollection<SchoolRecommendation> SchoolRecommendations { get; set; } = new List<SchoolRecommendation>();
+    public virtual ICollection<SportsAssessment> SportsAssessments { get; set; } = new List<SportsAssessment>();
+    public virtual ICollection<StudyAbroadProgram> StudyAbroadPrograms { get; set; } = new List<StudyAbroadProgram>();
+    public virtual ICollection<StudentPackagePurchase> PackagePurchases { get; set; } = new List<StudentPackagePurchase>();
 }

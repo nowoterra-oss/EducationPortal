@@ -55,6 +55,26 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Club> Clubs => Set<Club>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
 
+    // Coaching
+    public DbSet<Coach> Coaches => Set<Coach>();
+    public DbSet<StudentCoachAssignment> StudentCoachAssignments => Set<StudentCoachAssignment>();
+    public DbSet<CoachingSession> CoachingSessions => Set<CoachingSession>();
+
+    // Study Abroad
+    public DbSet<StudyAbroadProgram> StudyAbroadPrograms => Set<StudyAbroadProgram>();
+    public DbSet<ApplicationDocument> ApplicationDocuments => Set<ApplicationDocument>();
+    public DbSet<VisaProcess> VisaProcesses => Set<VisaProcess>();
+    public DbSet<AccommodationArrangement> AccommodationArrangements => Set<AccommodationArrangement>();
+
+    // Assessments
+    public DbSet<CareerAssessment> CareerAssessments => Set<CareerAssessment>();
+    public DbSet<SchoolRecommendation> SchoolRecommendations => Set<SchoolRecommendation>();
+    public DbSet<SportsAssessment> SportsAssessments => Set<SportsAssessment>();
+
+    // Packages
+    public DbSet<ServicePackage> ServicePackages => Set<ServicePackage>();
+    public DbSet<StudentPackagePurchase> StudentPackagePurchases => Set<StudentPackagePurchase>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -452,6 +472,175 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(a => a.PublishedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ===============================================
+        // COACHING MODULE RELATIONSHIPS
+        // ===============================================
+
+        // Coach relationships
+        builder.Entity<Coach>(entity =>
+        {
+            entity.HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(c => c.TeacherProfile)
+                .WithOne(t => t.CoachProfile)
+                .HasForeignKey<Coach>(c => c.TeacherId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // StudentCoachAssignment relationships
+        builder.Entity<StudentCoachAssignment>(entity =>
+        {
+            entity.HasOne(sca => sca.Student)
+                .WithMany(s => s.CoachAssignments)
+                .HasForeignKey(sca => sca.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sca => sca.Coach)
+                .WithMany(c => c.Students)
+                .HasForeignKey(sca => sca.CoachId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CoachingSession relationships
+        builder.Entity<CoachingSession>(entity =>
+        {
+            entity.HasOne(cs => cs.Student)
+                .WithMany(s => s.CoachingSessions)
+                .HasForeignKey(cs => cs.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(cs => cs.Coach)
+                .WithMany(c => c.Sessions)
+                .HasForeignKey(cs => cs.CoachId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ===============================================
+        // STUDY ABROAD MODULE RELATIONSHIPS
+        // ===============================================
+
+        // StudyAbroadProgram relationships
+        builder.Entity<StudyAbroadProgram>(entity =>
+        {
+            entity.HasOne(sap => sap.Student)
+                .WithMany(s => s.StudyAbroadPrograms)
+                .HasForeignKey(sap => sap.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sap => sap.Coach)
+                .WithMany()
+                .HasForeignKey(sap => sap.CoachId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ApplicationDocument relationships
+        builder.Entity<ApplicationDocument>(entity =>
+        {
+            entity.HasOne(ad => ad.Program)
+                .WithMany(sap => sap.Documents)
+                .HasForeignKey(ad => ad.ProgramId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // VisaProcess relationships
+        builder.Entity<VisaProcess>(entity =>
+        {
+            entity.HasOne(vp => vp.Program)
+                .WithMany(sap => sap.VisaProcesses)
+                .HasForeignKey(vp => vp.ProgramId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // AccommodationArrangement relationships
+        builder.Entity<AccommodationArrangement>(entity =>
+        {
+            entity.HasOne(aa => aa.Program)
+                .WithMany(sap => sap.Accommodations)
+                .HasForeignKey(aa => aa.ProgramId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ===============================================
+        // ASSESSMENT MODULE RELATIONSHIPS
+        // ===============================================
+
+        // CareerAssessment relationships
+        builder.Entity<CareerAssessment>(entity =>
+        {
+            entity.HasOne(ca => ca.Student)
+                .WithMany(s => s.CareerAssessments)
+                .HasForeignKey(ca => ca.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(ca => ca.Coach)
+                .WithMany()
+                .HasForeignKey(ca => ca.CoachId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SchoolRecommendation relationships
+        builder.Entity<SchoolRecommendation>(entity =>
+        {
+            entity.HasOne(sr => sr.Student)
+                .WithMany(s => s.SchoolRecommendations)
+                .HasForeignKey(sr => sr.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sr => sr.Coach)
+                .WithMany()
+                .HasForeignKey(sr => sr.CoachId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // SportsAssessment relationships
+        builder.Entity<SportsAssessment>(entity =>
+        {
+            entity.HasOne(sa => sa.Student)
+                .WithMany(s => s.SportsAssessments)
+                .HasForeignKey(sa => sa.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sa => sa.Coach)
+                .WithMany()
+                .HasForeignKey(sa => sa.CoachId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ===============================================
+        // PACKAGE MODULE RELATIONSHIPS
+        // ===============================================
+
+        // StudentPackagePurchase relationships
+        builder.Entity<StudentPackagePurchase>(entity =>
+        {
+            entity.HasOne(spp => spp.Student)
+                .WithMany(s => s.PackagePurchases)
+                .HasForeignKey(spp => spp.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(spp => spp.Package)
+                .WithMany(sp => sp.Purchases)
+                .HasForeignKey(spp => spp.PackageId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Payment additional relationships for coaching
+        builder.Entity<Payment>(entity =>
+        {
+            entity.HasOne(p => p.CoachingSession)
+                .WithMany()
+                .HasForeignKey(p => p.CoachingSessionId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(p => p.PackagePurchase)
+                .WithMany()
+                .HasForeignKey(p => p.PackagePurchaseId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Global query filter for soft delete

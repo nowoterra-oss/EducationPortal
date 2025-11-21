@@ -16,7 +16,17 @@ public class Teacher : BaseEntity
 
     public bool IsActive { get; set; } = true;
 
+    public int? BranchId { get; set; }
+
+    public bool IsAlsoCoach { get; set; } = false;
+    public int? CoachId { get; set; }
+
     // Navigation Properties
+    [ForeignKey(nameof(BranchId))]
+    public virtual Branch? Branch { get; set; }
+
+    [ForeignKey(nameof(CoachId))]
+    public virtual Coach? CoachProfile { get; set; }
     [ForeignKey(nameof(UserId))]
     public virtual ApplicationUser User { get; set; } = null!;
 
