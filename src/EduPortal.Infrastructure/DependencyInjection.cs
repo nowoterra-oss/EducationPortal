@@ -1,4 +1,5 @@
 using EduPortal.Application.Interfaces;
+using EduPortal.Application.Services;
 using EduPortal.Infrastructure.Repositories;
 using EduPortal.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,6 +19,9 @@ public static class DependencyInjection
         // Register Infrastructure Services
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<ICoachService, CoachService>();
+
+        // Register Application Services (using DbContext)
+        services.AddScoped<ICoachingSessionService, CoachingSessionService>();
 
         return services;
     }
