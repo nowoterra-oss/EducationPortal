@@ -13,6 +13,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     // DbSets
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Parent> Parents => Set<Parent>();
+    public DbSet<StudentParent> StudentParents => Set<StudentParent>();
     public DbSet<StudentSibling> StudentSiblings => Set<StudentSibling>();
     public DbSet<StudentHobby> StudentHobbies => Set<StudentHobby>();
     public DbSet<StudentClubMembership> StudentClubMemberships => Set<StudentClubMembership>();
@@ -283,11 +284,86 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(p => p.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
 
-            entity.HasOne(p => p.Student)
+        // StudentParent N:N relationship
+        builder.Entity<StudentParent>(entity =>
+        {
+            entity.HasOne(sp => sp.Student)
                 .WithMany(s => s.Parents)
-                .HasForeignKey(p => p.StudentId)
+                .HasForeignKey(sp => sp.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sp => sp.Parent)
+                .WithMany(p => p.Students)
+                .HasForeignKey(sp => sp.ParentId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Payment relationships
+        builder.Entity<Payment>(entity =>
+        {
+            entity.HasOne(p => p.Installment)
+                .WithMany(i => i.Payments)
+                .HasForeignKey(p => p.InstallmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.PaymentPlan)
+                .WithMany(pp => pp.Payments)
+                .HasForeignKey(p => p.PaymentPlanId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // AcademicTerm relationships
+        builder.Entity<InternalExam>(entity =>
+        {
+            entity.HasOne(e => e.AcademicTerm)
+                .WithMany(at => at.Exams)
+                .HasForeignKey(e => e.AcademicTermId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Class)
+                .WithMany(c => c.Exams)
+                .HasForeignKey(e => e.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<Homework>(entity =>
+        {
+            entity.HasOne(h => h.AcademicTerm)
+                .WithMany(at => at.Homeworks)
+                .HasForeignKey(h => h.AcademicTermId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(h => h.Class)
+                .WithMany(c => c.Homeworks)
+                .HasForeignKey(h => h.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        builder.Entity<StudentClassAssignment>(entity =>
+        {
+            entity.HasOne(sca => sca.AcademicTerm)
+                .WithMany(at => at.ClassAssignments)
+                .HasForeignKey(sca => sca.AcademicTermId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<WeeklySchedule>(entity =>
+        {
+            entity.HasOne(ws => ws.AcademicTerm)
+                .WithMany(at => at.Schedules)
+                .HasForeignKey(ws => ws.AcademicTermId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // CalendarEvent class relationship
+        builder.Entity<CalendarEvent>(entity =>
+        {
+            entity.HasOne(ce => ce.Class)
+                .WithMany()
+                .HasForeignKey(ce => ce.ClassId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Class relationships

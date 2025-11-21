@@ -33,4 +33,6 @@ public class Class : BaseAuditableEntity
 
     public virtual ICollection<StudentClassAssignment> Students { get; set; } = new List<StudentClassAssignment>();
     public virtual ICollection<WeeklySchedule> Schedules { get; set; } = new List<WeeklySchedule>();
+    public virtual ICollection<Homework> Homeworks { get; set; } = new List<Homework>();
+    public virtual ICollection<InternalExam> Exams { get; set; } = new List<InternalExam>();
 }

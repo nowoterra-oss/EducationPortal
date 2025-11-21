@@ -32,4 +32,6 @@ public class PaymentInstallment : BaseEntity
 
     [ForeignKey(nameof(PaymentPlanId))]
     public virtual PaymentPlan PaymentPlan { get; set; } = null!;
+
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

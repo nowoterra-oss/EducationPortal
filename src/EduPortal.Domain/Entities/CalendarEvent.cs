@@ -9,6 +9,11 @@ public class CalendarEvent : BaseAuditableEntity
 {
     public int? StudentId { get; set; }
 
+    public int? ClassId { get; set; }
+
+    [Required]
+    public EventScope Scope { get; set; } = EventScope.Personal;
+
     [Required]
     [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
@@ -38,4 +43,7 @@ public class CalendarEvent : BaseAuditableEntity
 
     [ForeignKey(nameof(StudentId))]
     public virtual Student? Student { get; set; }
+
+    [ForeignKey(nameof(ClassId))]
+    public virtual Class? Class { get; set; }
 }

@@ -12,6 +12,8 @@ public class Payment : BaseAuditableEntity
 
     public int? InstallmentId { get; set; }
 
+    public int? PaymentPlanId { get; set; }
+
     [Required]
     [Column(TypeName = "decimal(18,2)")]
     public decimal Amount { get; set; }
@@ -46,4 +48,7 @@ public class Payment : BaseAuditableEntity
 
     [ForeignKey(nameof(InstallmentId))]
     public virtual PaymentInstallment? Installment { get; set; }
+
+    [ForeignKey(nameof(PaymentPlanId))]
+    public virtual PaymentPlan? PaymentPlan { get; set; }
 }

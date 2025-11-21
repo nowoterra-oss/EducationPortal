@@ -59,7 +59,7 @@ public class Student : BaseAuditableEntity
     [ForeignKey(nameof(UserId))]
     public virtual ApplicationUser User { get; set; } = null!;
 
-    public virtual ICollection<Parent> Parents { get; set; } = new List<Parent>();
+    public virtual ICollection<StudentParent> Parents { get; set; } = new List<StudentParent>();
     public virtual ICollection<StudentSibling> Siblings { get; set; } = new List<StudentSibling>();
     public virtual ICollection<StudentHobby> Hobbies { get; set; } = new List<StudentHobby>();
     public virtual ICollection<StudentClubMembership> Clubs { get; set; } = new List<StudentClubMembership>();

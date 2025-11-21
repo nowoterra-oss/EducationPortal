@@ -35,4 +35,5 @@ public class PaymentPlan : BaseAuditableEntity
     public virtual Student Student { get; set; } = null!;
 
     public virtual ICollection<PaymentInstallment> Installments { get; set; } = new List<PaymentInstallment>();
+    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
 }

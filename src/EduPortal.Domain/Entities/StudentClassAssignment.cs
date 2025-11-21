@@ -13,6 +13,9 @@ public class StudentClassAssignment : BaseAuditableEntity
     public int ClassId { get; set; }
 
     [Required]
+    public int AcademicTermId { get; set; }
+
+    [Required]
     public DateTime AssignmentDate { get; set; } = DateTime.UtcNow;
 
     public DateTime? EndDate { get; set; }
@@ -27,4 +30,7 @@ public class StudentClassAssignment : BaseAuditableEntity
 
     [ForeignKey(nameof(ClassId))]
     public virtual Class Class { get; set; } = null!;
+
+    [ForeignKey(nameof(AcademicTermId))]
+    public virtual AcademicTerm AcademicTerm { get; set; } = null!;
 }

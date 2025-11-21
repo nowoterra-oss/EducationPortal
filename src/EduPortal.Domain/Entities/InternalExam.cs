@@ -12,6 +12,10 @@ public class InternalExam : BaseAuditableEntity
     [Required]
     public int TeacherId { get; set; }
 
+    public int? ClassId { get; set; }
+
+    public int? AcademicTermId { get; set; }
+
     [Required]
     [MaxLength(50)]
     public string ExamType { get; set; } = string.Empty; // "Deneme", "UniteSonu", "Donem"
@@ -36,6 +40,12 @@ public class InternalExam : BaseAuditableEntity
 
     [ForeignKey(nameof(TeacherId))]
     public virtual Teacher Teacher { get; set; } = null!;
+
+    [ForeignKey(nameof(ClassId))]
+    public virtual Class? Class { get; set; }
+
+    [ForeignKey(nameof(AcademicTermId))]
+    public virtual AcademicTerm? AcademicTerm { get; set; }
 
     public virtual ICollection<ExamResult> Results { get; set; } = new List<ExamResult>();
 }

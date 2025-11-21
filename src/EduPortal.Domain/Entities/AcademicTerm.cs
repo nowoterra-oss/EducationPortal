@@ -36,4 +36,10 @@ public class AcademicTerm : BaseAuditableEntity
 
     [MaxLength(500)]
     public string? Description { get; set; }
+
+    // Navigation Properties
+    public virtual ICollection<InternalExam> Exams { get; set; } = new List<InternalExam>();
+    public virtual ICollection<Homework> Homeworks { get; set; } = new List<Homework>();
+    public virtual ICollection<StudentClassAssignment> ClassAssignments { get; set; } = new List<StudentClassAssignment>();
+    public virtual ICollection<WeeklySchedule> Schedules { get; set; } = new List<WeeklySchedule>();
 }

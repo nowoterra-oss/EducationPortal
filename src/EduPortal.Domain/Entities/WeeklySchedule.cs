@@ -19,6 +19,9 @@ public class WeeklySchedule : BaseAuditableEntity
     public int? ClassroomId { get; set; }
 
     [Required]
+    public int AcademicTermId { get; set; }
+
+    [Required]
     public DayOfWeek DayOfWeek { get; set; }
 
     [Required]
@@ -47,4 +50,7 @@ public class WeeklySchedule : BaseAuditableEntity
 
     [ForeignKey(nameof(ClassroomId))]
     public virtual Classroom? Classroom { get; set; }
+
+    [ForeignKey(nameof(AcademicTermId))]
+    public virtual AcademicTerm AcademicTerm { get; set; } = null!;
 }

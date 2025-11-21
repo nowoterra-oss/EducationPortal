@@ -12,6 +12,10 @@ public class Homework : BaseAuditableEntity
     [Required]
     public int TeacherId { get; set; }
 
+    public int? ClassId { get; set; }
+
+    public int? AcademicTermId { get; set; }
+
     [Required]
     [MaxLength(200)]
     public string Title { get; set; } = string.Empty;
@@ -35,6 +39,12 @@ public class Homework : BaseAuditableEntity
 
     [ForeignKey(nameof(TeacherId))]
     public virtual Teacher Teacher { get; set; } = null!;
+
+    [ForeignKey(nameof(ClassId))]
+    public virtual Class? Class { get; set; }
+
+    [ForeignKey(nameof(AcademicTermId))]
+    public virtual AcademicTerm? AcademicTerm { get; set; }
 
     public virtual ICollection<StudentHomeworkSubmission> Submissions { get; set; } = new List<StudentHomeworkSubmission>();
 }
