@@ -20,7 +20,7 @@ public class Payment : BaseAuditableEntity
     public DateTime PaymentDate { get; set; } = DateTime.UtcNow;
 
     [Required]
-    public PaymentStatus Status { get; set; } = PaymentStatus.Pending;
+    public PaymentStatus Status { get; set; } = PaymentStatus.Bekliyor;
 
     [Required]
     public PaymentMethod PaymentMethod { get; set; }
