@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EduPortal.Domain\EduPortal.Domain.csproj" />
+    <ProjectReference Include="..\EduPortal.Application\EduPortal.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

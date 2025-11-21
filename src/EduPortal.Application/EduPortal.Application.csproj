@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EduPortal.Domain\EduPortal.Domain.csproj" />
-    <ProjectReference Include="..\EduPortal.Infrastructure\EduPortal.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

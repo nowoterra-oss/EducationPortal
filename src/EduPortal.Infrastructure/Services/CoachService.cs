@@ -6,7 +6,7 @@ using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 
-namespace EduPortal.Application.Services;
+namespace EduPortal.Infrastructure.Services;
 
 public class CoachService : ICoachService
 {
