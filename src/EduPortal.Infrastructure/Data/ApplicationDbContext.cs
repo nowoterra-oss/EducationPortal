@@ -324,9 +324,14 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        // Payment relationships
+        // Payment relationships (all Restrict to avoid cascade cycles)
         builder.Entity<Payment>(entity =>
         {
+            entity.HasOne(p => p.Student)
+                .WithMany()
+                .HasForeignKey(p => p.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             entity.HasOne(p => p.Installment)
                 .WithMany(i => i.Payments)
                 .HasForeignKey(p => p.InstallmentId)
@@ -335,6 +340,21 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(p => p.PaymentPlan)
                 .WithMany(pp => pp.Payments)
                 .HasForeignKey(p => p.PaymentPlanId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.Branch)
+                .WithMany()
+                .HasForeignKey(p => p.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.CoachingSession)
+                .WithMany()
+                .HasForeignKey(p => p.CoachingSessionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(p => p.PackagePurchase)
+                .WithMany()
+                .HasForeignKey(p => p.PackagePurchaseId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -430,20 +450,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(n => n.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // Payment relationship
-        builder.Entity<Payment>(entity =>
-        {
-            entity.HasOne(p => p.Student)
-                .WithMany()
-                .HasForeignKey(p => p.StudentId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(p => p.Installment)
-                .WithMany()
-                .HasForeignKey(p => p.InstallmentId)
-                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // StudentClassAssignment relationship
@@ -631,20 +637,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(sp => sp.Purchases)
                 .HasForeignKey(spp => spp.PackageId)
                 .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // Payment additional relationships for coaching
-        builder.Entity<Payment>(entity =>
-        {
-            entity.HasOne(p => p.CoachingSession)
-                .WithMany()
-                .HasForeignKey(p => p.CoachingSessionId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            entity.HasOne(p => p.PackagePurchase)
-                .WithMany()
-                .HasForeignKey(p => p.PackagePurchaseId)
-                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ===============================================
