@@ -90,7 +90,7 @@ public class BranchService : IBranchService
             return false;
 
         branch.IsDeleted = true;
-        branch.DeletedDate = DateTime.UtcNow;
+        branch.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
         return true;
@@ -117,7 +117,7 @@ public class BranchService : IBranchService
 
         var firstDayOfMonth = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
         stats.NewStudentsThisMonth = await _context.Students
-            .CountAsync(s => s.BranchId == id && !s.IsDeleted && s.CreatedDate >= firstDayOfMonth);
+            .CountAsync(s => s.BranchId == id && !s.IsDeleted && s.CreatedAt >= firstDayOfMonth);
 
         stats.TotalTeachers = await _context.Teachers
             .CountAsync(t => t.BranchId == id && !t.IsDeleted);
@@ -215,8 +215,8 @@ public class BranchService : IBranchService
             CurrentTeacherCount = teacherCount,
             CurrentCoachCount = coachCount,
             CapacityUtilization = branch.Capacity > 0 ? (decimal)studentCount / branch.Capacity * 100 : 0,
-            CreatedDate = branch.CreatedDate,
-            LastModifiedDate = branch.LastModifiedDate
+            CreatedDate = branch.CreatedAt,
+            LastModifiedDate = branch.UpdatedAt
         };
     }
 }

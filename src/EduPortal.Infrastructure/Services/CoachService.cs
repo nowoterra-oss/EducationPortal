@@ -110,7 +110,7 @@ public class CoachService : ICoachService
             return false;
 
         coach.IsDeleted = true;
-        coach.DeletedDate = DateTime.UtcNow;
+        coach.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
         return true;
@@ -161,7 +161,7 @@ public class CoachService : ICoachService
             .Where(s => s.Rating.HasValue)
             .Select(s => s.Rating!.Value);
 
-        performance.AverageRating = ratingsQuery.Any() ? ratingsQuery.Average() : 0;
+        performance.AverageRating = ratingsQuery.Any() ? (decimal)ratingsQuery.Average() : 0;
         performance.TotalRatings = ratingsQuery.Count();
 
         return performance;
@@ -207,7 +207,7 @@ public class CoachService : ICoachService
             TotalSessionsCompleted = _context.CoachingSessions
                 .Count(cs => cs.CoachId == coach.Id && cs.Status == SessionStatus.Completed && !cs.IsDeleted),
             AverageRating = CalculateAverageRating(coach.Id),
-            CreatedDate = coach.CreatedDate
+            CreatedDate = coach.CreatedAt
         };
     }
 
@@ -234,6 +234,6 @@ public class CoachService : ICoachService
             .Select(cs => cs.Rating!.Value)
             .ToList();
 
-        return ratings.Any() ? ratings.Average() : 0;
+        return ratings.Any() ? (decimal)ratings.Average() : 0;
     }
 }
