@@ -17,7 +17,7 @@ namespace EduPortal.Infrastructure.Data
                 .AddJsonFile("appsettings.json", optional: false)
                 .Build();
 
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            var connectionString = configuration.GetConnectionString("ConnectionString");
 
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             optionsBuilder.UseSqlServer(connectionString);
