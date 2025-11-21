@@ -1,3 +1,5 @@
+using EduPortal.Application.Interfaces;
+using EduPortal.Application.Services;
 using EduPortal.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,6 +14,10 @@ public static class DependencyInjection
         services.AddScoped<IStudentRepository, StudentRepository>();
         services.AddScoped<IHomeworkRepository, HomeworkRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+
+        // Register Application Services
+        services.AddScoped<IBranchService, BranchService>();
+        services.AddScoped<ICoachService, CoachService>();
 
         return services;
     }
