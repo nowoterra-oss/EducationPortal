@@ -8,7 +8,7 @@ namespace EduPortal.Domain.Entities;
 public class Notification : BaseAuditableEntity
 {
     [Required]
-    public int UserId { get; set; }
+    public string UserId { get; set; } = string.Empty;
 
     [Required]
     [MaxLength(200)]

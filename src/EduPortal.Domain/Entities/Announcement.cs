@@ -19,7 +19,7 @@ public class Announcement : BaseAuditableEntity
     public AnnouncementType Type { get; set; } = AnnouncementType.General;
 
     [Required]
-    public int PublishedBy { get; set; }
+    public string PublishedBy { get; set; } = string.Empty;
 
     public DateTime? PublishedDate { get; set; }
 
