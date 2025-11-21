@@ -45,5 +45,5 @@ public class Payment : BaseAuditableEntity
     public virtual Student Student { get; set; } = null!;
 
     [ForeignKey(nameof(InstallmentId))]
-    public virtual Installment? Installment { get; set; }
+    public virtual PaymentInstallment? Installment { get; set; }
 }

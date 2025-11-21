@@ -38,5 +38,5 @@ public class Announcement : BaseAuditableEntity
     public int ViewCount { get; set; } = 0;
 
     [ForeignKey(nameof(PublishedBy))]
-    public virtual User Publisher { get; set; } = null!;
+    public virtual ApplicationUser Publisher { get; set; } = null!;
 }

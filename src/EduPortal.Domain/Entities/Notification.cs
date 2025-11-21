@@ -37,5 +37,5 @@ public class Notification : BaseAuditableEntity
     public string? RelatedEntityType { get; set; } // "Homework", "Exam", "Payment"
 
     [ForeignKey(nameof(UserId))]
-    public virtual User User { get; set; } = null!;
+    public virtual ApplicationUser User { get; set; } = null!;
 }
