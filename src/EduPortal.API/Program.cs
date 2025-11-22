@@ -1,6 +1,7 @@
 using EduPortal.Application;
 using EduPortal.Domain.Entities;
 using EduPortal.Infrastructure;
+using EduPortal.Infrastructure.Configuration;
 using EduPortal.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -21,6 +22,10 @@ Console.WriteLine("=======================================================");
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+// Configure EmailSettings
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
 
 // Add Infrastructure Services (Repositories)
 builder.Services.AddInfrastructure();

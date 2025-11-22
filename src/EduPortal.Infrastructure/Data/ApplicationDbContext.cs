@@ -55,6 +55,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<AcademicTerm> AcademicTerms => Set<AcademicTerm>();
     public DbSet<Club> Clubs => Set<Club>();
     public DbSet<Announcement> Announcements => Set<Announcement>();
+    public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
 
     // Coaching
     public DbSet<Coach> Coaches => Set<Coach>();

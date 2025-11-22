@@ -47,6 +47,7 @@ public static class DependencyInjection
         services.AddScoped<IInternalExamService, InternalExamService>();
         services.AddScoped<IAttendanceService, AttendanceService>();
         services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IEmailService, EmailService>();
 
         return services;
     }
