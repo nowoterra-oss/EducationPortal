@@ -7,6 +7,6 @@ public class TodayScheduleDto
     public string ClassName { get; set; } = string.Empty;
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
-    public string? ClassroomName { get; set; }
+    public string? Classroom { get; set; }
     public int StudentCount { get; set; }
 }
