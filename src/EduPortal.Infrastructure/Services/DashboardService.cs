@@ -278,10 +278,9 @@ public class DashboardService : IDashboardService
             var revenues = await _context.Payments
                 .Where(p => !p.IsDeleted &&
                            p.Status == PaymentStatus.Odendi &&
-                           p.PaidDate.HasValue &&
-                           p.PaidDate.Value >= startDate &&
-                           p.PaidDate.Value <= endDate)
-                .GroupBy(p => new { p.PaidDate.Value.Year, p.PaidDate.Value.Month })
+                           p.PaymentDate >= startDate &&
+                           p.PaymentDate <= endDate)
+                .GroupBy(p => new { p.PaymentDate.Year, p.PaymentDate.Month })
                 .Select(g => new
                 {
                     Year = g.Key.Year,
@@ -372,13 +371,13 @@ public class DashboardService : IDashboardService
                 .Where(p => !p.IsDeleted && p.Status == PaymentStatus.Odendi)
                 .Include(p => p.Student)
                 .ThenInclude(s => s.User)
-                .OrderByDescending(p => p.PaidDate)
+                .OrderByDescending(p => p.PaymentDate)
                 .Take(count / 2)
                 .Select(p => new RecentActivityDto
                 {
                     ActivityType = "Payment",
                     Description = $"{p.Student.User.FirstName} {p.Student.User.LastName} ödeme yaptı ({p.Amount:C})",
-                    Timestamp = p.PaidDate ?? p.CreatedAt,
+                    Timestamp = p.PaymentDate,
                     UserId = p.Student.UserId,
                     UserName = $"{p.Student.User.FirstName} {p.Student.User.LastName}",
                     EntityType = "Payment",
