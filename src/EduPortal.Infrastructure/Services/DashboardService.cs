@@ -27,14 +27,14 @@ public class DashboardService : IDashboardService
                 TotalStudents = await _context.Students.CountAsync(s => !s.IsDeleted),
                 TotalTeachers = await _context.Teachers.CountAsync(t => !t.IsDeleted),
                 TotalCourses = await _context.Courses.CountAsync(c => !c.IsDeleted),
-                ActiveStudents = await _context.Students.CountAsync(s => !s.IsDeleted && s.IsActive),
+                ActiveStudents = await _context.Students.CountAsync(s => !s.IsDeleted),
                 TotalClasses = await _context.Classes.CountAsync(c => !c.IsDeleted),
 
                 PendingPayments = await _context.Payments
-                    .CountAsync(p => !p.IsDeleted && p.Status == PaymentStatus.Pending),
+                    .CountAsync(p => !p.IsDeleted && p.Status == PaymentStatus.Bekliyor),
 
                 PendingPaymentAmount = await _context.Payments
-                    .Where(p => !p.IsDeleted && p.Status == PaymentStatus.Pending)
+                    .Where(p => !p.IsDeleted && p.Status == PaymentStatus.Bekliyor)
                     .SumAsync(p => p.Amount),
 
                 UnreadMessages = await _context.Messages
@@ -54,7 +54,7 @@ public class DashboardService : IDashboardService
         }
         catch (Exception ex)
         {
-            return ApiResponse<AdminDashboardStatsDto>.FailureResponse(ex.Message);
+            return ApiResponse<AdminDashboardStatsDto>.ErrorResponse(ex.Message);
         }
     }
 
@@ -67,7 +67,7 @@ public class DashboardService : IDashboardService
         if (totalAttendance == 0) return 0;
 
         var presentCount = await _context.Attendances
-            .Where(a => !a.IsDeleted && a.Status == AttendanceStatus.Present)
+            .Where(a => !a.IsDeleted && a.Status == AttendanceStatus.Geldi)
             .CountAsync();
 
         return Math.Round((decimal)presentCount / totalAttendance * 100, 2);
@@ -82,10 +82,10 @@ public class DashboardService : IDashboardService
                 .FirstOrDefaultAsync(t => t.Id == teacherId && !t.IsDeleted);
 
             if (teacher == null)
-                return ApiResponse<TeacherDashboardStatsDto>.FailureResponse("Teacher not found");
+                return ApiResponse<TeacherDashboardStatsDto>.ErrorResponse("Teacher not found");
 
             var today = DateTime.UtcNow.Date;
-            var todayDayOfWeek = today.DayOfWeek;
+            var todayDayOfWeek = (int)today.DayOfWeek;
 
             var stats = new TeacherDashboardStatsDto
             {
@@ -107,7 +107,7 @@ public class DashboardService : IDashboardService
                 TodayClassCount = await _context.WeeklySchedules
                     .CountAsync(ws => ws.TeacherId == teacherId &&
                                      !ws.IsDeleted &&
-                                     ws.DayOfWeek == (int)todayDayOfWeek),
+                                     ws.DayOfWeek == todayDayOfWeek),
 
                 PendingHomeworks = await _context.Homeworks
                     .CountAsync(h => h.TeacherId == teacherId &&
@@ -118,14 +118,14 @@ public class DashboardService : IDashboardService
                     .Include(shs => shs.Homework)
                     .CountAsync(shs => shs.Homework.TeacherId == teacherId &&
                                       !shs.IsDeleted &&
-                                      shs.Status == SubmissionStatus.Submitted)
+                                      shs.Status == HomeworkStatus.TeslimEdildi)
             };
 
             // Get today's schedule
             stats.TodaySchedule = await _context.WeeklySchedules
                 .Where(ws => ws.TeacherId == teacherId &&
                             !ws.IsDeleted &&
-                            ws.DayOfWeek == (int)todayDayOfWeek)
+                            ws.DayOfWeek == todayDayOfWeek)
                 .Include(ws => ws.Course)
                 .Include(ws => ws.Class)
                 .Include(ws => ws.Classroom)
@@ -146,7 +146,7 @@ public class DashboardService : IDashboardService
         }
         catch (Exception ex)
         {
-            return ApiResponse<TeacherDashboardStatsDto>.FailureResponse(ex.Message);
+            return ApiResponse<TeacherDashboardStatsDto>.ErrorResponse(ex.Message);
         }
     }
 
@@ -159,7 +159,7 @@ public class DashboardService : IDashboardService
                 .FirstOrDefaultAsync(s => s.Id == studentId && !s.IsDeleted);
 
             if (student == null)
-                return ApiResponse<StudentDashboardStatsDto>.FailureResponse("Student not found");
+                return ApiResponse<StudentDashboardStatsDto>.ErrorResponse("Student not found");
 
             var today = DateTime.UtcNow.Date;
 
@@ -177,8 +177,8 @@ public class DashboardService : IDashboardService
                 PendingHomeworks = await _context.StudentHomeworkSubmissions
                     .CountAsync(shs => shs.StudentId == studentId &&
                                       !shs.IsDeleted &&
-                                      (shs.Status == SubmissionStatus.NotSubmitted ||
-                                       shs.Status == SubmissionStatus.Late)),
+                                      (shs.Status == HomeworkStatus.Bekliyor ||
+                                       shs.Status == HomeworkStatus.GecTeslim)),
 
                 UpcomingExams = await _context.InternalExams
                     .Where(e => !e.IsDeleted && e.ExamDate >= today)
@@ -232,7 +232,7 @@ public class DashboardService : IDashboardService
         }
         catch (Exception ex)
         {
-            return ApiResponse<StudentDashboardStatsDto>.FailureResponse(ex.Message);
+            return ApiResponse<StudentDashboardStatsDto>.ErrorResponse(ex.Message);
         }
     }
 
@@ -267,7 +267,7 @@ public class DashboardService : IDashboardService
         var presentCount = await _context.Attendances
             .CountAsync(a => a.StudentId == studentId &&
                             !a.IsDeleted &&
-                            a.Status == AttendanceStatus.Present);
+                            a.Status == AttendanceStatus.Geldi);
 
         return Math.Round((decimal)presentCount / totalAttendance * 100, 2);
     }
