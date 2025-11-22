@@ -80,6 +80,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Branch> Branches => Set<Branch>();
     public DbSet<StudentBranchTransfer> StudentBranchTransfers => Set<StudentBranchTransfer>();
 
+    // Scheduling
+    public DbSet<StudentAvailability> StudentAvailabilities => Set<StudentAvailability>();
+    public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
+    public DbSet<LessonSchedule> LessonSchedules => Set<LessonSchedule>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -738,6 +743,58 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(b => b.Classrooms)
                 .HasForeignKey(c => c.BranchId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ===============================================
+        // SCHEDULING MODULE RELATIONSHIPS
+        // ===============================================
+
+        // StudentAvailability relationships
+        builder.Entity<StudentAvailability>(entity =>
+        {
+            entity.HasOne(sa => sa.Student)
+                .WithMany()
+                .HasForeignKey(sa => sa.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(sa => new { sa.StudentId, sa.DayOfWeek, sa.StartTime });
+        });
+
+        // TeacherAvailability relationships
+        builder.Entity<TeacherAvailability>(entity =>
+        {
+            entity.HasOne(ta => ta.Teacher)
+                .WithMany()
+                .HasForeignKey(ta => ta.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(ta => new { ta.TeacherId, ta.DayOfWeek, ta.StartTime });
+        });
+
+        // LessonSchedule relationships
+        builder.Entity<LessonSchedule>(entity =>
+        {
+            entity.HasOne(ls => ls.Student)
+                .WithMany()
+                .HasForeignKey(ls => ls.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ls => ls.Teacher)
+                .WithMany()
+                .HasForeignKey(ls => ls.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ls => ls.Course)
+                .WithMany()
+                .HasForeignKey(ls => ls.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ls => ls.Classroom)
+                .WithMany()
+                .HasForeignKey(ls => ls.ClassroomId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(ls => new { ls.StudentId, ls.TeacherId, ls.DayOfWeek });
         });
 
         // Global query filter for soft delete

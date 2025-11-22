@@ -37,6 +37,9 @@ public static class DependencyInjection
         services.AddScoped<IStudentPaymentPlanService, StudentPaymentPlanService>();
         services.AddScoped<IPaymentInstallmentService, PaymentInstallmentService>();
 
+        // Scheduling Services
+        services.AddScoped<ISchedulingService, SchedulingService>();
+
         return services;
     }
 }
