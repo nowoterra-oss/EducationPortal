@@ -44,6 +44,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<MessageGroupMember> MessageGroupMembers => Set<MessageGroupMember>();
     public DbSet<GroupMessage> GroupMessages => Set<GroupMessage>();
     public DbSet<PaymentPlan> PaymentPlans => Set<PaymentPlan>();
+    public DbSet<StudentPaymentPlan> StudentPaymentPlans => Set<StudentPaymentPlan>();
     public DbSet<PaymentInstallment> PaymentInstallments => Set<PaymentInstallment>();
     public DbSet<Class> Classes => Set<Class>();
     public DbSet<StudentClassAssignment> StudentClassAssignments => Set<StudentClassAssignment>();
@@ -187,12 +188,23 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        builder.Entity<PaymentPlan>(entity =>
+        // StudentPaymentPlan relationships
+        builder.Entity<StudentPaymentPlan>(entity =>
         {
-            entity.HasOne(pp => pp.Student)
+            entity.HasOne(spp => spp.Student)
                 .WithMany(s => s.PaymentPlans)
-                .HasForeignKey(pp => pp.StudentId)
+                .HasForeignKey(spp => spp.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(spp => spp.PaymentPlan)
+                .WithMany(pp => pp.StudentPaymentPlans)
+                .HasForeignKey(spp => spp.PaymentPlanId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(spp => spp.PackagePurchase)
+                .WithMany()
+                .HasForeignKey(spp => spp.PackagePurchaseId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<Attendance>(entity =>
@@ -333,12 +345,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(p => p.Installment)
-                .WithMany(i => i.Payments)
+                .WithMany()
                 .HasForeignKey(p => p.InstallmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(p => p.PaymentPlan)
-                .WithMany(pp => pp.Payments)
+                .WithMany()
                 .HasForeignKey(p => p.PaymentPlanId)
                 .OnDelete(DeleteBehavior.Restrict);
 

@@ -79,7 +79,7 @@ public class Student : BaseAuditableEntity
     public virtual ICollection<AcademicDevelopmentPlan> AcademicDevelopmentPlans { get; set; } = new List<AcademicDevelopmentPlan>();
     public virtual ICollection<UniversityApplication> UniversityApplications { get; set; } = new List<UniversityApplication>();
     public virtual ICollection<CalendarEvent> CalendarEvents { get; set; } = new List<CalendarEvent>();
-    public virtual ICollection<PaymentPlan> PaymentPlans { get; set; } = new List<PaymentPlan>();
+    public virtual ICollection<StudentPaymentPlan> PaymentPlans { get; set; } = new List<StudentPaymentPlan>();
     public virtual ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
 
     // Coaching relationships

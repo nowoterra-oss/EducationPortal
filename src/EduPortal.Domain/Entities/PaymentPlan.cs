@@ -1,39 +1,38 @@
 using EduPortal.Domain.Common;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EduPortal.Domain.Entities;
 
+/// <summary>
+/// Ödeme planı şablonu (Örn: "10 Taksit", "12 Taksit")
+/// </summary>
 public class PaymentPlan : BaseAuditableEntity
 {
     [Required]
-    public int StudentId { get; set; }
+    [MaxLength(200)]
+    public string PlanName { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(20)]
-    public string AcademicYear { get; set; } = string.Empty;
-
-    [Required]
-    [Column(TypeName = "decimal(18,2)")]
-    public decimal TotalAmount { get; set; }
-
-    [Required]
-    [MaxLength(10)]
-    public string Currency { get; set; } = string.Empty;
+    [MaxLength(1000)]
+    public string? Description { get; set; }
 
     [Required]
     public int InstallmentCount { get; set; }
 
-    [Required]
-    public DateTime StartDate { get; set; }
+    /// <summary>
+    /// Taksitler arası gün sayısı (varsayılan 30 gün)
+    /// </summary>
+    public int DaysBetweenInstallments { get; set; } = 30;
 
-    [Required]
-    [MaxLength(50)]
-    public string Status { get; set; } = string.Empty; // "Aktif", "Tamamlandi", "Iptal"
+    /// <summary>
+    /// Peşin indirim oranı (%)
+    /// </summary>
+    public decimal? DownPaymentDiscount { get; set; }
 
-    [ForeignKey(nameof(StudentId))]
-    public virtual Student Student { get; set; } = null!;
+    public bool IsActive { get; set; } = true;
 
-    public virtual ICollection<PaymentInstallment> Installments { get; set; } = new List<PaymentInstallment>();
-    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+    [MaxLength(500)]
+    public string? Notes { get; set; }
+
+    // Navigation
+    public virtual ICollection<StudentPaymentPlan> StudentPaymentPlans { get; set; } = new List<StudentPaymentPlan>();
 }
