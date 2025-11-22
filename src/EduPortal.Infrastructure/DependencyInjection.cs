@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<ISportsAssessmentService, SportsAssessmentService>();
         services.AddScoped<IServicePackageService, ServicePackageService>();
         services.AddScoped<IStudentPackagePurchaseService, StudentPackagePurchaseService>();
+        services.AddScoped<IStudentTeacherAssignmentService, StudentTeacherAssignmentService>();
 
         return services;
     }

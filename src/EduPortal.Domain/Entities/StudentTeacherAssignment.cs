@@ -22,6 +22,10 @@ public class StudentTeacherAssignment : BaseEntity
 
     public bool IsActive { get; set; } = true;
 
+    [MaxLength(500)]
+    public string? Notes { get; set; }
+
+    // Navigation Properties
     [ForeignKey(nameof(StudentId))]
     public virtual Student Student { get; set; } = null!;
 
