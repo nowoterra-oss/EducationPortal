@@ -8,7 +8,7 @@ using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace EduPortal.Application.Services.Implementations;
+namespace EduPortal.Infrastructure.Services;
 
 public class AttendanceService : IAttendanceService
 {

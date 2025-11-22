@@ -7,7 +7,7 @@ using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace EduPortal.Application.Services.Implementations;
+namespace EduPortal.Infrastructure.Services;
 
 public class InternalExamService : IInternalExamService
 {
@@ -134,7 +134,7 @@ public class InternalExamService : IInternalExamService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while getting exams for student: {StudentId}", studentId);
-            return ApiResponse<List<InternalExamDto>>.ErrorResponse($"Örenci s1navlar1 getirilirken bir hata olu_tu: {ex.Message}");
+            return ApiResponse<List<InternalExamDto>>.ErrorResponse($"ï¿½renci s1navlar1 getirilirken bir hata olu_tu: {ex.Message}");
         }
     }
 
@@ -203,12 +203,12 @@ public class InternalExamService : IInternalExamService
             await _context.SaveChangesAsync();
 
             var examDto = MapToDto(exam);
-            return ApiResponse<InternalExamDto>.SuccessResponse(examDto, "S1nav ba_ar1yla güncellendi");
+            return ApiResponse<InternalExamDto>.SuccessResponse(examDto, "S1nav ba_ar1yla gï¿½ncellendi");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while updating exam: {ExamId}", dto.Id);
-            return ApiResponse<InternalExamDto>.ErrorResponse($"S1nav güncellenirken bir hata olu_tu: {ex.Message}");
+            return ApiResponse<InternalExamDto>.ErrorResponse($"S1nav gï¿½ncellenirken bir hata olu_tu: {ex.Message}");
         }
     }
 
@@ -266,7 +266,7 @@ public class InternalExamService : IInternalExamService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while getting results for exam: {ExamId}", examId);
-            return ApiResponse<PagedResponse<ExamResultDto>>.ErrorResponse($"Sonuçlar getirilirken bir hata olu_tu: {ex.Message}");
+            return ApiResponse<PagedResponse<ExamResultDto>>.ErrorResponse($"Sonuï¿½lar getirilirken bir hata olu_tu: {ex.Message}");
         }
     }
 
@@ -287,7 +287,7 @@ public class InternalExamService : IInternalExamService
             var student = await _studentRepository.GetByIdAsync(dto.StudentId);
             if (student == null)
             {
-                return ApiResponse<ExamResultDto>.ErrorResponse("Örenci bulunamad1");
+                return ApiResponse<ExamResultDto>.ErrorResponse("ï¿½renci bulunamad1");
             }
 
             // Check if result already exists
@@ -296,7 +296,7 @@ public class InternalExamService : IInternalExamService
 
             if (existingResult != null)
             {
-                return ApiResponse<ExamResultDto>.ErrorResponse("Bu örenci için s1nav sonucu zaten mevcut");
+                return ApiResponse<ExamResultDto>.ErrorResponse("Bu ï¿½renci iï¿½in s1nav sonucu zaten mevcut");
             }
 
             // Calculate percentage

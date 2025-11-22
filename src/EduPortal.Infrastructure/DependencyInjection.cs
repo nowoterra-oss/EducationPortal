@@ -41,6 +41,11 @@ public static class DependencyInjection
         // Scheduling Services
         services.AddScoped<ISchedulingService, SchedulingService>();
 
+        // Core Domain Services (moved from Application layer)
+        services.AddScoped<IHomeworkService, HomeworkService>();
+        services.AddScoped<IInternalExamService, InternalExamService>();
+        services.AddScoped<IAttendanceService, AttendanceService>();
+
         return services;
     }
 }
