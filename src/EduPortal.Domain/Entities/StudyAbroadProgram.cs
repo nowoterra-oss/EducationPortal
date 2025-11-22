@@ -40,6 +40,9 @@ public class StudyAbroadProgram : BaseAuditableEntity
     [Column(TypeName = "decimal(18,2)")]
     public decimal? EstimatedCost { get; set; }
 
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? ActualCost { get; set; }
+
     [MaxLength(2000)]
     public string? Notes { get; set; }
 

@@ -5,7 +5,7 @@ using EduPortal.Domain.Enums;
 using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace EduPortal.Application.Services;
+namespace EduPortal.Infrastructure.Services;
 
 public class ApplicationDocumentService : IApplicationDocumentService
 {
@@ -51,7 +51,7 @@ public class ApplicationDocumentService : IApplicationDocumentService
         var documents = program.Documents.Where(d => !d.IsDeleted).ToList();
         var totalDocs = documents.Count;
         var completedDocs = documents.Count(d => d.Status == DocumentStatus.Approved);
-        var pendingDocs = documents.Count(d => d.Status == DocumentStatus.Pending);
+        var pendingDocs = documents.Count(d => d.Status == DocumentStatus.NotStarted || d.Status == DocumentStatus.InProgress);
 
         return new DocumentChecklistDto
         {
@@ -92,7 +92,7 @@ public class ApplicationDocumentService : IApplicationDocumentService
             DocumentName = dto.DocumentName,
             DocumentType = (DocumentType)dto.DocumentType,
             DocumentUrl = dto.DocumentUrl,
-            Status = DocumentStatus.Pending,
+            Status = DocumentStatus.NotStarted,
             SubmissionDate = dto.SubmissionDate,
             ExpiryDate = dto.ExpiryDate,
             Notes = dto.Notes
@@ -147,7 +147,7 @@ public class ApplicationDocumentService : IApplicationDocumentService
         {
             TotalDocuments = documents.Count,
             CompletedDocuments = documents.Count(d => d.Status == DocumentStatus.Approved),
-            PendingDocuments = documents.Count(d => d.Status == DocumentStatus.Pending),
+            PendingDocuments = documents.Count(d => d.Status == DocumentStatus.NotStarted || d.Status == DocumentStatus.InProgress),
             ExpiringDocuments = documents.Count(d => d.ExpiryDate.HasValue &&
                                                      d.ExpiryDate.Value > now &&
                                                      d.ExpiryDate.Value <= now.AddDays(30)),

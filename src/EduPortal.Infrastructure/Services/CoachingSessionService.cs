@@ -5,7 +5,7 @@ using EduPortal.Domain.Enums;
 using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace EduPortal.Application.Services;
+namespace EduPortal.Infrastructure.Services;
 
 public class CoachingSessionService : ICoachingSessionService
 {

@@ -5,7 +5,7 @@ using EduPortal.Domain.Enums;
 using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace EduPortal.Application.Services;
+namespace EduPortal.Infrastructure.Services;
 
 public class StudyAbroadService : IStudyAbroadService
 {
@@ -41,7 +41,7 @@ public class StudyAbroadService : IStudyAbroadService
             .Include(p => p.Accommodations)
             .Where(p => !p.IsDeleted &&
                        (p.Status == StudyAbroadStatus.Planning ||
-                        p.Status == StudyAbroadStatus.InProgress))
+                        p.Status == StudyAbroadStatus.Preparing))
             .ToListAsync();
 
         return programs.Select(MapToDto);
@@ -175,7 +175,7 @@ public class StudyAbroadService : IStudyAbroadService
         var stats = new ProgramStatisticsDto
         {
             TotalPrograms = programs.Count,
-            ActivePrograms = programs.Count(p => p.Status == StudyAbroadStatus.InProgress),
+            ActivePrograms = programs.Count(p => p.Status == StudyAbroadStatus.Preparing),
             CompletedPrograms = programs.Count(p => p.Status == StudyAbroadStatus.Completed),
             CancelledPrograms = programs.Count(p => p.Status == StudyAbroadStatus.Cancelled)
         };
@@ -207,7 +207,7 @@ public class StudyAbroadService : IStudyAbroadService
     {
         var totalDocs = program.Documents.Count;
         var completedDocs = program.Documents.Count(d => d.Status == DocumentStatus.Approved);
-        var pendingDocs = program.Documents.Count(d => d.Status == DocumentStatus.Pending);
+        var pendingDocs = program.Documents.Count(d => d.Status == DocumentStatus.NotStarted || d.Status == DocumentStatus.InProgress);
 
         var hasVisa = program.VisaProcesses.Any();
         var visaStatus = program.VisaProcesses.OrderByDescending(v => v.CreatedAt)
@@ -251,7 +251,6 @@ public class StudyAbroadService : IStudyAbroadService
     private int CalculateProgress(StudyAbroadProgram program)
     {
         int progress = 0;
-        int totalSteps = 4;
 
         // Documents (25%)
         if (program.Documents.Any() && program.Documents.All(d => d.Status == DocumentStatus.Approved))
