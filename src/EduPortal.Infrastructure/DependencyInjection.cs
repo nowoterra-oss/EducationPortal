@@ -25,6 +25,9 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDocumentService, ApplicationDocumentService>();
         services.AddScoped<IVisaProcessService, VisaProcessService>();
         services.AddScoped<IAccommodationArrangementService, AccommodationArrangementService>();
+        services.AddScoped<ICareerAssessmentService, CareerAssessmentService>();
+        services.AddScoped<ISchoolRecommendationService, SchoolRecommendationService>();
+        services.AddScoped<ISportsAssessmentService, SportsAssessmentService>();
 
         return services;
     }
