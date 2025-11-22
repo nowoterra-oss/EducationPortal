@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IStudentRepository, StudentRepository>();
         services.AddScoped<IHomeworkRepository, HomeworkRepository>();
+        services.AddScoped<IInternalExamRepository, InternalExamRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
 
         // Register Infrastructure Services
