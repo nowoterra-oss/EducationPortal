@@ -22,6 +22,8 @@ public static class DependencyInjection
 
         // Register Application Services (using DbContext)
         services.AddScoped<ICoachingSessionService, CoachingSessionService>();
+        services.AddScoped<IStudyAbroadService, StudyAbroadService>();
+        services.AddScoped<IApplicationDocumentService, ApplicationDocumentService>();
 
         return services;
     }
