@@ -31,6 +31,11 @@ public static class DependencyInjection
         services.AddScoped<IServicePackageService, ServicePackageService>();
         services.AddScoped<IStudentPackagePurchaseService, StudentPackagePurchaseService>();
 
+        // Payment Plan Services
+        services.AddScoped<IPaymentPlanService, PaymentPlanService>();
+        services.AddScoped<IStudentPaymentPlanService, StudentPaymentPlanService>();
+        services.AddScoped<IPaymentInstallmentService, PaymentInstallmentService>();
+
         return services;
     }
 }

@@ -5,10 +5,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EduPortal.Domain.Entities;
 
-public class PaymentInstallment : BaseEntity
+/// <summary>
+/// Taksit detayları
+/// </summary>
+public class PaymentInstallment : BaseAuditableEntity
 {
     [Required]
-    public int PaymentPlanId { get; set; }
+    public int StudentPaymentPlanId { get; set; }
 
     [Required]
     public int InstallmentNumber { get; set; }
@@ -17,21 +20,36 @@ public class PaymentInstallment : BaseEntity
     [Column(TypeName = "decimal(18,2)")]
     public decimal Amount { get; set; }
 
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal PaidAmount { get; set; } = 0;
+
     [Required]
     public DateTime DueDate { get; set; }
 
-    public DateTime? PaymentDate { get; set; }
+    public DateTime? PaidDate { get; set; }
 
     [Required]
-    public PaymentStatus Status { get; set; }
+    public InstallmentStatus Status { get; set; } = InstallmentStatus.Pending;
 
-    public PaymentMethod? PaymentMethod { get; set; }
+    /// <summary>
+    /// İlgili ödeme ID (Payment tablosundan)
+    /// </summary>
+    public int? PaymentId { get; set; }
 
     [MaxLength(500)]
-    public string? ReceiptUrl { get; set; }
+    public string? Notes { get; set; }
 
-    [ForeignKey(nameof(PaymentPlanId))]
-    public virtual PaymentPlan PaymentPlan { get; set; } = null!;
+    /// <summary>
+    /// Gecikme günü
+    /// </summary>
+    public int DaysOverdue => Status == InstallmentStatus.Overdue && DueDate < DateTime.Now
+        ? (DateTime.Now - DueDate).Days
+        : 0;
 
-    public virtual ICollection<Payment> Payments { get; set; } = new List<Payment>();
+    // Navigation Properties
+    [ForeignKey(nameof(StudentPaymentPlanId))]
+    public virtual StudentPaymentPlan StudentPaymentPlan { get; set; } = null!;
+
+    [ForeignKey(nameof(PaymentId))]
+    public virtual Payment? Payment { get; set; }
 }
