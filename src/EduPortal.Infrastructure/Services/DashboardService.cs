@@ -85,7 +85,7 @@ public class DashboardService : IDashboardService
                 return ApiResponse<TeacherDashboardStatsDto>.ErrorResponse("Teacher not found");
 
             var today = DateTime.UtcNow.Date;
-            var todayDayOfWeek = (int)today.DayOfWeek;
+            var todayDayOfWeek = today.DayOfWeek;
 
             var stats = new TeacherDashboardStatsDto
             {
