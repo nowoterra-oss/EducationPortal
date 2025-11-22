@@ -23,6 +23,8 @@ public static class DependencyInjection
         services.AddScoped<ICoachingSessionService, CoachingSessionService>();
         services.AddScoped<IStudyAbroadService, StudyAbroadService>();
         services.AddScoped<IApplicationDocumentService, ApplicationDocumentService>();
+        services.AddScoped<IVisaProcessService, VisaProcessService>();
+        services.AddScoped<IAccommodationArrangementService, AccommodationArrangementService>();
 
         return services;
     }
