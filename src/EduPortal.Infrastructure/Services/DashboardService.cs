@@ -136,7 +136,7 @@ public class DashboardService : IDashboardService
                     ClassName = ws.Class != null ? ws.Class.ClassName : "N/A",
                     StartTime = ws.StartTime,
                     EndTime = ws.EndTime,
-                    Classroom = ws.Classroom != null ? ws.Classroom.RoomName : null,
+                    Classroom = ws.Classroom != null ? ws.Classroom.RoomNumber : null,
                     StudentCount = ws.Class != null ? ws.Class.Students.Count : 0
                 })
                 .OrderBy(s => s.StartTime)
