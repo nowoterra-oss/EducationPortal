@@ -102,7 +102,14 @@ public class HomeworkController : ControllerBase
     {
         try
         {
-            var result = await _homeworkService.CreateAsync(homeworkCreateDto);
+            // Get teacher ID from claims
+            var teacherIdClaim = User.FindFirst("teacherId");
+            if (teacherIdClaim == null || !int.TryParse(teacherIdClaim.Value, out int teacherId))
+            {
+                return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("Öğretmen bilgisi bulunamadı"));
+            }
+
+            var result = await _homeworkService.CreateAsync(homeworkCreateDto, teacherId);
 
             if (result.Success)
             {
@@ -275,17 +282,11 @@ public class HomeworkController : ControllerBase
     {
         try
         {
-            var result = await _homeworkService.GetHomeworkSubmissionsAsync(id);
+            var result = await _homeworkService.GetSubmissionsAsync(id, pageNumber, pageSize);
 
             if (result.Success)
             {
-                var pagedResponse = new PagedResponse<HomeworkSubmissionDto>(
-                    result.Data ?? new List<HomeworkSubmissionDto>(),
-                    result.Data?.Count ?? 0,
-                    pageNumber,
-                    pageSize
-                );
-                return Ok(ApiResponse<PagedResponse<HomeworkSubmissionDto>>.SuccessResponse(pagedResponse, "Teslimler başarıyla getirildi"));
+                return Ok(result);
             }
 
             return NotFound(result);
@@ -335,32 +336,31 @@ public class HomeworkController : ControllerBase
     }
 
     /// <summary>
-    /// Evaluate homework submission
+    /// Grade homework submission
     /// </summary>
     /// <param name="submissionId">Submission ID</param>
-    /// <param name="score">Score to assign</param>
-    /// <param name="feedback">Teacher feedback</param>
-    /// <returns>Evaluation confirmation</returns>
-    /// <response code="200">Submission evaluated successfully</response>
-    /// <response code="400">Invalid evaluation data</response>
+    /// <param name="gradeDto">Grading data</param>
+    /// <returns>Grading confirmation</returns>
+    /// <response code="200">Submission graded successfully</response>
+    /// <response code="400">Invalid grading data</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     /// <response code="404">Submission not found</response>
-    [HttpPut("submissions/{submissionId}/evaluate")]
+    [HttpPut("submissions/{submissionId}/grade")]
     [Authorize(Roles = "Öğretmen,Admin")]
     [ProducesResponseType(typeof(ApiResponse<HomeworkSubmissionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkSubmissionDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkSubmissionDto>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<HomeworkSubmissionDto>>> EvaluateSubmission(
+    public async Task<ActionResult<ApiResponse<HomeworkSubmissionDto>>> GradeSubmission(
         int submissionId,
-        [FromQuery] int score,
-        [FromBody] string? feedback)
+        [FromBody] GradeSubmissionDto gradeDto)
     {
         try
         {
-            var result = await _homeworkService.EvaluateSubmissionAsync(submissionId, score, feedback);
+            gradeDto.SubmissionId = submissionId;
+            var result = await _homeworkService.GradeSubmissionAsync(gradeDto);
 
             if (result.Success)
             {
@@ -371,8 +371,8 @@ public class HomeworkController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while evaluating submission: {SubmissionId}", submissionId);
-            return StatusCode(500, ApiResponse<HomeworkSubmissionDto>.ErrorResponse("Ödev değerlendirilirken bir hata oluştu"));
+            _logger.LogError(ex, "Error occurred while grading submission: {SubmissionId}", submissionId);
+            return StatusCode(500, ApiResponse<HomeworkSubmissionDto>.ErrorResponse("Ödev notlandırılırken bir hata oluştu"));
         }
     }
 
