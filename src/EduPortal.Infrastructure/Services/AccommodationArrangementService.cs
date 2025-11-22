@@ -197,7 +197,7 @@ public class AccommodationArrangementService : IAccommodationArrangementService
             : 0;
         var totalCost = arrangement.MonthlyRent.HasValue && durationMonths > 0
             ? arrangement.MonthlyRent.Value * durationMonths
-            : null;
+            : (decimal?)null;
         var isActive = arrangement.StartDate.HasValue && arrangement.EndDate.HasValue &&
                       arrangement.StartDate.Value <= now && arrangement.EndDate.Value >= now;
         var daysUntilStart = arrangement.StartDate.HasValue
