@@ -1,10 +1,12 @@
-using AutoMapper;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Attendance;
 using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using EduPortal.Domain.Entities;
 using EduPortal.Domain.Enums;
+using EduPortal.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace EduPortal.Application.Services.Implementations;
 
@@ -12,43 +14,82 @@ public class AttendanceService : IAttendanceService
 {
     private readonly IAttendanceRepository _attendanceRepository;
     private readonly IStudentRepository _studentRepository;
-    private readonly IMapper _mapper;
+    private readonly ApplicationDbContext _context;
+    private readonly ILogger<AttendanceService> _logger;
 
     public AttendanceService(
         IAttendanceRepository attendanceRepository,
         IStudentRepository studentRepository,
-        IMapper mapper)
+        ApplicationDbContext context,
+        ILogger<AttendanceService> logger)
     {
         _attendanceRepository = attendanceRepository;
         _studentRepository = studentRepository;
-        _mapper = mapper;
+        _context = context;
+        _logger = logger;
     }
 
     public async Task<ApiResponse<PagedResponse<AttendanceDto>>> GetAllAsync(int pageNumber = 1, int pageSize = 10)
     {
         try
         {
-            var attendances = await _attendanceRepository.GetAllAsync();
-            var attendancesList = attendances.ToList();
+            var query = _context.Attendances
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Course)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .Where(a => !a.IsDeleted)
+                .OrderByDescending(a => a.Date)
+                .AsQueryable();
 
-            var totalRecords = attendancesList.Count;
-            var pagedAttendances = attendancesList
+            var totalRecords = await query.CountAsync();
+
+            var attendances = await query
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
-                .ToList();
+                .ToListAsync();
 
-            var attendanceDtos = _mapper.Map<List<AttendanceDto>>(pagedAttendances);
+            var attendanceDtos = attendances.Select(MapToDto).ToList();
             var pagedResponse = new PagedResponse<AttendanceDto>(attendanceDtos, totalRecords, pageNumber, pageSize);
 
             return ApiResponse<PagedResponse<AttendanceDto>>.SuccessResponse(pagedResponse);
         }
         catch (Exception ex)
         {
-            return ApiResponse<PagedResponse<AttendanceDto>>.ErrorResponse($"Hata: {ex.Message}");
+            _logger.LogError(ex, "Error occurred while getting all attendance records");
+            return ApiResponse<PagedResponse<AttendanceDto>>.ErrorResponse($"Devamsızlık kayıtları getirilirken bir hata oluştu: {ex.Message}");
         }
     }
 
-    public async Task<ApiResponse<AttendanceDto>> RecordAttendanceAsync(AttendanceCreateDto dto)
+    public async Task<ApiResponse<AttendanceDto>> GetByIdAsync(int id)
+    {
+        try
+        {
+            var attendance = await _context.Attendances
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Course)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+
+            if (attendance == null)
+            {
+                return ApiResponse<AttendanceDto>.ErrorResponse("Devamsızlık kaydı bulunamadı");
+            }
+
+            var dto = MapToDto(attendance);
+            return ApiResponse<AttendanceDto>.SuccessResponse(dto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while getting attendance by ID: {AttendanceId}", id);
+            return ApiResponse<AttendanceDto>.ErrorResponse($"Devamsızlık kaydı getirilirken bir hata oluştu: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse<AttendanceDto>> RecordAttendanceAsync(AttendanceCreateDto dto, int teacherId)
     {
         try
         {
@@ -60,10 +101,12 @@ public class AttendanceService : IAttendanceService
             }
 
             // Check if attendance already exists for this student, course and date
-            var existingAttendance = await _attendanceRepository.GetAttendanceByStudentAndDateAsync(
-                dto.StudentId,
-                dto.CourseId,
-                dto.Date);
+            var existingAttendance = await _context.Attendances
+                .FirstOrDefaultAsync(a =>
+                    a.StudentId == dto.StudentId &&
+                    a.CourseId == dto.CourseId &&
+                    a.Date.Date == dto.Date.Date &&
+                    !a.IsDeleted);
 
             Attendance attendance;
 
@@ -72,27 +115,108 @@ public class AttendanceService : IAttendanceService
                 // Update existing attendance
                 existingAttendance.Status = dto.Status;
                 existingAttendance.Notes = dto.Notes;
-                await _attendanceRepository.UpdateAsync(existingAttendance);
+                existingAttendance.UpdatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
                 attendance = existingAttendance;
             }
             else
             {
                 // Create new attendance record
-                attendance = _mapper.Map<Attendance>(dto);
-                // Note: TeacherId should be set based on the authenticated user in the API controller
-                // For now, we'll set it to 1 as a placeholder
-                attendance.TeacherId = 1;
-                await _attendanceRepository.AddAsync(attendance);
+                attendance = new Attendance
+                {
+                    StudentId = dto.StudentId,
+                    CourseId = dto.CourseId,
+                    TeacherId = teacherId,
+                    Date = dto.Date,
+                    Status = dto.Status,
+                    Notes = dto.Notes,
+                    CreatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                };
+
+                await _context.Attendances.AddAsync(attendance);
+                await _context.SaveChangesAsync();
             }
 
-            var attendanceDto = _mapper.Map<AttendanceDto>(attendance);
+            // Reload with navigation properties
+            attendance = await _context.Attendances
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Course)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .FirstOrDefaultAsync(a => a.Id == attendance.Id);
+
+            var attendanceDto = MapToDto(attendance!);
             return ApiResponse<AttendanceDto>.SuccessResponse(
                 attendanceDto,
                 existingAttendance != null ? "Yoklama başarıyla güncellendi" : "Yoklama başarıyla kaydedildi");
         }
         catch (Exception ex)
         {
-            return ApiResponse<AttendanceDto>.ErrorResponse($"Hata: {ex.Message}");
+            _logger.LogError(ex, "Error occurred while recording attendance");
+            return ApiResponse<AttendanceDto>.ErrorResponse($"Yoklama kaydedilirken bir hata oluştu: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse<AttendanceDto>> UpdateAsync(int id, AttendanceCreateDto dto)
+    {
+        try
+        {
+            var attendance = await _context.Attendances
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Course)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+
+            if (attendance == null)
+            {
+                return ApiResponse<AttendanceDto>.ErrorResponse("Devamsızlık kaydı bulunamadı");
+            }
+
+            attendance.Status = dto.Status;
+            attendance.Notes = dto.Notes;
+            attendance.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            var attendanceDto = MapToDto(attendance);
+            return ApiResponse<AttendanceDto>.SuccessResponse(attendanceDto, "Yoklama başarıyla güncellendi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while updating attendance: {AttendanceId}", id);
+            return ApiResponse<AttendanceDto>.ErrorResponse($"Yoklama güncellenirken bir hata oluştu: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse<bool>> DeleteAsync(int id)
+    {
+        try
+        {
+            var attendance = await _context.Attendances
+                .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
+
+            if (attendance == null)
+            {
+                return ApiResponse<bool>.ErrorResponse("Devamsızlık kaydı bulunamadı");
+            }
+
+            // Soft delete
+            attendance.IsDeleted = true;
+            attendance.DeletedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return ApiResponse<bool>.SuccessResponse(true, "Yoklama kaydı başarıyla silindi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while deleting attendance: {AttendanceId}", id);
+            return ApiResponse<bool>.ErrorResponse($"Yoklama silinirken bir hata oluştu: {ex.Message}");
         }
     }
 
@@ -109,26 +233,29 @@ public class AttendanceService : IAttendanceService
                 return ApiResponse<List<AttendanceDto>>.ErrorResponse("Öğrenci bulunamadı");
             }
 
-            IEnumerable<Attendance> attendances;
+            var query = _context.Attendances
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Course)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .Where(a => a.StudentId == studentId && !a.IsDeleted)
+                .AsQueryable();
 
             if (startDate.HasValue && endDate.HasValue)
             {
-                attendances = await _attendanceRepository.GetAttendanceByDateRangeAsync(
-                    studentId,
-                    startDate.Value,
-                    endDate.Value);
-            }
-            else
-            {
-                attendances = await _attendanceRepository.GetAttendanceByStudentAsync(studentId);
+                query = query.Where(a => a.Date >= startDate.Value && a.Date <= endDate.Value);
             }
 
-            var attendanceDtos = _mapper.Map<List<AttendanceDto>>(attendances);
+            var attendances = await query.OrderByDescending(a => a.Date).ToListAsync();
+            var attendanceDtos = attendances.Select(MapToDto).ToList();
+
             return ApiResponse<List<AttendanceDto>>.SuccessResponse(attendanceDtos);
         }
         catch (Exception ex)
         {
-            return ApiResponse<List<AttendanceDto>>.ErrorResponse($"Hata: {ex.Message}");
+            _logger.LogError(ex, "Error occurred while getting student attendance: {StudentId}", studentId);
+            return ApiResponse<List<AttendanceDto>>.ErrorResponse($"Öğrenci devamsızlığı getirilirken bir hata oluştu: {ex.Message}");
         }
     }
 
@@ -142,16 +269,17 @@ public class AttendanceService : IAttendanceService
                 return ApiResponse<Dictionary<string, int>>.ErrorResponse("Öğrenci bulunamadı");
             }
 
-            var stats = await _attendanceRepository.GetAttendanceStatsByStudentAsync(studentId);
+            var attendances = await _context.Attendances
+                .Where(a => a.StudentId == studentId && !a.IsDeleted)
+                .ToListAsync();
 
-            // Convert enum values to string keys for better readability
             var summary = new Dictionary<string, int>
             {
-                { "Geldi", stats.GetValueOrDefault((int)AttendanceStatus.Geldi, 0) },
-                { "GecGeldi", stats.GetValueOrDefault((int)AttendanceStatus.GecGeldi, 0) },
-                { "Gelmedi_Mazeretli", stats.GetValueOrDefault((int)AttendanceStatus.Gelmedi_Mazeretli, 0) },
-                { "Gelmedi_Mazeretsiz", stats.GetValueOrDefault((int)AttendanceStatus.Gelmedi_Mazeretsiz, 0) },
-                { "DersIptal", stats.GetValueOrDefault((int)AttendanceStatus.DersIptal, 0) }
+                { "Geldi", attendances.Count(a => a.Status == AttendanceStatus.Geldi) },
+                { "GecGeldi", attendances.Count(a => a.Status == AttendanceStatus.GecGeldi) },
+                { "Gelmedi_Mazeretli", attendances.Count(a => a.Status == AttendanceStatus.Gelmedi_Mazeretli) },
+                { "Gelmedi_Mazeretsiz", attendances.Count(a => a.Status == AttendanceStatus.Gelmedi_Mazeretsiz) },
+                { "DersIptal", attendances.Count(a => a.Status == AttendanceStatus.DersIptal) }
             };
 
             // Calculate totals
@@ -174,7 +302,8 @@ public class AttendanceService : IAttendanceService
         }
         catch (Exception ex)
         {
-            return ApiResponse<Dictionary<string, int>>.ErrorResponse($"Hata: {ex.Message}");
+            _logger.LogError(ex, "Error occurred while getting attendance summary: {StudentId}", studentId);
+            return ApiResponse<Dictionary<string, int>>.ErrorResponse($"Devamsızlık özeti getirilirken bir hata oluştu: {ex.Message}");
         }
     }
 
@@ -182,14 +311,45 @@ public class AttendanceService : IAttendanceService
     {
         try
         {
-            var attendances = await _attendanceRepository.GetAttendanceByCourseAsync(courseId);
-            var attendanceDtos = _mapper.Map<List<AttendanceDto>>(attendances);
+            var attendances = await _context.Attendances
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Course)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .Where(a => a.CourseId == courseId && !a.IsDeleted)
+                .OrderByDescending(a => a.Date)
+                .ToListAsync();
 
+            var attendanceDtos = attendances.Select(MapToDto).ToList();
             return ApiResponse<List<AttendanceDto>>.SuccessResponse(attendanceDtos);
         }
         catch (Exception ex)
         {
-            return ApiResponse<List<AttendanceDto>>.ErrorResponse($"Hata: {ex.Message}");
+            _logger.LogError(ex, "Error occurred while getting course attendance: {CourseId}", courseId);
+            return ApiResponse<List<AttendanceDto>>.ErrorResponse($"Ders devamsızlığı getirilirken bir hata oluştu: {ex.Message}");
         }
+    }
+
+    // Private helper method for manual mapping
+    private static AttendanceDto MapToDto(Attendance attendance)
+    {
+        return new AttendanceDto
+        {
+            Id = attendance.Id,
+            StudentId = attendance.StudentId,
+            StudentName = attendance.Student?.User != null
+                ? $"{attendance.Student.User.FirstName} {attendance.Student.User.LastName}"
+                : string.Empty,
+            CourseId = attendance.CourseId,
+            CourseName = attendance.Course?.CourseName ?? string.Empty,
+            TeacherId = attendance.TeacherId,
+            TeacherName = attendance.Teacher?.User != null
+                ? $"{attendance.Teacher.User.FirstName} {attendance.Teacher.User.LastName}"
+                : string.Empty,
+            Date = attendance.Date,
+            Status = attendance.Status,
+            Notes = attendance.Notes
+        };
     }
 }

@@ -9,8 +9,9 @@ public class AttendanceDto
     public string StudentName { get; set; } = string.Empty;
     public int CourseId { get; set; }
     public string CourseName { get; set; } = string.Empty;
+    public int TeacherId { get; set; }
+    public string TeacherName { get; set; } = string.Empty;
     public DateTime Date { get; set; }
     public AttendanceStatus Status { get; set; }
     public string? Notes { get; set; }
-    public DateTime CreatedAt { get; set; }
 }
