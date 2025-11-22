@@ -207,7 +207,7 @@ public class AttendanceService : IAttendanceService
 
             // Soft delete
             attendance.IsDeleted = true;
-            attendance.DeletedAt = DateTime.UtcNow;
+            attendance.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 

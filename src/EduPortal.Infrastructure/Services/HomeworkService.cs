@@ -114,10 +114,10 @@ public class HomeworkService : IHomeworkService
     {
         try
         {
-            // Get all homeworks for courses the student is enrolled in
-            var studentCourseIds = await _context.CourseEnrollments
-                .Where(ce => ce.StudentId == studentId)
-                .Select(ce => ce.CourseId)
+            // Get all homeworks for the student's class or where they have a submission
+            var studentClassIds = await _context.StudentClassAssignments
+                .Where(sca => sca.StudentId == studentId && sca.IsActive && !sca.IsDeleted)
+                .Select(sca => sca.ClassId)
                 .ToListAsync();
 
             var homeworks = await _context.Homeworks
@@ -125,7 +125,10 @@ public class HomeworkService : IHomeworkService
                 .Include(h => h.Teacher)
                     .ThenInclude(t => t.User)
                 .Include(h => h.Submissions)
-                .Where(h => studentCourseIds.Contains(h.CourseId) && !h.IsDeleted)
+                .Where(h => !h.IsDeleted && (
+                    h.Submissions.Any(s => s.StudentId == studentId) ||
+                    (h.ClassId.HasValue && studentClassIds.Contains(h.ClassId.Value))
+                ))
                 .OrderByDescending(h => h.DueDate)
                 .ToListAsync();
 
@@ -233,7 +236,7 @@ public class HomeworkService : IHomeworkService
 
             // Soft delete
             homework.IsDeleted = true;
-            homework.DeletedAt = DateTime.UtcNow;
+            homework.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 

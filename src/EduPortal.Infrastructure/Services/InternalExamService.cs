@@ -113,10 +113,10 @@ public class InternalExamService : IInternalExamService
     {
         try
         {
-            // Get all exams for courses the student is enrolled in
-            var studentCourseIds = await _context.CourseEnrollments
-                .Where(ce => ce.StudentId == studentId)
-                .Select(ce => ce.CourseId)
+            // Get all exams where the student has a result or is in the exam's class
+            var studentClassIds = await _context.StudentClassAssignments
+                .Where(sca => sca.StudentId == studentId && sca.IsActive && !sca.IsDeleted)
+                .Select(sca => sca.ClassId)
                 .ToListAsync();
 
             var exams = await _context.InternalExams
@@ -124,7 +124,10 @@ public class InternalExamService : IInternalExamService
                 .Include(e => e.Teacher)
                     .ThenInclude(t => t.User)
                 .Include(e => e.Results)
-                .Where(e => studentCourseIds.Contains(e.CourseId) && !e.IsDeleted)
+                .Where(e => !e.IsDeleted && (
+                    e.Results.Any(r => r.StudentId == studentId) ||
+                    (e.ClassId.HasValue && studentClassIds.Contains(e.ClassId.Value))
+                ))
                 .OrderByDescending(e => e.ExamDate)
                 .ToListAsync();
 
@@ -226,7 +229,7 @@ public class InternalExamService : IInternalExamService
 
             // Soft delete
             exam.IsDeleted = true;
-            exam.DeletedAt = DateTime.UtcNow;
+            exam.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
 

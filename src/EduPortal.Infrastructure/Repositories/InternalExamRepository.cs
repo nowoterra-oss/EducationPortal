@@ -37,10 +37,10 @@ public class InternalExamRepository : GenericRepository<InternalExam>, IInternal
 
     public async Task<IEnumerable<InternalExam>> GetExamsByStudentAsync(int studentId, CancellationToken cancellationToken = default)
     {
-        // Get all exams for courses the student is enrolled in
-        var studentCourseIds = await _context.CourseEnrollments
-            .Where(ce => ce.StudentId == studentId)
-            .Select(ce => ce.CourseId)
+        // Get all exams where the student has a result or is in the exam's class
+        var studentClassIds = await _context.StudentClassAssignments
+            .Where(sca => sca.StudentId == studentId && sca.IsActive && !sca.IsDeleted)
+            .Select(sca => sca.ClassId)
             .ToListAsync(cancellationToken);
 
         return await _dbSet
@@ -48,7 +48,8 @@ public class InternalExamRepository : GenericRepository<InternalExam>, IInternal
             .Include(e => e.Teacher)
                 .ThenInclude(t => t.User)
             .Include(e => e.Results)
-            .Where(e => studentCourseIds.Contains(e.CourseId))
+            .Where(e => e.Results.Any(r => r.StudentId == studentId) ||
+                        (e.ClassId.HasValue && studentClassIds.Contains(e.ClassId.Value)))
             .OrderByDescending(e => e.ExamDate)
             .ToListAsync(cancellationToken);
     }

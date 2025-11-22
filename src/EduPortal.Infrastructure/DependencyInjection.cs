@@ -1,4 +1,5 @@
 using EduPortal.Application.Interfaces;
+using EduPortal.Application.Services.Interfaces;
 using EduPortal.Infrastructure.Repositories;
 using EduPortal.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection;
