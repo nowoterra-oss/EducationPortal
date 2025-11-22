@@ -109,14 +109,20 @@ public class PaymentInstallmentService : IPaymentInstallmentService
             throw new Exception("This installment is already paid");
 
         // Payment kaydı oluştur
+        var paymentMethod = PaymentMethod.Nakit; // Varsayılan
+        if (!string.IsNullOrEmpty(dto.PaymentMethod))
+        {
+            Enum.TryParse<PaymentMethod>(dto.PaymentMethod, true, out paymentMethod);
+        }
+
         var payment = new Payment
         {
             StudentId = installment.StudentPaymentPlan.StudentId,
             Amount = dto.Amount,
             PaymentDate = dto.PaymentDate,
-            PaymentMethod = dto.PaymentMethod ?? "Cash",
-            TransactionReference = dto.TransactionReference,
-            Status = "Completed",
+            PaymentMethod = paymentMethod,
+            TransactionId = dto.TransactionReference,
+            Status = PaymentStatus.Odendi,
             Notes = dto.Notes
         };
 
