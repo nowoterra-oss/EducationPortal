@@ -236,25 +236,170 @@ public class DashboardService : IDashboardService
         }
     }
 
-    public Task<ApiResponse<ChartDataDto>> GetEnrollmentChartAsync(DateTime startDate, DateTime endDate)
+    public async Task<ApiResponse<ChartDataDto>> GetEnrollmentChartAsync(DateTime startDate, DateTime endDate)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var enrollments = await _context.Students
+                .Where(s => !s.IsDeleted &&
+                           s.CreatedAt >= startDate &&
+                           s.CreatedAt <= endDate)
+                .GroupBy(s => new { s.CreatedAt.Year, s.CreatedAt.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Count = g.Count()
+                })
+                .OrderBy(x => x.Year)
+                .ThenBy(x => x.Month)
+                .ToListAsync();
+
+            var chartData = new ChartDataDto
+            {
+                ChartType = "line",
+                Title = "Öğrenci Kayıt Grafiği",
+                Labels = enrollments.Select(e => $"{e.Month}/{e.Year}").ToList(),
+                Data = enrollments.Select(e => (decimal)e.Count).ToList()
+            };
+
+            return ApiResponse<ChartDataDto>.SuccessResponse(chartData);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<ChartDataDto>.ErrorResponse(ex.Message);
+        }
     }
 
-    public Task<ApiResponse<ChartDataDto>> GetRevenueChartAsync(DateTime startDate, DateTime endDate)
+    public async Task<ApiResponse<ChartDataDto>> GetRevenueChartAsync(DateTime startDate, DateTime endDate)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var revenues = await _context.Payments
+                .Where(p => !p.IsDeleted &&
+                           p.Status == PaymentStatus.Odendi &&
+                           p.PaidDate.HasValue &&
+                           p.PaidDate.Value >= startDate &&
+                           p.PaidDate.Value <= endDate)
+                .GroupBy(p => new { p.PaidDate.Value.Year, p.PaidDate.Value.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    TotalAmount = g.Sum(p => p.Amount)
+                })
+                .OrderBy(x => x.Year)
+                .ThenBy(x => x.Month)
+                .ToListAsync();
+
+            var chartData = new ChartDataDto
+            {
+                ChartType = "bar",
+                Title = "Gelir Grafiği",
+                Labels = revenues.Select(r => $"{r.Month}/{r.Year}").ToList(),
+                Data = revenues.Select(r => r.TotalAmount).ToList()
+            };
+
+            return ApiResponse<ChartDataDto>.SuccessResponse(chartData);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<ChartDataDto>.ErrorResponse(ex.Message);
+        }
     }
 
-    public Task<ApiResponse<ChartDataDto>> GetAttendanceChartAsync(DateTime startDate, DateTime endDate)
+    public async Task<ApiResponse<ChartDataDto>> GetAttendanceChartAsync(DateTime startDate, DateTime endDate)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var attendanceData = await _context.Attendances
+                .Where(a => !a.IsDeleted &&
+                           a.Date >= startDate &&
+                           a.Date <= endDate)
+                .GroupBy(a => a.Date.Date)
+                .Select(g => new
+                {
+                    Date = g.Key,
+                    PresentCount = g.Count(a => a.Status == AttendanceStatus.Geldi),
+                    AbsentCount = g.Count(a => a.Status == AttendanceStatus.Gelmedi_Mazeretsiz),
+                    LateCount = g.Count(a => a.Status == AttendanceStatus.GecGeldi)
+                })
+                .OrderBy(x => x.Date)
+                .ToListAsync();
+
+            var chartData = new ChartDataDto
+            {
+                ChartType = "line",
+                Title = "Devamsızlık Grafiği",
+                Labels = attendanceData.Select(a => a.Date.ToString("dd/MM")).ToList(),
+                Data = attendanceData.Select(a => (decimal)a.PresentCount).ToList()
+            };
+
+            return ApiResponse<ChartDataDto>.SuccessResponse(chartData);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<ChartDataDto>.ErrorResponse(ex.Message);
+        }
     }
 
-    public Task<ApiResponse<List<RecentActivityDto>>> GetRecentActivitiesAsync(int count = 10)
+    public async Task<ApiResponse<List<RecentActivityDto>>> GetRecentActivitiesAsync(int count = 10)
     {
-        // Basit implementation - ileride geliştirilebilir
-        return Task.FromResult(ApiResponse<List<RecentActivityDto>>.SuccessResponse(new List<RecentActivityDto>()));
+        try
+        {
+            var activities = new List<RecentActivityDto>();
+
+            // Son kayıt olan öğrenciler
+            var recentStudents = await _context.Students
+                .Where(s => !s.IsDeleted)
+                .Include(s => s.User)
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(count / 2)
+                .Select(s => new RecentActivityDto
+                {
+                    ActivityType = "StudentEnrollment",
+                    Description = $"{s.User.FirstName} {s.User.LastName} sisteme kaydoldu",
+                    Timestamp = s.CreatedAt,
+                    UserId = s.UserId,
+                    UserName = $"{s.User.FirstName} {s.User.LastName}",
+                    EntityType = "Student",
+                    EntityId = s.Id
+                })
+                .ToListAsync();
+
+            // Son ödemeler
+            var recentPayments = await _context.Payments
+                .Where(p => !p.IsDeleted && p.Status == PaymentStatus.Odendi)
+                .Include(p => p.Student)
+                .ThenInclude(s => s.User)
+                .OrderByDescending(p => p.PaidDate)
+                .Take(count / 2)
+                .Select(p => new RecentActivityDto
+                {
+                    ActivityType = "Payment",
+                    Description = $"{p.Student.User.FirstName} {p.Student.User.LastName} ödeme yaptı ({p.Amount:C})",
+                    Timestamp = p.PaidDate ?? p.CreatedAt,
+                    UserId = p.Student.UserId,
+                    UserName = $"{p.Student.User.FirstName} {p.Student.User.LastName}",
+                    EntityType = "Payment",
+                    EntityId = p.Id
+                })
+                .ToListAsync();
+
+            activities.AddRange(recentStudents);
+            activities.AddRange(recentPayments);
+
+            var sortedActivities = activities
+                .OrderByDescending(a => a.Timestamp)
+                .Take(count)
+                .ToList();
+
+            return ApiResponse<List<RecentActivityDto>>.SuccessResponse(sortedActivities);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<List<RecentActivityDto>>.ErrorResponse(ex.Message);
+        }
     }
 
     private async Task<decimal> CalculateStudentAttendanceRateAsync(int studentId)
