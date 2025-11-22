@@ -638,7 +638,7 @@ public class SchedulingService : ISchedulingService
             EffectiveTo = lesson.EffectiveTo,
             Status = lesson.Status.ToString(),
             ClassroomId = lesson.ClassroomId,
-            ClassroomName = lesson.Classroom?.RoomName
+            ClassroomName = lesson.Classroom?.RoomNumber
         };
     }
 }

@@ -174,13 +174,13 @@ public static class DbInitializer
             {
                 classrooms.Add(new Classroom
                 {
-                    RoomName = $"{branch.BranchCode.Split('-')[0]}-{i:D2}",
-                    RoomNumber = $"{i:D2}",
+                    RoomNumber = $"{branch.BranchCode.Split('-')[0]}-{i:D2}",
+                    BuildingName = "Ana Bina",
                     Capacity = i % 3 == 0 ? 30 : (i % 2 == 0 ? 20 : 15),
-                    Floor = (i - 1) / 5 + 1,
+                    Floor = $"{(i - 1) / 5 + 1}. Kat",
                     HasProjector = i % 2 == 0,
                     HasSmartBoard = i % 3 == 0,
-                    IsActive = true,
+                    IsAvailable = true,
                     BranchId = branch.Id
                 });
             }
@@ -404,14 +404,15 @@ public static class DbInitializer
         }
 
         var coaches = new List<Coach>();
+        var specializations = new[] { "Kariyer Koçluğu", "Akademik Koçluk", "Spor Koçluğu", "Yaşam Koçluğu", "Okul Seçimi Danışmanlığı" };
         foreach (var user in coachUsers)
         {
             coaches.Add(new Coach
             {
                 UserId = user.Id,
-                PrimaryArea = (CoachingArea)random.Next(0, 5),
-                YearsOfExperience = random.Next(2, 15),
-                IsActive = true,
+                Specialization = specializations[random.Next(specializations.Length)],
+                ExperienceYears = random.Next(2, 15),
+                IsAvailable = true,
                 BranchId = branches[random.Next(branches.Count)].Id
             });
         }
@@ -458,7 +459,7 @@ public static class DbInitializer
                 StudentNo = $"STD{DateTime.Now.Year}{i:D4}",
                 SchoolName = new[] { "Kadıköy Anadolu Lisesi", "Beşiktaş Fen Lisesi", "Ankara Fen Lisesi", "İzmir Anadolu Lisesi", "Robert Kolej", "Galatasaray Lisesi" }[random.Next(6)],
                 CurrentGrade = random.Next(9, 13),
-                Gender = isMale ? Gender.Male : Gender.Female,
+                Gender = isMale ? Gender.Erkek : Gender.Kiz,
                 DateOfBirth = new DateTime(birthYear, random.Next(1, 13), random.Next(1, 28)),
                 EnrollmentDate = DateTime.UtcNow.AddDays(-random.Next(30, 200)),
                 BranchId = branches[random.Next(branches.Count)].Id,
@@ -492,8 +493,7 @@ public static class DbInitializer
                 {
                     UserId = motherUser.Id,
                     Occupation = new[] { "Öğretmen", "Hemşire", "Mühendis", "Doktor", "Avukat", "İşletmeci", "Ev Hanımı", "Memur" }[random.Next(8)],
-                    WorkPlace = "Özel Şirket",
-                    EmergencyContact = motherUser.PhoneNumber
+                    WorkPhone = $"555{random.Next(1000000, 9999999)}"
                 };
                 parents.Add(mother);
             }
@@ -523,8 +523,7 @@ public static class DbInitializer
                 {
                     UserId = fatherUser.Id,
                     Occupation = new[] { "Mühendis", "Doktor", "Avukat", "İşletmeci", "Memur", "Esnaf", "Öğretmen" }[random.Next(7)],
-                    WorkPlace = "Özel Şirket",
-                    EmergencyContact = fatherUser.PhoneNumber
+                    WorkPhone = $"555{random.Next(1000000, 9999999)}"
                 };
                 parents.Add(father);
             }
@@ -581,11 +580,11 @@ public static class DbInitializer
                     classes.Add(new Class
                     {
                         ClassName = className,
-                        GradeLevel = grade,
-                        Section = ((char)('A' + section - 1)).ToString(),
+                        Grade = grade,
+                        Branch = ((char)('A' + section - 1)).ToString(),
                         ClassTeacherId = classTeacher.Id,
                         Capacity = 30,
-                        AcademicTermId = currentTerm?.Id,
+                        AcademicYear = $"{DateTime.Now.Year}-{DateTime.Now.Year + 1}",
                         BranchId = branch.Id,
                         IsActive = true
                     });
@@ -604,18 +603,18 @@ public static class DbInitializer
         foreach (var student in students)
         {
             var matchingClasses = classes
-                .Where(c => c.GradeLevel == student.CurrentGrade && c.BranchId == student.BranchId)
+                .Where(c => c.Grade == student.CurrentGrade && c.BranchId == student.BranchId)
                 .ToList();
 
-            if (matchingClasses.Any())
+            if (matchingClasses.Any() && currentTerm != null)
             {
                 var assignedClass = matchingClasses[random.Next(matchingClasses.Count)];
                 studentClassAssignments.Add(new StudentClassAssignment
                 {
                     StudentId = student.Id,
                     ClassId = assignedClass.Id,
-                    AcademicTermId = currentTerm?.Id,
-                    AssignedDate = DateTime.UtcNow.AddDays(-random.Next(30, 90)),
+                    AcademicTermId = currentTerm.Id,
+                    AssignmentDate = DateTime.UtcNow.AddDays(-random.Next(30, 90)),
                     IsActive = true
                 });
             }
@@ -804,10 +803,9 @@ public static class DbInitializer
                     CourseId = course.Id,
                     TeacherId = teacher.Id,
                     ClassId = relatedClass.Id,
+                    AssignedDate = DateTime.UtcNow.AddDays(-random.Next(1, 10)),
                     DueDate = DateTime.UtcNow.AddDays(random.Next(7, 30)),
-                    MaxScore = 100,
-                    Status = HomeworkStatus.Active,
-                    CreatedAt = DateTime.UtcNow.AddDays(-random.Next(1, 10))
+                    MaxScore = 100
                 });
             }
         }
@@ -832,28 +830,28 @@ public static class DbInitializer
 
             exams.Add(new InternalExam
             {
-                ExamName = $"{course.CourseName} Vize Sınavı",
+                Title = $"{course.CourseName} Vize Sınavı",
+                ExamType = "Deneme",
                 CourseId = course.Id,
                 TeacherId = teacher.Id,
                 ClassId = relatedClass.Id,
                 AcademicTermId = currentTerm?.Id,
                 ExamDate = DateTime.UtcNow.AddDays(random.Next(-30, 30)),
                 Duration = random.Next(60, 120),
-                MaxScore = 100,
-                ExamType = ExamType.Midterm
+                MaxScore = 100
             });
 
             exams.Add(new InternalExam
             {
-                ExamName = $"{course.CourseName} Final Sınavı",
+                Title = $"{course.CourseName} Final Sınavı",
+                ExamType = "Donem",
                 CourseId = course.Id,
                 TeacherId = teacher.Id,
                 ClassId = relatedClass.Id,
                 AcademicTermId = currentTerm?.Id,
                 ExamDate = DateTime.UtcNow.AddDays(random.Next(30, 90)),
                 Duration = random.Next(90, 150),
-                MaxScore = 100,
-                ExamType = ExamType.Final
+                MaxScore = 100
             });
         }
 
@@ -868,36 +866,30 @@ public static class DbInitializer
         {
             new PaymentPlan
             {
-                PlanName = "Standart Eğitim Planı",
-                Description = "Temel eğitim paketi - Haftada 3 ders",
-                TotalAmount = 15000,
+                PlanName = "Standart 10 Taksit Planı",
+                Description = "10 aylık taksit seçeneği",
                 InstallmentCount = 10,
-                InstallmentAmount = 1500,
-                Status = PaymentPlanStatus.Active,
-                ValidFrom = DateTime.UtcNow,
-                ValidUntil = DateTime.UtcNow.AddYears(1)
+                DaysBetweenInstallments = 30,
+                DownPaymentDiscount = 5,
+                IsActive = true
             },
             new PaymentPlan
             {
-                PlanName = "Premium Eğitim Planı",
-                Description = "Yoğun eğitim paketi - Haftada 5 ders",
-                TotalAmount = 25000,
-                InstallmentCount = 10,
-                InstallmentAmount = 2500,
-                Status = PaymentPlanStatus.Active,
-                ValidFrom = DateTime.UtcNow,
-                ValidUntil = DateTime.UtcNow.AddYears(1)
-            },
-            new PaymentPlan
-            {
-                PlanName = "VIP Eğitim Planı",
-                Description = "Bireysel danışmanlık dahil - Haftada 6+ ders",
-                TotalAmount = 40000,
+                PlanName = "Premium 12 Taksit Planı",
+                Description = "12 aylık uzun vadeli taksit",
                 InstallmentCount = 12,
-                InstallmentAmount = 3333.33m,
-                Status = PaymentPlanStatus.Active,
-                ValidFrom = DateTime.UtcNow,
-                ValidUntil = DateTime.UtcNow.AddYears(1)
+                DaysBetweenInstallments = 30,
+                DownPaymentDiscount = 10,
+                IsActive = true
+            },
+            new PaymentPlan
+            {
+                PlanName = "Peşin Ödeme Planı",
+                Description = "Tek seferde peşin ödeme - %15 indirim",
+                InstallmentCount = 1,
+                DaysBetweenInstallments = 0,
+                DownPaymentDiscount = 15,
+                IsActive = true
             }
         };
 
@@ -914,40 +906,44 @@ public static class DbInitializer
             {
                 PackageName = "SAT Hazırlık Paketi",
                 Description = "SAT sınavına kapsamlı hazırlık programı",
-                PackageType = PackageType.Academic,
+                Type = PackageType.TuitionPremium,
                 Price = 12000,
-                DurationMonths = 6,
-                Features = "12 haftalık yoğun program, Mock testler, Bireysel danışmanlık",
+                SessionCount = 48,
+                ValidityMonths = 6,
+                Includes = "12 haftalık yoğun program, Mock testler, Bireysel danışmanlık",
                 IsActive = true
             },
             new ServicePackage
             {
                 PackageName = "TOEFL Hazırlık Paketi",
                 Description = "TOEFL sınavı hazırlık programı",
-                PackageType = PackageType.Academic,
+                Type = PackageType.TuitionStandard,
                 Price = 10000,
-                DurationMonths = 4,
-                Features = "Speaking, Writing, Reading, Listening modülleri",
+                SessionCount = 32,
+                ValidityMonths = 4,
+                Includes = "Speaking, Writing, Reading, Listening modülleri",
                 IsActive = true
             },
             new ServicePackage
             {
                 PackageName = "Üniversite Başvuru Paketi",
                 Description = "ABD/UK üniversite başvuru danışmanlığı",
-                PackageType = PackageType.Consulting,
+                Type = PackageType.StudyAbroadPremium,
                 Price = 15000,
-                DurationMonths = 12,
-                Features = "Okul seçimi, Essay yazımı, Başvuru takibi",
+                SessionCount = 24,
+                ValidityMonths = 12,
+                Includes = "Okul seçimi, Essay yazımı, Başvuru takibi",
                 IsActive = true
             },
             new ServicePackage
             {
                 PackageName = "Kariyer Koçluğu Paketi",
                 Description = "Bireysel kariyer planlama ve koçluk",
-                PackageType = PackageType.Coaching,
+                Type = PackageType.CareerCoaching,
                 Price = 8000,
-                DurationMonths = 6,
-                Features = "Meslek testleri, Bireysel görüşmeler, Hedef belirleme",
+                SessionCount = 16,
+                ValidityMonths = 6,
+                Includes = "Meslek testleri, Bireysel görüşmeler, Hedef belirleme",
                 IsActive = true
             }
         };
