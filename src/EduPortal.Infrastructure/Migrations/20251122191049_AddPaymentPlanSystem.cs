@@ -72,13 +72,7 @@ namespace EduPortal.Infrastructure.Migrations
                 name: "IX_PaymentInstallments_PaymentPlanId",
                 table: "PaymentInstallments",
                 newName: "IX_PaymentInstallments_StudentPaymentPlanId");
-
-            migrationBuilder.AddColumn<decimal>(
-                name: "ActualCost",
-                table: "StudyAbroadPrograms",
-                type: "decimal(18,2)",
-                nullable: true);
-
+ 
             migrationBuilder.AddColumn<string>(
                 name: "Description",
                 table: "PaymentPlans",
@@ -231,10 +225,6 @@ namespace EduPortal.Infrastructure.Migrations
             migrationBuilder.DropIndex(
                 name: "IX_PaymentInstallments_PaymentId",
                 table: "PaymentInstallments");
-
-            migrationBuilder.DropColumn(
-                name: "ActualCost",
-                table: "StudyAbroadPrograms");
 
             migrationBuilder.DropColumn(
                 name: "Description",
