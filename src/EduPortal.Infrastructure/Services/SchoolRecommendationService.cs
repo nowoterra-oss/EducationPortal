@@ -94,7 +94,7 @@ public class SchoolRecommendationService : ISchoolRecommendationService
             District = dto.District,
             Reasoning = dto.Reasoning,
             RankingScore = dto.RankingScore,
-            Status = RecommendationStatus.Pending,
+            Status = RecommendationStatus.Recommended,
             Notes = dto.Notes
         };
 
@@ -149,7 +149,7 @@ public class SchoolRecommendationService : ISchoolRecommendationService
         {
             TotalRecommendations = recommendations.Count,
             AcceptedRecommendations = recommendations.Count(r => r.Status == RecommendationStatus.Accepted),
-            PendingRecommendations = recommendations.Count(r => r.Status == RecommendationStatus.Pending),
+            PendingRecommendations = recommendations.Count(r => r.Status == RecommendationStatus.Recommended || r.Status == RecommendationStatus.Considering),
             RejectedRecommendations = recommendations.Count(r => r.Status == RecommendationStatus.Rejected)
         };
 
