@@ -333,28 +333,256 @@ public class EmailService : IEmailService
     }
 
     // Specific notification emails
-    public Task<ApiResponse<bool>> SendVeliOdemeBilgilendirmeAsync(int studentId, int paymentId)
+    public async Task<ApiResponse<bool>> SendVeliOdemeBilgilendirmeAsync(int studentId, int paymentId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var payment = await _context.Payments
+                .Include(p => p.Student)
+                .ThenInclude(s => s.User)
+                .Include(p => p.Student)
+                .ThenInclude(s => s.Parents)
+                .ThenInclude(sp => sp.Parent)
+                .ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(p => p.Id == paymentId && !p.IsDeleted);
+
+            if (payment == null)
+                return ApiResponse<bool>.ErrorResponse("Ödeme bulunamadı");
+
+            var parent = payment.Student.Parents.FirstOrDefault()?.Parent;
+            if (parent == null || string.IsNullOrEmpty(parent.User.Email))
+                return ApiResponse<bool>.ErrorResponse("Veli email adresi bulunamadı");
+
+            var variables = new Dictionary<string, string>
+            {
+                { "VeliAdi", $"{parent.User.FirstName} {parent.User.LastName}" },
+                { "OgrenciAdi", $"{payment.Student.User.FirstName} {payment.Student.User.LastName}" },
+                { "OgrenciNo", payment.Student.StudentNo },
+                { "OdemeTutari", payment.Amount.ToString("C") },
+                { "OdemeTarihi", payment.DueDate.ToString("dd/MM/yyyy") },
+                { "OdemeDurumu", payment.Status.ToString() },
+                { "Aciklama", payment.Description ?? "" }
+            };
+
+            return await SendTemplateEmailAsync(
+                parent.User.Email,
+                (int)EmailTemplateType.VeliOdemeBilgilendirme,
+                variables
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error sending payment notification for student {studentId}");
+            return ApiResponse<bool>.ErrorResponse(ex.Message);
+        }
     }
 
-    public Task<ApiResponse<bool>> SendOdevBildirimiAsync(int homeworkId)
+    public async Task<ApiResponse<bool>> SendOdevBildirimiAsync(int homeworkId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var homework = await _context.Homeworks
+                .Include(h => h.Course)
+                .Include(h => h.Teacher)
+                .ThenInclude(t => t.User)
+                .FirstOrDefaultAsync(h => h.Id == homeworkId && !h.IsDeleted);
+
+            if (homework == null)
+                return ApiResponse<bool>.ErrorResponse("Ödev bulunamadı");
+
+            // Get all students in this course
+            var studentEmails = await _context.StudentTeacherAssignments
+                .Where(sta => sta.CourseId == homework.CourseId &&
+                             sta.TeacherId == homework.TeacherId &&
+                             !sta.IsDeleted &&
+                             sta.IsActive)
+                .Include(sta => sta.Student)
+                .ThenInclude(s => s.User)
+                .Select(sta => sta.Student.User.Email)
+                .Where(email => !string.IsNullOrEmpty(email))
+                .ToListAsync();
+
+            if (!studentEmails.Any())
+                return ApiResponse<bool>.ErrorResponse("Öğrenci bulunamadı");
+
+            var variables = new Dictionary<string, string>
+            {
+                { "DersAdi", homework.Course.CourseName },
+                { "OdevBaslik", homework.Title },
+                { "OdevAciklama", homework.Description ?? "" },
+                { "SonTeslimTarihi", homework.DueDate.ToString("dd/MM/yyyy HH:mm") },
+                { "OgretmenAdi", $"{homework.Teacher.User.FirstName} {homework.Teacher.User.LastName}" }
+            };
+
+            var bulkDto = new BulkEmailDto
+            {
+                Recipients = studentEmails,
+                Subject = $"Yeni Ödev: {homework.Title}",
+                Body = ReplaceVariables(
+                    "Merhaba,<br/><br/>" +
+                    "<strong>{DersAdi}</strong> dersi için yeni bir ödev verildi.<br/><br/>" +
+                    "<strong>Ödev:</strong> {OdevBaslik}<br/>" +
+                    "<strong>Açıklama:</strong> {OdevAciklama}<br/>" +
+                    "<strong>Son Teslim:</strong> {SonTeslimTarihi}<br/>" +
+                    "<strong>Öğretmen:</strong> {OgretmenAdi}<br/><br/>" +
+                    "İyi çalışmalar!",
+                    variables
+                ),
+                IsHtml = true
+            };
+
+            return await SendBulkEmailAsync(bulkDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error sending homework notification {homeworkId}");
+            return ApiResponse<bool>.ErrorResponse(ex.Message);
+        }
     }
 
-    public Task<ApiResponse<bool>> SendSinavSonucBildirimiAsync(int examResultId)
+    public async Task<ApiResponse<bool>> SendSinavSonucBildirimiAsync(int examResultId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var examResult = await _context.ExamResults
+                .Include(er => er.Student)
+                .ThenInclude(s => s.User)
+                .Include(er => er.InternalExam)
+                .ThenInclude(e => e.Course)
+                .FirstOrDefaultAsync(er => er.Id == examResultId && !er.IsDeleted);
+
+            if (examResult == null)
+                return ApiResponse<bool>.ErrorResponse("Sınav sonucu bulunamadı");
+
+            if (string.IsNullOrEmpty(examResult.Student.User.Email))
+                return ApiResponse<bool>.ErrorResponse("Öğrenci email adresi bulunamadı");
+
+            var percentage = (examResult.Score / examResult.InternalExam.TotalPoints) * 100;
+
+            var variables = new Dictionary<string, string>
+            {
+                { "OgrenciAdi", $"{examResult.Student.User.FirstName} {examResult.Student.User.LastName}" },
+                { "DersAdi", examResult.InternalExam.Course.CourseName },
+                { "SinavAdi", examResult.InternalExam.ExamName },
+                { "Puan", examResult.Score.ToString("F2") },
+                { "ToplamPuan", examResult.InternalExam.TotalPoints.ToString("F2") },
+                { "Yuzde", percentage.ToString("F1") },
+                { "SinavTarihi", examResult.InternalExam.ExamDate.ToString("dd/MM/yyyy") }
+            };
+
+            return await SendTemplateEmailAsync(
+                examResult.Student.User.Email,
+                (int)EmailTemplateType.SinavSonucBildirimi,
+                variables
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error sending exam result notification {examResultId}");
+            return ApiResponse<bool>.ErrorResponse(ex.Message);
+        }
     }
 
-    public Task<ApiResponse<bool>> SendDevamsizlikUyariAsync(int studentId)
+    public async Task<ApiResponse<bool>> SendDevamsizlikUyariAsync(int studentId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var student = await _context.Students
+                .Include(s => s.User)
+                .Include(s => s.Parents)
+                .ThenInclude(sp => sp.Parent)
+                .ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(s => s.Id == studentId && !s.IsDeleted);
+
+            if (student == null)
+                return ApiResponse<bool>.ErrorResponse("Öğrenci bulunamadı");
+
+            var totalAttendance = await _context.Attendances
+                .CountAsync(a => a.StudentId == studentId && !a.IsDeleted);
+
+            var absentCount = await _context.Attendances
+                .CountAsync(a => a.StudentId == studentId &&
+                               !a.IsDeleted &&
+                               a.Status == AttendanceStatus.Gelmedi_Mazeretsiz);
+
+            var absentRate = totalAttendance > 0 ? (decimal)absentCount / totalAttendance * 100 : 0;
+
+            var variables = new Dictionary<string, string>
+            {
+                { "OgrenciAdi", $"{student.User.FirstName} {student.User.LastName}" },
+                { "OgrenciNo", student.StudentNo },
+                { "DevamsizlikSayisi", absentCount.ToString() },
+                { "ToplamDers", totalAttendance.ToString() },
+                { "DevamsizlikOrani", absentRate.ToString("F1") }
+            };
+
+            var parent = student.Parents.FirstOrDefault()?.Parent;
+            var recipientEmail = parent?.User.Email ?? student.User.Email;
+
+            if (string.IsNullOrEmpty(recipientEmail))
+                return ApiResponse<bool>.ErrorResponse("Email adresi bulunamadı");
+
+            return await SendTemplateEmailAsync(
+                recipientEmail,
+                (int)EmailTemplateType.DevamsizlikUyari,
+                variables
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error sending absence warning for student {studentId}");
+            return ApiResponse<bool>.ErrorResponse(ex.Message);
+        }
     }
 
-    public Task<ApiResponse<bool>> SendTaksitHatirlatmaAsync(int installmentId)
+    public async Task<ApiResponse<bool>> SendTaksitHatirlatmaAsync(int installmentId)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var installment = await _context.PaymentInstallments
+                .Include(i => i.StudentPaymentPlan)
+                .ThenInclude(spp => spp.Student)
+                .ThenInclude(s => s.User)
+                .Include(i => i.StudentPaymentPlan)
+                .ThenInclude(spp => spp.Student)
+                .ThenInclude(s => s.Parents)
+                .ThenInclude(sp => sp.Parent)
+                .ThenInclude(p => p.User)
+                .FirstOrDefaultAsync(i => i.Id == installmentId && !i.IsDeleted);
+
+            if (installment == null)
+                return ApiResponse<bool>.ErrorResponse("Taksit bulunamadı");
+
+            var student = installment.StudentPaymentPlan.Student;
+            var parent = student.Parents.FirstOrDefault()?.Parent;
+
+            var recipientEmail = parent?.User.Email ?? student.User.Email;
+            if (string.IsNullOrEmpty(recipientEmail))
+                return ApiResponse<bool>.ErrorResponse("Email adresi bulunamadı");
+
+            var daysUntilDue = (installment.DueDate - DateTime.UtcNow).Days;
+
+            var variables = new Dictionary<string, string>
+            {
+                { "OgrenciAdi", $"{student.User.FirstName} {student.User.LastName}" },
+                { "OgrenciNo", student.StudentNo },
+                { "TaksitNo", installment.InstallmentNumber.ToString() },
+                { "TaksitTutari", installment.Amount.ToString("C") },
+                { "SonOdemeTarihi", installment.DueDate.ToString("dd/MM/yyyy") },
+                { "KalanGun", daysUntilDue.ToString() },
+                { "Durum", installment.Status.ToString() }
+            };
+
+            return await SendTemplateEmailAsync(
+                recipientEmail,
+                (int)EmailTemplateType.TaksitHatirlatma,
+                variables
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error sending installment reminder {installmentId}");
+            return ApiResponse<bool>.ErrorResponse(ex.Message);
+        }
     }
 }
