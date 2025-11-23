@@ -20,9 +20,19 @@ Console.WriteLine($"[CONNECTION STRING] Using database connection:");
 Console.WriteLine($"[CONNECTION STRING] {connectionString}");
 Console.WriteLine("=======================================================");
 
-// Add DbContext
+// Add DbContext with retry logic for transient failures
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sqlOptions =>
+    {
+        // Enable retry on failure for transient errors
+        sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 5,
+            maxRetryDelay: TimeSpan.FromSeconds(30),
+            errorNumbersToAdd: null);
+
+        // Set command timeout
+        sqlOptions.CommandTimeout(60);
+    }));
 
 // Configure EmailSettings
 builder.Services.Configure<EmailSettings>(
