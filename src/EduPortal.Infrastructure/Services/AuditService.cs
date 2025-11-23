@@ -118,14 +118,12 @@ public class AuditService : IAuditService
 
             var dtos = logs.Select(MapToDto).ToList();
 
-            var pagedResponse = new PagedResponse<AuditLogDto>
-            {
-                Data = dtos,
-                PageNumber = filter.PageNumber,
-                PageSize = filter.PageSize,
-                TotalCount = totalCount,
-                TotalPages = (int)Math.Ceiling(totalCount / (double)filter.PageSize)
-            };
+            var pagedResponse = new PagedResponse<AuditLogDto>(
+                dtos,
+                totalCount,
+                filter.PageNumber,
+                filter.PageSize
+            );
 
             return ApiResponse<PagedResponse<AuditLogDto>>.SuccessResponse(pagedResponse);
         }
