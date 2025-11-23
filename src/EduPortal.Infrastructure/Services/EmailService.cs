@@ -359,7 +359,7 @@ public class EmailService : IEmailService
                 { "OgrenciAdi", $"{payment.Student.User.FirstName} {payment.Student.User.LastName}" },
                 { "OgrenciNo", payment.Student.StudentNo },
                 { "OdemeTutari", payment.Amount.ToString("C") },
-                { "OdemeTarihi", payment.DueDate.ToString("dd/MM/yyyy") },
+                { "OdemeTarihi", payment.PaymentDate.ToString("dd/MM/yyyy") },
                 { "OdemeDurumu", payment.Status.ToString() },
                 { "Aciklama", payment.Description ?? "" }
             };
@@ -398,8 +398,8 @@ public class EmailService : IEmailService
                              sta.IsActive)
                 .Include(sta => sta.Student)
                 .ThenInclude(s => s.User)
-                .Select(sta => sta.Student.User.Email)
-                .Where(email => !string.IsNullOrEmpty(email))
+                .Where(sta => !string.IsNullOrEmpty(sta.Student.User.Email))
+                .Select(sta => sta.Student.User.Email!)
                 .ToListAsync();
 
             if (!studentEmails.Any())
@@ -447,7 +447,7 @@ public class EmailService : IEmailService
             var examResult = await _context.ExamResults
                 .Include(er => er.Student)
                 .ThenInclude(s => s.User)
-                .Include(er => er.InternalExam)
+                .Include(er => er.Exam)
                 .ThenInclude(e => e.Course)
                 .FirstOrDefaultAsync(er => er.Id == examResultId && !er.IsDeleted);
 
@@ -457,17 +457,17 @@ public class EmailService : IEmailService
             if (string.IsNullOrEmpty(examResult.Student.User.Email))
                 return ApiResponse<bool>.ErrorResponse("Öğrenci email adresi bulunamadı");
 
-            var percentage = (examResult.Score / examResult.InternalExam.TotalPoints) * 100;
+            var percentage = (examResult.Score / examResult.Exam.TotalPoints) * 100;
 
             var variables = new Dictionary<string, string>
             {
                 { "OgrenciAdi", $"{examResult.Student.User.FirstName} {examResult.Student.User.LastName}" },
-                { "DersAdi", examResult.InternalExam.Course.CourseName },
-                { "SinavAdi", examResult.InternalExam.ExamName },
+                { "DersAdi", examResult.Exam.Course.CourseName },
+                { "SinavAdi", examResult.Exam.ExamName },
                 { "Puan", examResult.Score.ToString("F2") },
-                { "ToplamPuan", examResult.InternalExam.TotalPoints.ToString("F2") },
+                { "ToplamPuan", examResult.Exam.TotalPoints.ToString("F2") },
                 { "Yuzde", percentage.ToString("F1") },
-                { "SinavTarihi", examResult.InternalExam.ExamDate.ToString("dd/MM/yyyy") }
+                { "SinavTarihi", examResult.Exam.ExamDate.ToString("dd/MM/yyyy") }
             };
 
             return await SendTemplateEmailAsync(
