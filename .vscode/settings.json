@@ -1,0 +1,23 @@
+{
+  // C# ve .NET ayarları
+  "dotnet.defaultSolution": "EduPortal.sln",
+
+  // Hot Reload ayarları
+  "dotnet-watch-options.suppressBrowserRefresh": false,
+  "dotnet-watch-options.suppressLaunchBrowser": true,
+
+  // Debug ayarları
+  "debug.console.closeOnEnd": false,
+  "debug.internalConsoleOptions": "neverOpen",
+  "debug.openDebug": "neverOpen",
+
+  // File exclusions for better performance
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+
+  // Dil ayarları
+  "files.encoding": "utf8",
+  "files.eol": "\n"
+}

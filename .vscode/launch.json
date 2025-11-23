@@ -10,13 +10,40 @@
       "args": [],
       "cwd": "${workspaceFolder}/src/EduPortal.API",
       "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
       "serverReadyAction": {
         "action": "openExternally",
         "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
       },
       "env": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "http://localhost:5129"
+        "ASPNETCORE_URLS": "http://localhost:5129",
+        "DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER": "1"
+      },
+      "sourceFileMap": {
+        "/Views": "${workspaceFolder}/Views"
+      }
+    },
+    {
+      "name": ".NET Core Launch with Hot Reload",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "watch",
+      "program": "${workspaceFolder}/src/EduPortal.API/bin/Debug/net8.0/EduPortal.API.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/EduPortal.API",
+      "stopAtEntry": false,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+      },
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5129",
+        "DOTNET_WATCH_SUPPRESS_LAUNCH_BROWSER": "1"
       },
       "sourceFileMap": {
         "/Views": "${workspaceFolder}/Views"

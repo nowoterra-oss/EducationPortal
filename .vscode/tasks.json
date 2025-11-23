@@ -33,9 +33,46 @@
         "watch",
         "run",
         "--project",
-        "${workspaceFolder}/src/EduPortal.API/EduPortal.API.csproj"
+        "${workspaceFolder}/src/EduPortal.API/EduPortal.API.csproj",
+        "--no-hot-reload"
       ],
-      "problemMatcher": "$msCompile"
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "csharp",
+        "fileLocation": "absolute",
+        "pattern": {
+          "regexp": "^(.*)\\((\\d+),(\\d+)\\):\\s+(error|warning)\\s+(\\w+):\\s+(.*)$",
+          "file": 1,
+          "line": 2,
+          "column": 3,
+          "severity": 4,
+          "code": 5,
+          "message": 6
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^.*Building.*",
+          "endsPattern": "^.*Application started.*|^.*dotnet watch.*"
+        }
+      }
+    },
+    {
+      "label": "kill-dotnet",
+      "command": "taskkill",
+      "type": "shell",
+      "windows": {
+        "command": "taskkill /F /IM dotnet.exe /T || echo 'No process found'"
+      },
+      "linux": {
+        "command": "pkill -9 dotnet || echo 'No process found'"
+      },
+      "osx": {
+        "command": "pkill -9 dotnet || echo 'No process found'"
+      },
+      "presentation": {
+        "reveal": "silent",
+        "close": true
+      }
     }
   ]
 }
