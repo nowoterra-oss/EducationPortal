@@ -39,6 +39,7 @@ public static class DbInitializer
         await SeedExamsAsync(context);
         await SeedPaymentPlansAsync(context);
         await SeedServicePackagesAsync(context);
+        await SeedEmailTemplatesAsync(context);
 
         Console.WriteLine("✅ Database seeded successfully with comprehensive data!");
     }
@@ -951,5 +952,96 @@ public static class DbInitializer
         await context.ServicePackages.AddRangeAsync(packages);
         await context.SaveChangesAsync();
         Console.WriteLine($"✓ {packages.Count} service packages created");
+    }
+
+    private static async Task SeedEmailTemplatesAsync(ApplicationDbContext context)
+    {
+        if (await context.EmailTemplates.AnyAsync())
+            return;
+
+        var templates = new List<EmailTemplate>
+        {
+            new EmailTemplate
+            {
+                TemplateName = "Veli Ödeme Bilgilendirme",
+                TemplateType = EmailTemplateType.VeliOdemeBilgilendirme,
+                Subject = "Ödeme Bildirimi - {OgrenciAdi}",
+                Body = @"
+                <h2>Sayın {VeliAdi},</h2>
+                <p><strong>{OgrenciAdi}</strong> ({OgrenciNo}) için ödeme bildirimi:</p>
+                <ul>
+                    <li><strong>Tutar:</strong> {OdemeTutari}</li>
+                    <li><strong>Son Ödeme Tarihi:</strong> {OdemeTarihi}</li>
+                    <li><strong>Durum:</strong> {OdemeDurumu}</li>
+                    <li><strong>Açıklama:</strong> {Aciklama}</li>
+                </ul>
+                <p>Saygılarımızla,<br/>EduPortal</p>
+            ",
+                VariablesJson = "{\"VeliAdi\":\"\",\"OgrenciAdi\":\"\",\"OgrenciNo\":\"\",\"OdemeTutari\":\"\",\"OdemeTarihi\":\"\",\"OdemeDurumu\":\"\",\"Aciklama\":\"\"}",
+                IsActive = true
+            },
+            new EmailTemplate
+            {
+                TemplateName = "Sınav Sonucu Bildirimi",
+                TemplateType = EmailTemplateType.SinavSonucBildirimi,
+                Subject = "Sınav Sonucunuz - {DersAdi}",
+                Body = @"
+                <h2>Merhaba {OgrenciAdi},</h2>
+                <p><strong>{DersAdi}</strong> dersi <strong>{SinavAdi}</strong> sınavı sonucunuz:</p>
+                <ul>
+                    <li><strong>Aldığınız Puan:</strong> {Puan}</li>
+                    <li><strong>Toplam Puan:</strong> {ToplamPuan}</li>
+                    <li><strong>Başarı Yüzdesi:</strong> %{Yuzde}</li>
+                    <li><strong>Sınav Tarihi:</strong> {SinavTarihi}</li>
+                </ul>
+                <p>Başarılar dileriz!<br/>EduPortal</p>
+            ",
+                VariablesJson = "{\"OgrenciAdi\":\"\",\"DersAdi\":\"\",\"SinavAdi\":\"\",\"Puan\":\"\",\"ToplamPuan\":\"\",\"Yuzde\":\"\",\"SinavTarihi\":\"\"}",
+                IsActive = true
+            },
+            new EmailTemplate
+            {
+                TemplateName = "Devamsızlık Uyarısı",
+                TemplateType = EmailTemplateType.DevamsizlikUyari,
+                Subject = "Devamsızlık Uyarısı - {OgrenciAdi}",
+                Body = @"
+                <h2>Sayın Veli/Öğrenci,</h2>
+                <p><strong>{OgrenciAdi}</strong> ({OgrenciNo}) için devamsızlık uyarısı:</p>
+                <ul>
+                    <li><strong>Toplam Devamsızlık:</strong> {DevamsizlikSayisi}</li>
+                    <li><strong>Toplam Ders:</strong> {ToplamDers}</li>
+                    <li><strong>Devamsızlık Oranı:</strong> %{DevamsizlikOrani}</li>
+                </ul>
+                <p>Lütfen devamsızlık durumunu takip ediniz.</p>
+                <p>Saygılarımızla,<br/>EduPortal</p>
+            ",
+                VariablesJson = "{\"OgrenciAdi\":\"\",\"OgrenciNo\":\"\",\"DevamsizlikSayisi\":\"\",\"ToplamDers\":\"\",\"DevamsizlikOrani\":\"\"}",
+                IsActive = true
+            },
+            new EmailTemplate
+            {
+                TemplateName = "Taksit Hatırlatma",
+                TemplateType = EmailTemplateType.TaksitHatirlatma,
+                Subject = "Ödeme Hatırlatma - Taksit {TaksitNo}",
+                Body = @"
+                <h2>Sayın Veli,</h2>
+                <p><strong>{OgrenciAdi}</strong> ({OgrenciNo}) için ödeme hatırlatması:</p>
+                <ul>
+                    <li><strong>Taksit No:</strong> {TaksitNo}</li>
+                    <li><strong>Tutar:</strong> {TaksitTutari}</li>
+                    <li><strong>Son Ödeme Tarihi:</strong> {SonOdemeTarihi}</li>
+                    <li><strong>Kalan Gün:</strong> {KalanGun} gün</li>
+                </ul>
+                <p>Zamanında ödeme yapmanızı rica ederiz.</p>
+                <p>Saygılarımızla,<br/>EduPortal</p>
+            ",
+                VariablesJson = "{\"OgrenciAdi\":\"\",\"OgrenciNo\":\"\",\"TaksitNo\":\"\",\"TaksitTutari\":\"\",\"SonOdemeTarihi\":\"\",\"KalanGun\":\"\",\"Durum\":\"\"}",
+                IsActive = true
+            }
+        };
+
+        await context.EmailTemplates.AddRangeAsync(templates);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"✓ {templates.Count} email templates created");
     }
 }

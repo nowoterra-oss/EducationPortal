@@ -457,15 +457,15 @@ public class EmailService : IEmailService
             if (string.IsNullOrEmpty(examResult.Student.User.Email))
                 return ApiResponse<bool>.ErrorResponse("Öğrenci email adresi bulunamadı");
 
-            var percentage = (examResult.Score / examResult.Exam.TotalPoints) * 100;
+            var percentage = (examResult.Score / examResult.Exam.MaxScore) * 100;
 
             var variables = new Dictionary<string, string>
             {
                 { "OgrenciAdi", $"{examResult.Student.User.FirstName} {examResult.Student.User.LastName}" },
                 { "DersAdi", examResult.Exam.Course.CourseName },
-                { "SinavAdi", examResult.Exam.ExamName },
+                { "SinavAdi", examResult.Exam.Title },
                 { "Puan", examResult.Score.ToString("F2") },
-                { "ToplamPuan", examResult.Exam.TotalPoints.ToString("F2") },
+                { "ToplamPuan", examResult.Exam.MaxScore.ToString("F0") },
                 { "Yuzde", percentage.ToString("F1") },
                 { "SinavTarihi", examResult.Exam.ExamDate.ToString("dd/MM/yyyy") }
             };
