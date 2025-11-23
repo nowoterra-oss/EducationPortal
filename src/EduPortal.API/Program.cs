@@ -1,3 +1,4 @@
+using EduPortal.API.Middleware;
 using EduPortal.Application;
 using EduPortal.Domain.Entities;
 using EduPortal.Infrastructure;
@@ -181,6 +182,10 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseAuthentication();
+
+// Audit Middleware
+app.UseMiddleware<AuditMiddleware>();
+
 app.UseAuthorization();
 
 app.MapControllers();
