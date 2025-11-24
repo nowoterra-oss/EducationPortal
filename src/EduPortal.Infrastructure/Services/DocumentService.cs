@@ -161,9 +161,10 @@ public class DocumentService : IDocumentService
         if (document == null)
             throw new KeyNotFoundException("Belge bulunamadı");
 
+        var userIdString = dto.UserId.ToString();
         var user = await _context.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == dto.UserId);
+            .FirstOrDefaultAsync(u => u.Id == userIdString);
 
         if (user == null)
             throw new KeyNotFoundException("Kullanıcı bulunamadı");

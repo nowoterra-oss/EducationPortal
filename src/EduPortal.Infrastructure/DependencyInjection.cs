@@ -31,6 +31,8 @@ public static class DependencyInjection
         services.AddScoped<IAGPService, AGPService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IUniversityApplicationService, UniversityApplicationService>();
+        services.AddScoped<ICourseService, CourseService>();
+        services.AddScoped<IStudentClassAssignmentService, StudentClassAssignmentService>();
 
         // Register Application Services (using DbContext)
         services.AddScoped<ICoachingSessionService, CoachingSessionService>();
