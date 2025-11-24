@@ -1,4 +1,6 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.Counselor;
+using EduPortal.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +15,12 @@ namespace EduPortal.API.Controllers;
 [Authorize]
 public class CounselorsController : ControllerBase
 {
-    // TODO: Implement ICounselorService
+    private readonly ICounselorService _counselorService;
     private readonly ILogger<CounselorsController> _logger;
 
-    public CounselorsController(ILogger<CounselorsController> logger)
+    public CounselorsController(ICounselorService counselorService, ILogger<CounselorsController> logger)
     {
+        _counselorService = counselorService;
         _logger = logger;
     }
 
@@ -26,24 +29,71 @@ public class CounselorsController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetAll(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<CounselorSummaryDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<CounselorSummaryDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _counselorService.GetCounselorsPagedAsync(pageNumber, pageSize);
+            var pagedResponse = new PagedResponse<CounselorSummaryDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<CounselorSummaryDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting counselors");
+            return StatusCode(500, ApiResponse<PagedResponse<CounselorSummaryDto>>.ErrorResponse("Danışmanlar alınırken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Get active counselors
+    /// </summary>
+    [HttpGet("active")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<CounselorDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<CounselorDto>>>> GetActive()
+    {
+        try
+        {
+            var counselors = await _counselorService.GetActiveCounselorsAsync();
+            return Ok(ApiResponse<IEnumerable<CounselorDto>>.SuccessResponse(counselors));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting active counselors");
+            return StatusCode(500, ApiResponse<IEnumerable<CounselorDto>>.ErrorResponse("Aktif danışmanlar alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Get counselor by ID
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetById(int id)
+    [ProducesResponseType(typeof(ApiResponse<CounselorDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CounselorDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<CounselorDto>>> GetById(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var counselor = await _counselorService.GetCounselorByIdAsync(id);
+            if (counselor == null)
+            {
+                return NotFound(ApiResponse<CounselorDto>.ErrorResponse("Danışman bulunamadı"));
+            }
+
+            return Ok(ApiResponse<CounselorDto>.SuccessResponse(counselor));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting counselor {CounselorId}", id);
+            return StatusCode(500, ApiResponse<CounselorDto>.ErrorResponse("Danışman alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -51,11 +101,26 @@ public class CounselorsController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
-    public async Task<ActionResult<ApiResponse<object>>> Create([FromBody] object counselorDto)
+    [ProducesResponseType(typeof(ApiResponse<CounselorDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<CounselorDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<CounselorDto>>> Create([FromBody] CreateCounselorDto counselorDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<CounselorDto>.ErrorResponse("Geçersiz veri"));
+            }
+
+            var counselor = await _counselorService.CreateCounselorAsync(counselorDto);
+            return CreatedAtAction(nameof(GetById), new { id = counselor.Id },
+                ApiResponse<CounselorDto>.SuccessResponse(counselor, "Danışman başarıyla oluşturuldu"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating counselor");
+            return StatusCode(500, ApiResponse<CounselorDto>.ErrorResponse("Danışman oluşturulurken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -63,11 +128,29 @@ public class CounselorsController : ControllerBase
     /// </summary>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> Update(int id, [FromBody] object counselorDto)
+    [ProducesResponseType(typeof(ApiResponse<CounselorDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CounselorDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<CounselorDto>>> Update(int id, [FromBody] UpdateCounselorDto counselorDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<CounselorDto>.ErrorResponse("Geçersiz veri"));
+            }
+
+            var counselor = await _counselorService.UpdateCounselorAsync(id, counselorDto);
+            return Ok(ApiResponse<CounselorDto>.SuccessResponse(counselor, "Danışman başarıyla güncellendi"));
+        }
+        catch (Exception ex) when (ex.Message == "Counselor not found")
+        {
+            return NotFound(ApiResponse<CounselorDto>.ErrorResponse("Danışman bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating counselor {CounselorId}", id);
+            return StatusCode(500, ApiResponse<CounselorDto>.ErrorResponse("Danışman güncellenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -76,34 +159,122 @@ public class CounselorsController : ControllerBase
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var result = await _counselorService.DeleteCounselorAsync(id);
+            if (!result)
+            {
+                return NotFound(ApiResponse<bool>.ErrorResponse("Danışman bulunamadı"));
+            }
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Danışman başarıyla silindi"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting counselor {CounselorId}", id);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Danışman silinirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Get counselor's assigned students
     /// </summary>
     [HttpGet("{id}/students")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetStudents(int id)
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<CounselorStudentDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<CounselorStudentDto>>>> GetStudents(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var students = await _counselorService.GetCounselorStudentsAsync(id);
+            return Ok(ApiResponse<IEnumerable<CounselorStudentDto>>.SuccessResponse(students));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting students for counselor {CounselorId}", id);
+            return StatusCode(500, ApiResponse<IEnumerable<CounselorStudentDto>>.ErrorResponse("Öğrenciler alınırken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Assign student to counselor
+    /// </summary>
+    [HttpPost("{id}/students/{studentId}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<bool>>> AssignStudent(int id, int studentId)
+    {
+        try
+        {
+            var result = await _counselorService.AssignStudentAsync(id, studentId);
+            if (!result)
+            {
+                return BadRequest(ApiResponse<bool>.ErrorResponse("Öğrenci atanamadı. Danışman bulunamadı veya öğrenci zaten atanmış."));
+            }
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Öğrenci başarıyla atandı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error assigning student {StudentId} to counselor {CounselorId}", studentId, id);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Öğrenci atanırken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Unassign student from counselor
+    /// </summary>
+    [HttpDelete("{id}/students/{studentId}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> UnassignStudent(int id, int studentId)
+    {
+        try
+        {
+            var result = await _counselorService.UnassignStudentAsync(id, studentId);
+            if (!result)
+            {
+                return NotFound(ApiResponse<bool>.ErrorResponse("Atama bulunamadı"));
+            }
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Öğrenci ataması başarıyla kaldırıldı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error unassigning student {StudentId} from counselor {CounselorId}", studentId, id);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Atama kaldırılırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Get counselor's sessions
     /// </summary>
     [HttpGet("{id}/sessions")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetSessions(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<CounselingSessionDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<CounselingSessionDto>>>> GetSessions(
         int id,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _counselorService.GetCounselorSessionsPagedAsync(id, pageNumber, pageSize);
+            var pagedResponse = new PagedResponse<CounselingSessionDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<CounselingSessionDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting sessions for counselor {CounselorId}", id);
+            return StatusCode(500, ApiResponse<PagedResponse<CounselingSessionDto>>.ErrorResponse("Oturumlar alınırken bir hata oluştu"));
+        }
     }
 }
