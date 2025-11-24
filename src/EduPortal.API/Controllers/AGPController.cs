@@ -1,4 +1,6 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.AGP;
+using EduPortal.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +15,12 @@ namespace EduPortal.API.Controllers;
 [Authorize]
 public class AGPController : ControllerBase
 {
-    // TODO: Implement IAGPService
+    private readonly IAGPService _agpService;
     private readonly ILogger<AGPController> _logger;
 
-    public AGPController(ILogger<AGPController> logger)
+    public AGPController(IAGPService agpService, ILogger<AGPController> logger)
     {
+        _agpService = agpService;
         _logger = logger;
     }
 
@@ -26,24 +29,52 @@ public class AGPController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize(Roles = "Admin,Danışman")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetAll(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<AGPDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<AGPDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _agpService.GetAllPagedAsync(pageNumber, pageSize);
+
+            var pagedResponse = new PagedResponse<AGPDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<AGPDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP kayıtları getirilirken hata oluştu");
+            return StatusCode(500, ApiResponse<PagedResponse<AGPDto>>.ErrorResponse("AGP kayıtları getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Get AGP by ID
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetById(int id)
+    [ProducesResponseType(typeof(ApiResponse<AGPDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<AGPDto>>> GetById(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var agp = await _agpService.GetByIdAsync(id);
+
+            if (agp == null)
+                return NotFound(ApiResponse<AGPDto>.ErrorResponse("AGP bulunamadı"));
+
+            return Ok(ApiResponse<AGPDto>.SuccessResponse(agp));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP getirilirken hata oluştu. ID: {AGPId}", id);
+            return StatusCode(500, ApiResponse<AGPDto>.ErrorResponse("AGP getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -51,11 +82,25 @@ public class AGPController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin,Danışman")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
-    public async Task<ActionResult<ApiResponse<object>>> Create([FromBody] object agpDto)
+    [ProducesResponseType(typeof(ApiResponse<AGPDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<AGPDto>>> Create([FromBody] CreateAGPDto createDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<AGPDto>.ErrorResponse("Geçersiz veri"));
+
+            var agp = await _agpService.CreateAsync(createDto);
+
+            return CreatedAtAction(nameof(GetById), new { id = agp.Id },
+                ApiResponse<AGPDto>.SuccessResponse(agp, "AGP başarıyla oluşturuldu"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP oluşturulurken hata oluştu");
+            return StatusCode(500, ApiResponse<AGPDto>.ErrorResponse("AGP oluşturulurken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -63,11 +108,28 @@ public class AGPController : ControllerBase
     /// </summary>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Danışman")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> Update(int id, [FromBody] object agpDto)
+    [ProducesResponseType(typeof(ApiResponse<AGPDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<AGPDto>>> Update(int id, [FromBody] UpdateAGPDto updateDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<AGPDto>.ErrorResponse("Geçersiz veri"));
+
+            var agp = await _agpService.UpdateAsync(id, updateDto);
+
+            return Ok(ApiResponse<AGPDto>.SuccessResponse(agp, "AGP başarıyla güncellendi"));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(ApiResponse<AGPDto>.ErrorResponse("AGP bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP güncellenirken hata oluştu. ID: {AGPId}", id);
+            return StatusCode(500, ApiResponse<AGPDto>.ErrorResponse("AGP güncellenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -76,32 +138,61 @@ public class AGPController : ControllerBase
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var result = await _agpService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(ApiResponse<bool>.ErrorResponse("AGP bulunamadı"));
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "AGP başarıyla silindi"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP silinirken hata oluştu. ID: {AGPId}", id);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("AGP silinirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Get student AGP
     /// </summary>
     [HttpGet("student/{studentId}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetByStudent(int studentId)
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<AGPDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<AGPDto>>>> GetByStudent(int studentId)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var agps = await _agpService.GetByStudentAsync(studentId);
+            return Ok(ApiResponse<IEnumerable<AGPDto>>.SuccessResponse(agps));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Öğrenci AGP kayıtları getirilirken hata oluştu. StudentId: {StudentId}", studentId);
+            return StatusCode(500, ApiResponse<IEnumerable<AGPDto>>.ErrorResponse("AGP kayıtları getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
-    /// Get AGP goals
+    /// Get AGP goals (milestones)
     /// </summary>
     [HttpGet("{id}/goals")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetGoals(int id)
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<AGPGoalDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<AGPGoalDto>>>> GetGoals(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var goals = await _agpService.GetGoalsAsync(id);
+            return Ok(ApiResponse<IEnumerable<AGPGoalDto>>.SuccessResponse(goals));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP hedefleri getirilirken hata oluştu. AGPId: {AGPId}", id);
+            return StatusCode(500, ApiResponse<IEnumerable<AGPGoalDto>>.ErrorResponse("Hedefler getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -109,11 +200,29 @@ public class AGPController : ControllerBase
     /// </summary>
     [HttpPost("{id}/goals")]
     [Authorize(Roles = "Admin,Danışman")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
-    public async Task<ActionResult<ApiResponse<object>>> AddGoal(int id, [FromBody] object goalDto)
+    [ProducesResponseType(typeof(ApiResponse<AGPGoalDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<AGPGoalDto>>> AddGoal(int id, [FromBody] CreateAGPGoalDto goalDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<AGPGoalDto>.ErrorResponse("Geçersiz veri"));
+
+            var goal = await _agpService.AddGoalAsync(id, goalDto);
+
+            return CreatedAtAction(nameof(GetGoals), new { id },
+                ApiResponse<AGPGoalDto>.SuccessResponse(goal, "Hedef başarıyla eklendi"));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(ApiResponse<AGPGoalDto>.ErrorResponse("AGP bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Hedef eklenirken hata oluştu. AGPId: {AGPId}", id);
+            return StatusCode(500, ApiResponse<AGPGoalDto>.ErrorResponse("Hedef eklenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -121,11 +230,28 @@ public class AGPController : ControllerBase
     /// </summary>
     [HttpPut("{id}/goals/{goalId}")]
     [Authorize(Roles = "Admin,Danışman")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> UpdateGoal(int id, int goalId, [FromBody] object goalDto)
+    [ProducesResponseType(typeof(ApiResponse<AGPGoalDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<AGPGoalDto>>> UpdateGoal(int id, int goalId, [FromBody] UpdateAGPGoalDto goalDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<AGPGoalDto>.ErrorResponse("Geçersiz veri"));
+
+            var goal = await _agpService.UpdateGoalAsync(id, goalId, goalDto);
+
+            return Ok(ApiResponse<AGPGoalDto>.SuccessResponse(goal, "Hedef başarıyla güncellendi"));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(ApiResponse<AGPGoalDto>.ErrorResponse("Hedef bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Hedef güncellenirken hata oluştu. AGPId: {AGPId}, GoalId: {GoalId}", id, goalId);
+            return StatusCode(500, ApiResponse<AGPGoalDto>.ErrorResponse("Hedef güncellenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -134,20 +260,46 @@ public class AGPController : ControllerBase
     [HttpDelete("{id}/goals/{goalId}")]
     [Authorize(Roles = "Admin,Danışman")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteGoal(int id, int goalId)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var result = await _agpService.DeleteGoalAsync(id, goalId);
+
+            if (!result)
+                return NotFound(ApiResponse<bool>.ErrorResponse("Hedef bulunamadı"));
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Hedef başarıyla silindi"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Hedef silinirken hata oluştu. AGPId: {AGPId}, GoalId: {GoalId}", id, goalId);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Hedef silinirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Get AGP progress
     /// </summary>
     [HttpGet("{id}/progress")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetProgress(int id)
+    [ProducesResponseType(typeof(ApiResponse<AGPProgressDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<AGPProgressDto>>> GetProgress(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var progress = await _agpService.GetProgressAsync(id);
+            return Ok(ApiResponse<AGPProgressDto>.SuccessResponse(progress));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(ApiResponse<AGPProgressDto>.ErrorResponse("AGP bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP ilerleme durumu getirilirken hata oluştu. AGPId: {AGPId}", id);
+            return StatusCode(500, ApiResponse<AGPProgressDto>.ErrorResponse("İlerleme durumu getirilirken bir hata oluştu"));
+        }
     }
 }

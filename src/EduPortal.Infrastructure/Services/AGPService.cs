@@ -1,0 +1,297 @@
+using EduPortal.Application.DTOs.AGP;
+using EduPortal.Application.Interfaces;
+using EduPortal.Domain.Entities;
+using EduPortal.Domain.Enums;
+using EduPortal.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace EduPortal.Infrastructure.Services;
+
+public class AGPService : IAGPService
+{
+    private readonly ApplicationDbContext _context;
+
+    public AGPService(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<(IEnumerable<AGPDto> Items, int TotalCount)> GetAllPagedAsync(int pageNumber, int pageSize)
+    {
+        var query = _context.AcademicDevelopmentPlans
+            .Include(a => a.Student)
+                .ThenInclude(s => s.User)
+            .Include(a => a.Milestones)
+            .AsNoTracking();
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderByDescending(a => a.CreatedAt)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(a => MapToDto(a))
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<AGPDto?> GetByIdAsync(int id)
+    {
+        var agp = await _context.AcademicDevelopmentPlans
+            .Include(a => a.Student)
+                .ThenInclude(s => s.User)
+            .Include(a => a.Milestones)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        return agp == null ? null : MapToDto(agp);
+    }
+
+    public async Task<AGPDto> CreateAsync(CreateAGPDto dto)
+    {
+        var agp = new AcademicDevelopmentPlan
+        {
+            StudentId = dto.StudentId,
+            AcademicYear = dto.AcademicYear,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate,
+            PlanDocumentUrl = dto.PlanDocumentUrl,
+            Status = dto.Status
+        };
+
+        _context.AcademicDevelopmentPlans.Add(agp);
+        await _context.SaveChangesAsync();
+
+        return await GetByIdAsync(agp.Id) ?? throw new InvalidOperationException("AGP oluşturulamadı");
+    }
+
+    public async Task<AGPDto> UpdateAsync(int id, UpdateAGPDto dto)
+    {
+        var agp = await _context.AcademicDevelopmentPlans.FindAsync(id);
+
+        if (agp == null)
+            throw new KeyNotFoundException("AGP bulunamadı");
+
+        agp.AcademicYear = dto.AcademicYear;
+        agp.StartDate = dto.StartDate;
+        agp.EndDate = dto.EndDate;
+        agp.PlanDocumentUrl = dto.PlanDocumentUrl;
+        agp.Status = dto.Status;
+
+        await _context.SaveChangesAsync();
+
+        return await GetByIdAsync(id) ?? throw new InvalidOperationException("AGP güncellenemedi");
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var agp = await _context.AcademicDevelopmentPlans
+            .Include(a => a.Milestones)
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        if (agp == null)
+            return false;
+
+        // Remove milestones first
+        _context.AGPMilestones.RemoveRange(agp.Milestones);
+        _context.AcademicDevelopmentPlans.Remove(agp);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<IEnumerable<AGPDto>> GetByStudentAsync(int studentId)
+    {
+        var agps = await _context.AcademicDevelopmentPlans
+            .Include(a => a.Student)
+                .ThenInclude(s => s.User)
+            .Include(a => a.Milestones)
+            .Where(a => a.StudentId == studentId)
+            .OrderByDescending(a => a.StartDate)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return agps.Select(MapToDto);
+    }
+
+    public async Task<IEnumerable<AGPGoalDto>> GetGoalsAsync(int agpId)
+    {
+        var milestones = await _context.AGPMilestones
+            .Where(m => m.AGPId == agpId)
+            .OrderBy(m => m.Month)
+            .ThenBy(m => m.StartDate)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return milestones.Select(MapToGoalDto);
+    }
+
+    public async Task<AGPGoalDto> AddGoalAsync(int agpId, CreateAGPGoalDto dto)
+    {
+        var agpExists = await _context.AcademicDevelopmentPlans.AnyAsync(a => a.Id == agpId);
+        if (!agpExists)
+            throw new KeyNotFoundException("AGP bulunamadı");
+
+        var milestone = new AGPMilestone
+        {
+            AGPId = agpId,
+            Month = dto.Month,
+            Title = dto.Title,
+            Description = dto.Description,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate,
+            Status = dto.Status,
+            CompletionPercentage = dto.CompletionPercentage,
+            Notes = dto.Notes
+        };
+
+        _context.AGPMilestones.Add(milestone);
+        await _context.SaveChangesAsync();
+
+        return MapToGoalDto(milestone);
+    }
+
+    public async Task<AGPGoalDto> UpdateGoalAsync(int agpId, int goalId, UpdateAGPGoalDto dto)
+    {
+        var milestone = await _context.AGPMilestones
+            .FirstOrDefaultAsync(m => m.Id == goalId && m.AGPId == agpId);
+
+        if (milestone == null)
+            throw new KeyNotFoundException("Hedef bulunamadı");
+
+        milestone.Month = dto.Month;
+        milestone.Title = dto.Title;
+        milestone.Description = dto.Description;
+        milestone.StartDate = dto.StartDate;
+        milestone.EndDate = dto.EndDate;
+        milestone.Status = dto.Status;
+        milestone.CompletionPercentage = dto.CompletionPercentage;
+        milestone.Notes = dto.Notes;
+
+        await _context.SaveChangesAsync();
+
+        return MapToGoalDto(milestone);
+    }
+
+    public async Task<bool> DeleteGoalAsync(int agpId, int goalId)
+    {
+        var milestone = await _context.AGPMilestones
+            .FirstOrDefaultAsync(m => m.Id == goalId && m.AGPId == agpId);
+
+        if (milestone == null)
+            return false;
+
+        _context.AGPMilestones.Remove(milestone);
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<AGPProgressDto> GetProgressAsync(int agpId)
+    {
+        var agp = await _context.AcademicDevelopmentPlans
+            .Include(a => a.Milestones)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == agpId);
+
+        if (agp == null)
+            throw new KeyNotFoundException("AGP bulunamadı");
+
+        var milestones = agp.Milestones.ToList();
+        var totalMilestones = milestones.Count;
+        var completedMilestones = milestones.Count(m => m.Status == MilestoneStatus.Tamamlandi);
+        var inProgressMilestones = milestones.Count(m => m.Status == MilestoneStatus.Devam);
+        var pendingMilestones = milestones.Count(m => m.Status == MilestoneStatus.Bekliyor);
+
+        var overallPercentage = totalMilestones > 0
+            ? (int)milestones.Average(m => m.CompletionPercentage)
+            : 0;
+
+        var monthlyProgress = milestones
+            .GroupBy(m => m.Month)
+            .OrderBy(g => g.Key)
+            .Select(g => new MonthlyProgressDto
+            {
+                Month = g.Key,
+                MonthName = GetMonthName(g.Key),
+                MilestoneCount = g.Count(),
+                CompletedCount = g.Count(m => m.Status == MilestoneStatus.Tamamlandi),
+                AverageCompletionPercentage = (int)g.Average(m => m.CompletionPercentage)
+            })
+            .ToList();
+
+        return new AGPProgressDto
+        {
+            AGPId = agpId,
+            AcademicYear = agp.AcademicYear,
+            TotalMilestones = totalMilestones,
+            CompletedMilestones = completedMilestones,
+            InProgressMilestones = inProgressMilestones,
+            PendingMilestones = pendingMilestones,
+            OverallCompletionPercentage = overallPercentage,
+            MonthlyProgress = monthlyProgress
+        };
+    }
+
+    private static AGPDto MapToDto(AcademicDevelopmentPlan agp)
+    {
+        var milestones = agp.Milestones?.ToList() ?? new List<AGPMilestone>();
+        var completedCount = milestones.Count(m => m.Status == MilestoneStatus.Tamamlandi);
+        var overallProgress = milestones.Count > 0
+            ? (int)milestones.Average(m => m.CompletionPercentage)
+            : 0;
+
+        return new AGPDto
+        {
+            Id = agp.Id,
+            StudentId = agp.StudentId,
+            StudentName = agp.Student?.User != null
+                ? $"{agp.Student.User.FirstName} {agp.Student.User.LastName}"
+                : string.Empty,
+            AcademicYear = agp.AcademicYear,
+            StartDate = agp.StartDate,
+            EndDate = agp.EndDate,
+            PlanDocumentUrl = agp.PlanDocumentUrl,
+            Status = agp.Status,
+            MilestoneCount = milestones.Count,
+            CompletedMilestoneCount = completedCount,
+            OverallProgress = overallProgress,
+            Milestones = milestones.Select(MapToGoalDto).ToList()
+        };
+    }
+
+    private static AGPGoalDto MapToGoalDto(AGPMilestone milestone)
+    {
+        return new AGPGoalDto
+        {
+            Id = milestone.Id,
+            AGPId = milestone.AGPId,
+            Month = milestone.Month,
+            Title = milestone.Title,
+            Description = milestone.Description,
+            StartDate = milestone.StartDate,
+            EndDate = milestone.EndDate,
+            Status = milestone.Status,
+            CompletionPercentage = milestone.CompletionPercentage,
+            Notes = milestone.Notes
+        };
+    }
+
+    private static string GetMonthName(int month) => month switch
+    {
+        1 => "Ocak",
+        2 => "Şubat",
+        3 => "Mart",
+        4 => "Nisan",
+        5 => "Mayıs",
+        6 => "Haziran",
+        7 => "Temmuz",
+        8 => "Ağustos",
+        9 => "Eylül",
+        10 => "Ekim",
+        11 => "Kasım",
+        12 => "Aralık",
+        _ => month.ToString()
+    };
+}

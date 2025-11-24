@@ -28,6 +28,7 @@ public static class DependencyInjection
         services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<ICalendarService, CalendarService>();
         services.AddScoped<IWeeklyScheduleService, WeeklyScheduleService>();
+        services.AddScoped<IAGPService, AGPService>();
 
         // Register Application Services (using DbContext)
         services.AddScoped<ICoachingSessionService, CoachingSessionService>();

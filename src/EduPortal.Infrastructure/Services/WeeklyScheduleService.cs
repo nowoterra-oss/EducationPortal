@@ -232,7 +232,7 @@ public class WeeklyScheduleService : IWeeklyScheduleService
             TeacherId = schedule.TeacherId,
             TeacherName = $"{schedule.Teacher.User.FirstName} {schedule.Teacher.User.LastName}",
             ClassroomId = schedule.ClassroomId,
-            ClassroomName = schedule.Classroom?.RoomName,
+            ClassroomName = schedule.Classroom?.RoomNumber,
             AcademicTermId = schedule.AcademicTermId,
             AcademicTermName = schedule.AcademicTerm.TermName,
             DayOfWeek = schedule.DayOfWeek,
