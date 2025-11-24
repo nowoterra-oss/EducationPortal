@@ -21,6 +21,7 @@ public static class DependencyInjection
         // Register Infrastructure Services
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<ICoachService, CoachService>();
+        services.AddScoped<IParentService, ParentService>();
 
         // Register Application Services (using DbContext)
         services.AddScoped<ICoachingSessionService, CoachingSessionService>();
