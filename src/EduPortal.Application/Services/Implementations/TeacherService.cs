@@ -218,11 +218,11 @@ public class TeacherService : ITeacherService
             var courseDtos = courses.Select(c => new
             {
                 c.Id,
-                c.Name,
-                c.SubjectId,
-                SubjectName = c.Subject?.Name,
-                c.StartDate,
-                c.EndDate,
+                CourseName = c.CourseName,
+                CourseCode = c.CourseCode,
+                Subject = c.Subject,
+                Level = c.Level,
+                Credits = c.Credits,
                 c.IsActive
             }).ToList<object>();
 

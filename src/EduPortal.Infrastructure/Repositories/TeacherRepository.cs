@@ -70,7 +70,6 @@ public class TeacherRepository : GenericRepository<Teacher>, ITeacherRepository
     {
         var teacher = await _dbSet
             .Include(t => t.Courses)
-                .ThenInclude(c => c.Subject)
             .FirstOrDefaultAsync(t => t.Id == teacherId, cancellationToken);
 
         return teacher?.Courses ?? new List<Course>();
