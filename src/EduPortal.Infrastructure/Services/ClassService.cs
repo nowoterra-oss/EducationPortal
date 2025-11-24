@@ -172,7 +172,7 @@ public class ClassService : IClassService
         var completedHomeworks = 0;
         if (totalHomeworks > 0 && studentIds.Any())
         {
-            completedHomeworks = await _context.HomeworkSubmissions
+            completedHomeworks = await _context.StudentHomeworkSubmissions
                 .CountAsync(hs => studentIds.Contains(hs.StudentId) &&
                                   classEntity.Homeworks.Select(h => h.Id).Contains(hs.HomeworkId) &&
                                   !hs.IsDeleted);
@@ -182,11 +182,10 @@ public class ClassService : IClassService
         var examScores = new List<decimal>();
         if (classEntity.Exams.Any() && studentIds.Any())
         {
-            examScores = await _context.InternalExamResults
-                .Where(ier => studentIds.Contains(ier.StudentId) &&
-                              classEntity.Exams.Select(e => e.Id).Contains(ier.InternalExamId) &&
-                              !ier.IsDeleted)
-                .Select(ier => ier.Score)
+            examScores = await _context.ExamResults
+                .Where(er => studentIds.Contains(er.StudentId) &&
+                              classEntity.Exams.Select(e => e.Id).Contains(er.ExamId))
+                .Select(er => er.Score)
                 .ToListAsync();
         }
 
@@ -200,7 +199,9 @@ public class ClassService : IClassService
 
             if (attendanceRecords.Any())
             {
-                var presentCount = attendanceRecords.Count(a => a.IsPresent);
+                var presentCount = attendanceRecords.Count(a =>
+                    a.Status == Domain.Enums.AttendanceStatus.Geldi ||
+                    a.Status == Domain.Enums.AttendanceStatus.GecGeldi);
                 attendanceRate = (decimal)presentCount / attendanceRecords.Count * 100;
             }
         }
@@ -210,9 +211,9 @@ public class ClassService : IClassService
         var femaleCount = 0;
         foreach (var assignment in classEntity.Students)
         {
-            if (assignment.Student?.User?.Gender == Domain.Enums.Gender.Male)
+            if (assignment.Student?.Gender == Domain.Enums.Gender.Erkek)
                 maleCount++;
-            else if (assignment.Student?.User?.Gender == Domain.Enums.Gender.Female)
+            else if (assignment.Student?.Gender == Domain.Enums.Gender.Kiz)
                 femaleCount++;
         }
 
