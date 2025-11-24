@@ -11,6 +11,23 @@ public class StudentRepository : GenericRepository<Student>, IStudentRepository
     {
     }
 
+    public override async Task<IEnumerable<Student>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(s => s.User)
+            .Where(s => !s.IsDeleted)
+            .OrderBy(s => s.User.LastName)
+            .ThenBy(s => s.User.FirstName)
+            .ToListAsync(cancellationToken);
+    }
+
+    public override async Task<Student?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(s => s.User)
+            .FirstOrDefaultAsync(s => s.Id == id && !s.IsDeleted, cancellationToken);
+    }
+
     public async Task<Student?> GetByStudentNoAsync(string studentNo, CancellationToken cancellationToken = default)
     {
         return await _dbSet
