@@ -340,14 +340,15 @@ public class HomeworkService : IHomeworkService
                 await _context.SaveChangesAsync();
 
                 // Reload with navigation properties
-                submission = await _context.StudentHomeworkSubmissions
+                var reloadedSubmission = await _context.StudentHomeworkSubmissions
                     .Include(s => s.Homework)
                     .Include(s => s.Student)
                         .ThenInclude(st => st.User)
                     .FirstOrDefaultAsync(s => s.Id == submission.Id);
+                submission = reloadedSubmission!;
             }
 
-            var submissionDto = MapSubmissionToDto(submission!);
+            var submissionDto = MapSubmissionToDto(submission);
             return ApiResponse<HomeworkSubmissionDto>.SuccessResponse(submissionDto, "Ödev başarıyla teslim edildi");
         }
         catch (Exception ex)

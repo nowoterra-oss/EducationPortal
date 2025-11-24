@@ -140,7 +140,7 @@ public class AttendanceService : IAttendanceService
             }
 
             // Reload with navigation properties
-            attendance = await _context.Attendances
+            var reloadedAttendance = await _context.Attendances
                 .Include(a => a.Student)
                     .ThenInclude(s => s.User)
                 .Include(a => a.Course)
@@ -148,7 +148,7 @@ public class AttendanceService : IAttendanceService
                     .ThenInclude(t => t.User)
                 .FirstOrDefaultAsync(a => a.Id == attendance.Id);
 
-            var attendanceDto = MapToDto(attendance!);
+            var attendanceDto = MapToDto(reloadedAttendance!);
             return ApiResponse<AttendanceDto>.SuccessResponse(
                 attendanceDto,
                 existingAttendance != null ? "Yoklama başarıyla güncellendi" : "Yoklama başarıyla kaydedildi");
