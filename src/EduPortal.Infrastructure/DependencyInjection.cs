@@ -47,6 +47,7 @@ public static class DependencyInjection
         // Core Domain Services (moved from Application layer)
         services.AddScoped<IHomeworkService, HomeworkService>();
         services.AddScoped<IInternalExamService, InternalExamService>();
+        services.AddScoped<IInternationalExamService, InternationalExamService>();
         services.AddScoped<IAttendanceService, AttendanceService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IEmailService, EmailService>();

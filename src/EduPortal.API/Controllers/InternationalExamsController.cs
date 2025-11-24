@@ -1,4 +1,7 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.Exam;
+using EduPortal.Application.Services.Interfaces;
+using EduPortal.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +16,14 @@ namespace EduPortal.API.Controllers;
 [Authorize]
 public class InternationalExamsController : ControllerBase
 {
-    // TODO: Implement IInternationalExamService
+    private readonly IInternationalExamService _examService;
     private readonly ILogger<InternationalExamsController> _logger;
 
-    public InternationalExamsController(ILogger<InternationalExamsController> logger)
+    public InternationalExamsController(
+        IInternationalExamService examService,
+        ILogger<InternationalExamsController> logger)
     {
+        _examService = examService;
         _logger = logger;
     }
 
@@ -26,24 +32,29 @@ public class InternationalExamsController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize(Roles = "Admin,Danışman")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetAll(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<InternationalExamDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<InternationalExamDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        var result = await _examService.GetAllAsync(pageNumber, pageSize);
+        return Ok(result);
     }
 
     /// <summary>
     /// Get international exam record by ID
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetById(int id)
+    [ProducesResponseType(typeof(ApiResponse<InternationalExamDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<InternationalExamDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<InternationalExamDto>>> GetById(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        var result = await _examService.GetByIdAsync(id);
+        if (!result.Success)
+        {
+            return NotFound(result);
+        }
+        return Ok(result);
     }
 
     /// <summary>
@@ -51,11 +62,22 @@ public class InternationalExamsController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin,Danışman")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
-    public async Task<ActionResult<ApiResponse<object>>> Create([FromBody] object examDto)
+    [ProducesResponseType(typeof(ApiResponse<InternationalExamDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<InternationalExamDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<InternationalExamDto>>> Create([FromBody] InternationalExamCreateDto examDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<InternationalExamDto>.ErrorResponse("Geçersiz veri"));
+        }
+
+        var result = await _examService.CreateAsync(examDto);
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result);
     }
 
     /// <summary>
@@ -63,11 +85,22 @@ public class InternationalExamsController : ControllerBase
     /// </summary>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Danışman")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> Update(int id, [FromBody] object examDto)
+    [ProducesResponseType(typeof(ApiResponse<InternationalExamDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<InternationalExamDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<InternationalExamDto>>> Update(int id, [FromBody] InternationalExamUpdateDto examDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ApiResponse<InternationalExamDto>.ErrorResponse("Geçersiz veri"));
+        }
+
+        var result = await _examService.UpdateAsync(id, examDto);
+        if (!result.Success)
+        {
+            return NotFound(result);
+        }
+
+        return Ok(result);
     }
 
     /// <summary>
@@ -76,21 +109,27 @@ public class InternationalExamsController : ControllerBase
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
+        var result = await _examService.DeleteAsync(id);
+        if (!result.Success)
+        {
+            return NotFound(result);
+        }
+
+        return Ok(result);
     }
 
     /// <summary>
     /// Get international exam records for a student
     /// </summary>
     [HttpGet("student/{studentId}")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetByStudent(int studentId)
+    [ProducesResponseType(typeof(ApiResponse<List<InternationalExamDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<InternationalExamDto>>>> GetByStudent(int studentId)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        var result = await _examService.GetByStudentAsync(studentId);
+        return Ok(result);
     }
 
     /// <summary>
@@ -98,13 +137,20 @@ public class InternationalExamsController : ControllerBase
     /// </summary>
     [HttpGet("type/{examType}")]
     [Authorize(Roles = "Admin,Danışman")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetByType(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<InternationalExamDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<InternationalExamDto>>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<InternationalExamDto>>>> GetByType(
         string examType,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        if (!Enum.TryParse<ExamType>(examType, true, out var parsedExamType))
+        {
+            return BadRequest(ApiResponse<PagedResponse<InternationalExamDto>>.ErrorResponse(
+                $"Geçersiz sınav tipi. Geçerli tipler: {string.Join(", ", Enum.GetNames<ExamType>())}"));
+        }
+
+        var result = await _examService.GetByExamTypeAsync(parsedExamType, pageNumber, pageSize);
+        return Ok(result);
     }
 }
