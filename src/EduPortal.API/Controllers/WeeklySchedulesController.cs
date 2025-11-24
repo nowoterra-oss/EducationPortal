@@ -1,4 +1,6 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.WeeklySchedule;
+using EduPortal.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,164 +15,247 @@ namespace EduPortal.API.Controllers;
 [Authorize]
 public class WeeklySchedulesController : ControllerBase
 {
-    // TODO: Implement IWeeklyScheduleService
+    private readonly IWeeklyScheduleService _weeklyScheduleService;
     private readonly ILogger<WeeklySchedulesController> _logger;
 
-    public WeeklySchedulesController(ILogger<WeeklySchedulesController> logger)
+    public WeeklySchedulesController(IWeeklyScheduleService weeklyScheduleService, ILogger<WeeklySchedulesController> logger)
     {
+        _weeklyScheduleService = weeklyScheduleService;
         _logger = logger;
     }
 
     /// <summary>
     /// Tüm haftalık programları listele
     /// </summary>
-    /// <param name="pageNumber">Sayfa numarası</param>
-    /// <param name="pageSize">Sayfa başına kayıt</param>
-    /// <returns>Sayfalanmış program listesi</returns>
     [HttpGet]
     [Authorize(Roles = "Admin,Öğretmen,Kayitci")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetAll(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<WeeklyScheduleDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<WeeklyScheduleDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.GetAll called but service not implemented yet");
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _weeklyScheduleService.GetAllPagedAsync(pageNumber, pageSize);
+
+            var pagedResponse = new PagedResponse<WeeklyScheduleDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<WeeklyScheduleDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ders programları getirilirken hata oluştu");
+            return StatusCode(500, ApiResponse<PagedResponse<WeeklyScheduleDto>>.ErrorResponse("Ders programları getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// ID ile program detayı getir
     /// </summary>
-    /// <param name="id">Program ID</param>
-    /// <returns>Program detayları</returns>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<WeeklyScheduleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<WeeklyScheduleDto>>> GetById(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.GetById called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var schedule = await _weeklyScheduleService.GetByIdAsync(id);
+
+            if (schedule == null)
+                return NotFound(ApiResponse<WeeklyScheduleDto>.ErrorResponse("Ders programı bulunamadı"));
+
+            return Ok(ApiResponse<WeeklyScheduleDto>.SuccessResponse(schedule));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ders programı getirilirken hata oluştu. ID: {ScheduleId}", id);
+            return StatusCode(500, ApiResponse<WeeklyScheduleDto>.ErrorResponse("Ders programı getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Sınıfın haftalık programını getir
     /// </summary>
-    /// <param name="classId">Sınıf ID</param>
-    /// <returns>Sınıfın tüm dersleri</returns>
     [HttpGet("class/{classId}")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetByClass(int classId)
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<WeeklyScheduleDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<WeeklyScheduleDto>>>> GetByClass(int classId)
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.GetByClass called but service not implemented yet");
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var schedules = await _weeklyScheduleService.GetByClassAsync(classId);
+            return Ok(ApiResponse<IEnumerable<WeeklyScheduleDto>>.SuccessResponse(schedules));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Sınıf programı getirilirken hata oluştu. ClassId: {ClassId}", classId);
+            return StatusCode(500, ApiResponse<IEnumerable<WeeklyScheduleDto>>.ErrorResponse("Sınıf programı getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Öğretmenin haftalık programını getir
     /// </summary>
-    /// <param name="teacherId">Öğretmen ID</param>
-    /// <returns>Öğretmenin tüm dersleri</returns>
     [HttpGet("teacher/{teacherId}")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetByTeacher(int teacherId)
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<WeeklyScheduleDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<WeeklyScheduleDto>>>> GetByTeacher(int teacherId)
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.GetByTeacher called but service not implemented yet");
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var schedules = await _weeklyScheduleService.GetByTeacherAsync(teacherId);
+            return Ok(ApiResponse<IEnumerable<WeeklyScheduleDto>>.SuccessResponse(schedules));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Öğretmen programı getirilirken hata oluştu. TeacherId: {TeacherId}", teacherId);
+            return StatusCode(500, ApiResponse<IEnumerable<WeeklyScheduleDto>>.ErrorResponse("Öğretmen programı getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Dersliğin kullanım programını getir
     /// </summary>
-    /// <param name="classroomId">Derslik ID</param>
-    /// <returns>Dersliğin kullanım programı</returns>
     [HttpGet("classroom/{classroomId}")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetByClassroom(int classroomId)
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<WeeklyScheduleDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<WeeklyScheduleDto>>>> GetByClassroom(int classroomId)
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.GetByClassroom called but service not implemented yet");
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var schedules = await _weeklyScheduleService.GetByClassroomAsync(classroomId);
+            return Ok(ApiResponse<IEnumerable<WeeklyScheduleDto>>.SuccessResponse(schedules));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Derslik programı getirilirken hata oluştu. ClassroomId: {ClassroomId}", classroomId);
+            return StatusCode(500, ApiResponse<IEnumerable<WeeklyScheduleDto>>.ErrorResponse("Derslik programı getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Bugünün derslerini getir
     /// </summary>
-    /// <returns>Bugünün tüm dersleri</returns>
     [HttpGet("today")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetToday()
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<WeeklyScheduleDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<WeeklyScheduleDto>>>> GetToday()
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.GetToday called but service not implemented yet");
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var schedules = await _weeklyScheduleService.GetTodayAsync();
+            return Ok(ApiResponse<IEnumerable<WeeklyScheduleDto>>.SuccessResponse(schedules));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Bugünün dersleri getirilirken hata oluştu");
+            return StatusCode(500, ApiResponse<IEnumerable<WeeklyScheduleDto>>.ErrorResponse("Bugünün dersleri getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Yeni ders ekle
     /// </summary>
-    /// <param name="createDto">Ders bilgileri</param>
-    /// <returns>Oluşturulan ders</returns>
     [HttpPost]
     [Authorize(Roles = "Admin,Kayitci")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<WeeklyScheduleDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<object>>> Create([FromBody] object createDto)
+    public async Task<ActionResult<ApiResponse<WeeklyScheduleDto>>> Create([FromBody] CreateWeeklyScheduleDto createDto)
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.Create called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<WeeklyScheduleDto>.ErrorResponse("Geçersiz veri"));
+
+            var schedule = await _weeklyScheduleService.CreateAsync(createDto);
+
+            return CreatedAtAction(nameof(GetById), new { id = schedule.Id },
+                ApiResponse<WeeklyScheduleDto>.SuccessResponse(schedule, "Ders programı başarıyla oluşturuldu"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ders programı oluşturulurken hata oluştu");
+            return StatusCode(500, ApiResponse<WeeklyScheduleDto>.ErrorResponse("Ders programı oluşturulurken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Toplu ders ekle
     /// </summary>
-    /// <param name="createDtos">Ders listesi</param>
-    /// <returns>Oluşturulan dersler</returns>
     [HttpPost("bulk")]
     [Authorize(Roles = "Admin,Kayitci")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<WeeklyScheduleDto>>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> CreateBulk([FromBody] List<object> createDtos)
+    public async Task<ActionResult<ApiResponse<IEnumerable<WeeklyScheduleDto>>>> CreateBulk([FromBody] List<CreateWeeklyScheduleDto> createDtos)
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.CreateBulk called but service not implemented yet");
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid || !createDtos.Any())
+                return BadRequest(ApiResponse<IEnumerable<WeeklyScheduleDto>>.ErrorResponse("Geçersiz veri"));
+
+            var schedules = await _weeklyScheduleService.CreateBulkAsync(createDtos);
+
+            return CreatedAtAction(nameof(GetAll), null,
+                ApiResponse<IEnumerable<WeeklyScheduleDto>>.SuccessResponse(schedules, $"{schedules.Count()} ders programı başarıyla oluşturuldu"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Toplu ders programı oluşturulurken hata oluştu");
+            return StatusCode(500, ApiResponse<IEnumerable<WeeklyScheduleDto>>.ErrorResponse("Toplu ders programı oluşturulurken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Ders programını güncelle
     /// </summary>
-    /// <param name="id">Program ID</param>
-    /// <param name="updateDto">Güncellenecek bilgiler</param>
-    /// <returns>Güncellenmiş program</returns>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Kayitci")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<WeeklyScheduleDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Update(int id, [FromBody] object updateDto)
+    public async Task<ActionResult<ApiResponse<WeeklyScheduleDto>>> Update(int id, [FromBody] UpdateWeeklyScheduleDto updateDto)
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.Update called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<WeeklyScheduleDto>.ErrorResponse("Geçersiz veri"));
+
+            var schedule = await _weeklyScheduleService.UpdateAsync(id, updateDto);
+
+            return Ok(ApiResponse<WeeklyScheduleDto>.SuccessResponse(schedule, "Ders programı başarıyla güncellendi"));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(ApiResponse<WeeklyScheduleDto>.ErrorResponse("Ders programı bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ders programı güncellenirken hata oluştu. ID: {ScheduleId}", id);
+            return StatusCode(500, ApiResponse<WeeklyScheduleDto>.ErrorResponse("Ders programı güncellenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Ders programını sil
     /// </summary>
-    /// <param name="id">Program ID</param>
-    /// <returns>Silme işlemi sonucu</returns>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("WeeklySchedulesController.Delete called but service not implemented yet");
-        return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var result = await _weeklyScheduleService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(ApiResponse<bool>.ErrorResponse("Ders programı bulunamadı"));
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Ders programı başarıyla silindi"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ders programı silinirken hata oluştu. ID: {ScheduleId}", id);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Ders programı silinirken bir hata oluştu"));
+        }
     }
 }
