@@ -181,7 +181,7 @@ public class StudentClassAssignmentService : IStudentClassAssignmentService
             StudentName = assignment.Student?.User != null
                 ? $"{assignment.Student.User.FirstName} {assignment.Student.User.LastName}"
                 : string.Empty,
-            StudentNumber = assignment.Student?.StudentNumber,
+            StudentNumber = assignment.Student?.StudentNo,
             ClassId = assignment.ClassId,
             ClassName = assignment.Class?.ClassName ?? string.Empty,
             AcademicTermId = assignment.AcademicTermId,
