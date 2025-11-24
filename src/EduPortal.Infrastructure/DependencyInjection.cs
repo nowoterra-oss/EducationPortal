@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IParentService, ParentService>();
         services.AddScoped<ICounselorService, CounselorService>();
         services.AddScoped<IClassService, ClassService>();
+        services.AddScoped<IMessageService, MessageService>();
 
         // Register Application Services (using DbContext)
         services.AddScoped<ICoachingSessionService, CoachingSessionService>();
