@@ -10,7 +10,24 @@ public class TeacherRepository : GenericRepository<Teacher>, ITeacherRepository
     public TeacherRepository(ApplicationDbContext context) : base(context)
     {
     }
+    public override async Task<IEnumerable<Teacher>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(t => t.User)
+            .Include(t => t.Branch)
+            .Where(t => !t.IsDeleted)
+            .OrderBy(t => t.User.LastName)
+            .ThenBy(t => t.User.FirstName)
+            .ToListAsync(cancellationToken);
+    }
 
+    public override async Task<Teacher?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(t => t.User)
+            .Include(t => t.Branch)
+            .FirstOrDefaultAsync(t => t.Id == id && !t.IsDeleted, cancellationToken);
+    }
     public async Task<Teacher?> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
