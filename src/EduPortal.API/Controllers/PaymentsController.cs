@@ -1,4 +1,7 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.Payment;
+using EduPortal.Application.Interfaces;
+using EduPortal.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,11 +16,12 @@ namespace EduPortal.API.Controllers;
 [Authorize]
 public class PaymentsController : ControllerBase
 {
-    // TODO: Implement IPaymentService
+    private readonly IPaymentService _paymentService;
     private readonly ILogger<PaymentsController> _logger;
 
-    public PaymentsController(ILogger<PaymentsController> logger)
+    public PaymentsController(IPaymentService paymentService, ILogger<PaymentsController> logger)
     {
+        _paymentService = paymentService;
         _logger = logger;
     }
 
@@ -26,24 +30,52 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpGet]
     [Authorize(Roles = "Admin,Muhasebe")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetAll(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _paymentService.GetAllPagedAsync(pageNumber, pageSize);
+            var pagedResponse = new PagedResponse<PaymentSummaryDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<PaymentSummaryDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting payments");
+            return StatusCode(500, ApiResponse<PagedResponse<PaymentSummaryDto>>.ErrorResponse("Ödemeler alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Get payment by ID
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetById(int id)
+    [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<PaymentDto>>> GetById(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var payment = await _paymentService.GetByIdAsync(id);
+            if (payment == null)
+            {
+                return NotFound(ApiResponse<PaymentDto>.ErrorResponse("Ödeme bulunamadı"));
+            }
+
+            return Ok(ApiResponse<PaymentDto>.SuccessResponse(payment));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting payment {PaymentId}", id);
+            return StatusCode(500, ApiResponse<PaymentDto>.ErrorResponse("Ödeme alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -51,11 +83,26 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin,Muhasebe")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
-    public async Task<ActionResult<ApiResponse<object>>> Create([FromBody] object paymentDto)
+    [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<PaymentDto>>> Create([FromBody] PaymentCreateDto paymentDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<PaymentDto>.ErrorResponse("Geçersiz veri"));
+            }
+
+            var payment = await _paymentService.CreateAsync(paymentDto);
+            return CreatedAtAction(nameof(GetById), new { id = payment.Id },
+                ApiResponse<PaymentDto>.SuccessResponse(payment, "Ödeme başarıyla oluşturuldu"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating payment");
+            return StatusCode(500, ApiResponse<PaymentDto>.ErrorResponse("Ödeme oluşturulurken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -63,11 +110,29 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Muhasebe")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> Update(int id, [FromBody] object paymentDto)
+    [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<PaymentDto>>> Update(int id, [FromBody] PaymentCreateDto paymentDto)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<PaymentDto>.ErrorResponse("Geçersiz veri"));
+            }
+
+            var payment = await _paymentService.UpdateAsync(id, paymentDto);
+            return Ok(ApiResponse<PaymentDto>.SuccessResponse(payment, "Ödeme başarıyla güncellendi"));
+        }
+        catch (Exception ex) when (ex.Message == "Payment not found")
+        {
+            return NotFound(ApiResponse<PaymentDto>.ErrorResponse("Ödeme bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating payment {PaymentId}", id);
+            return StatusCode(500, ApiResponse<PaymentDto>.ErrorResponse("Ödeme güncellenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -76,24 +141,52 @@ public class PaymentsController : ControllerBase
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var result = await _paymentService.DeleteAsync(id);
+            if (!result)
+            {
+                return NotFound(ApiResponse<bool>.ErrorResponse("Ödeme bulunamadı"));
+            }
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Ödeme başarıyla silindi"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting payment {PaymentId}", id);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Ödeme silinirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Get student payments
     /// </summary>
     [HttpGet("student/{studentId}")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetByStudent(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetByStudent(
         int studentId,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _paymentService.GetByStudentPagedAsync(studentId, pageNumber, pageSize);
+            var pagedResponse = new PagedResponse<PaymentSummaryDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<PaymentSummaryDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting payments for student {StudentId}", studentId);
+            return StatusCode(500, ApiResponse<PagedResponse<PaymentSummaryDto>>.ErrorResponse("Öğrenci ödemeleri alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -101,14 +194,35 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpGet("status/{status}")]
     [Authorize(Roles = "Admin,Muhasebe")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetByStatus(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetByStatus(
         string status,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!Enum.TryParse<PaymentStatus>(status, true, out var parsedStatus))
+            {
+                return BadRequest(ApiResponse<PagedResponse<PaymentSummaryDto>>.ErrorResponse(
+                    $"Geçersiz durum. Geçerli durumlar: {string.Join(", ", Enum.GetNames<PaymentStatus>())}"));
+            }
+
+            var (items, totalCount) = await _paymentService.GetByStatusPagedAsync(parsedStatus, pageNumber, pageSize);
+            var pagedResponse = new PagedResponse<PaymentSummaryDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<PaymentSummaryDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting payments by status {Status}", status);
+            return StatusCode(500, ApiResponse<PagedResponse<PaymentSummaryDto>>.ErrorResponse("Ödemeler alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -116,13 +230,27 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpGet("pending")]
     [Authorize(Roles = "Admin,Muhasebe")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetPending(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetPending(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _paymentService.GetPendingPagedAsync(pageNumber, pageSize);
+            var pagedResponse = new PagedResponse<PaymentSummaryDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<PaymentSummaryDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting pending payments");
+            return StatusCode(500, ApiResponse<PagedResponse<PaymentSummaryDto>>.ErrorResponse("Bekleyen ödemeler alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -130,14 +258,27 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpGet("overdue")]
     [Authorize(Roles = "Admin,Muhasebe")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetOverdue(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetOverdue(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        _logger.LogWarning("PaymentsController.GetOverdue called but service not implemented yet");
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _paymentService.GetOverduePagedAsync(pageNumber, pageSize);
+            var pagedResponse = new PagedResponse<PaymentSummaryDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<PaymentSummaryDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting overdue payments");
+            return StatusCode(500, ApiResponse<PagedResponse<PaymentSummaryDto>>.ErrorResponse("Gecikmiş ödemeler alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -145,11 +286,28 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpPost("{id}/process")]
     [Authorize(Roles = "Admin,Muhasebe")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> ProcessPayment(int id)
+    [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<PaymentDto>>> ProcessPayment(int id)
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var payment = await _paymentService.ProcessPaymentAsync(id);
+            return Ok(ApiResponse<PaymentDto>.SuccessResponse(payment, "Ödeme başarıyla işlendi"));
+        }
+        catch (Exception ex) when (ex.Message == "Payment not found")
+        {
+            return NotFound(ApiResponse<PaymentDto>.ErrorResponse("Ödeme bulunamadı"));
+        }
+        catch (Exception ex) when (ex.Message == "Payment already processed")
+        {
+            return BadRequest(ApiResponse<PaymentDto>.ErrorResponse("Bu ödeme zaten işlenmiş"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing payment {PaymentId}", id);
+            return StatusCode(500, ApiResponse<PaymentDto>.ErrorResponse("Ödeme işlenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -157,11 +315,24 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpGet("{id}/receipt")]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DownloadReceipt(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("PaymentsController.DownloadReceipt called but service not implemented yet");
-        return BadRequest(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var receiptBytes = await _paymentService.GenerateReceiptAsync(id);
+            if (receiptBytes == null)
+            {
+                return NotFound(ApiResponse<object>.ErrorResponse("Ödeme bulunamadı"));
+            }
+
+            return File(receiptBytes, "text/plain", $"makbuz-{id}.txt");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating receipt for payment {PaymentId}", id);
+            return StatusCode(500, ApiResponse<object>.ErrorResponse("Makbuz oluşturulurken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -169,10 +340,18 @@ public class PaymentsController : ControllerBase
     /// </summary>
     [HttpGet("statistics")]
     [Authorize(Roles = "Admin,Muhasebe")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<object>>> GetStatistics()
+    [ProducesResponseType(typeof(ApiResponse<PaymentStatisticsDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PaymentStatisticsDto>>> GetStatistics()
     {
-        // TODO: Implement service
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var statistics = await _paymentService.GetStatisticsAsync();
+            return Ok(ApiResponse<PaymentStatisticsDto>.SuccessResponse(statistics));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting payment statistics");
+            return StatusCode(500, ApiResponse<PaymentStatisticsDto>.ErrorResponse("İstatistikler alınırken bir hata oluştu"));
+        }
     }
 }
