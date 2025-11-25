@@ -2,7 +2,7 @@
 # EduPortal - CD Deploy to TEST Environment
 # ============================================================
 # Triggers on: Push to develop branch
-# Jobs: Build image, Push to registry, Deploy to test server
+# Jobs: Build image, Push to registry, Deploy, Email Notification
 # ============================================================
 
 name: CD - Deploy to Test
@@ -19,6 +19,11 @@ env:
   REGISTRY: docker.io
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/eduportal-api
   DOTNET_VERSION: '8.0.x'
+
+# Prevent concurrent deployments
+concurrency:
+  group: deploy-test
+  cancel-in-progress: false
 
 jobs:
   # ===========================================================
@@ -40,7 +45,6 @@ jobs:
       - name: Generate version
         id: version
         run: |
-          # Generate version based on date and short SHA
           VERSION="test-$(date +'%Y%m%d')-${GITHUB_SHA::7}"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Generated version: $VERSION"
@@ -74,17 +78,6 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            BUILD_VERSION=${{ steps.version.outputs.version }}
-            BUILD_DATE=${{ github.event.head_commit.timestamp }}
-
-      - name: Generate deployment summary
-        run: |
-          echo "## Docker Image Built & Pushed" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** ${{ env.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Tags:** ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
-          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
 
   # ===========================================================
   # Deploy to Test Server
@@ -94,10 +87,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push
     environment: test
+    outputs:
+      deploy-status: ${{ steps.deploy.outcome }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: Get changelog
+        id: changelog
+        run: |
+          CHANGELOG=$(git log --oneline --pretty=format:"• %s (%an)" -5 2>/dev/null || echo "No recent commits")
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Setup SSH key
         run: |
@@ -107,132 +112,172 @@ jobs:
           ssh-keyscan -H ${{ secrets.TEST_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Deploy to test server
+        id: deploy
         env:
           SSH_KEY: ~/.ssh/deploy_key
           SERVER_HOST: ${{ secrets.TEST_SERVER_HOST }}
           SERVER_USER: ${{ secrets.TEST_SERVER_USER }}
-          IMAGE_TAG: ${{ needs.build-and-push.outputs.version }}
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         run: |
           ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
             set -e
-
             echo "=== Deploying EduPortal to TEST ==="
             cd /opt/eduportal || exit 1
 
-            # Pull latest image
-            echo "[1/5] Pulling Docker image..."
+            echo "[1/4] Pulling Docker image..."
             docker pull ${DOCKERHUB_USERNAME}/eduportal-api:latest
 
-            # Stop current containers
-            echo "[2/5] Stopping current containers..."
+            echo "[2/4] Stopping current containers..."
             docker-compose -f docker-compose.test.yml --env-file .env.test down || true
 
-            # Update image tag in compose file (optional)
-            echo "[3/5] Starting new containers..."
+            echo "[3/4] Starting new containers..."
             docker-compose -f docker-compose.test.yml --env-file .env.test up -d
 
-            # Wait for health check
-            echo "[4/5] Waiting for health check..."
+            echo "[4/4] Waiting for health check..."
             sleep 15
 
-            # Verify deployment
-            echo "[5/5] Verifying deployment..."
             HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health || echo "000")
-
             if [ "$HEALTH_STATUS" = "200" ]; then
-              echo "✅ Deployment successful! Health check passed."
+              echo "✅ Deployment successful!"
             else
               echo "❌ Health check failed! Status: $HEALTH_STATUS"
               docker-compose -f docker-compose.test.yml --env-file .env.test logs --tail=50
               exit 1
             fi
 
-            # Clean up old images
             docker image prune -f
-
             echo "=== Deployment Complete ==="
           ENDSSH
 
-      - name: Health Check Verification
-        run: |
-          echo "Verifying deployment from GitHub Actions..."
-          sleep 5
-
-          # Retry health check
-          for i in {1..5}; do
-            RESPONSE=$(curl -s http://${{ secrets.TEST_SERVER_HOST }}:8080/health || echo "FAILED")
-            if echo "$RESPONSE" | grep -q "healthy"; then
-              echo "✅ Health check passed!"
-              echo "Response: $RESPONSE"
-              exit 0
-            fi
-            echo "Attempt $i failed, retrying in 10s..."
-            sleep 10
-          done
-
-          echo "❌ Health check failed after 5 attempts"
-          exit 1
-
-      - name: Deployment Summary
+      - name: Generate summary
         if: success()
         run: |
-          echo "## 🚀 Deployment to TEST Successful" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 TEST Deployment Successful" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Environment:** Test" >> $GITHUB_STEP_SUMMARY
-          echo "**Server:** ${{ secrets.TEST_SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
           echo "**Version:** ${{ needs.build-and-push.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** http://${{ secrets.TEST_SERVER_HOST }}:8080" >> $GITHUB_STEP_SUMMARY
-          echo "**Health:** http://${{ secrets.TEST_SERVER_HOST }}:8080/health" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Test" >> $GITHUB_STEP_SUMMARY
           echo "**Deployed at:** $(date -u)" >> $GITHUB_STEP_SUMMARY
 
   # ===========================================================
-  # Notify Slack
+  # Email Notification
   # ===========================================================
   notify:
-    name: Send Notification
+    name: Send Notifications
     runs-on: ubuntu-latest
     needs: [build-and-push, deploy-test]
     if: always()
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: Get changelog
+        id: changelog
+        run: |
+          CHANGELOG=$(git log --oneline --pretty=format:"• %s" -5 2>/dev/null | head -5 || echo "• No recent commits")
+          # Escape for HTML
+          CHANGELOG_HTML=$(echo "$CHANGELOG" | sed 's/$/\<br\>/g' | tr -d '\n')
+          echo "changelog=$CHANGELOG_HTML" >> $GITHUB_OUTPUT
+
+      - name: Send success email
+        if: needs.deploy-test.result == 'success' && vars.EMAIL_NOTIFICATIONS_ENABLED == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.EMAIL_HOST }}
+          server_port: ${{ secrets.EMAIL_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "🚀 EduPortal TEST Deployed - ${{ needs.build-and-push.outputs.version }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f4f5; margin: 0; padding: 20px;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 40px 30px; text-align: center;">
+                  <div style="font-size: 48px; margin-bottom: 10px;">🚀</div>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 600;">TEST Deploy Successful!</h1>
+                  <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px;">EduPortal CI/CD Pipeline</p>
+                </div>
+                <div style="padding: 30px;">
+                  <div style="background: #f5f3ff; border: 1px solid #c4b5fd; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <p style="margin: 0; color: #5b21b6; font-size: 14px;">🧪 New version deployed to TEST environment</p>
+                  </div>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Environment</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;"><span style="background: #8b5cf6; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">TEST</span></td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Version</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-family: monospace; font-size: 12px;">${{ needs.build-and-push.outputs.version }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Branch</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.ref_name }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Author</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.actor }}</td></tr>
+                    <tr><td style="padding: 12px 0; color: #6b7280; font-size: 13px;">Commit</td><td style="padding: 12px 0; font-family: monospace; font-size: 11px;">${{ github.sha }}</td></tr>
+                  </table>
+                  <div style="margin-top: 24px; background: #f9fafb; border-radius: 8px; padding: 16px;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #374151;">📝 Recent Changes</h3>
+                    <div style="font-size: 13px; color: #4b5563; line-height: 1.6;">${{ steps.changelog.outputs.changelog }}</div>
+                  </div>
+                  <div style="text-align: center; margin-top: 30px;">
+                    <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="display: inline-block; padding: 14px 28px; background: #8b5cf6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Deployment →</a>
+                  </div>
+                </div>
+                <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">🎓 EduPortal Automated CI/CD System</p>
+                </div>
+              </div>
+            </body>
+            </html>
+
+      - name: Send failure email
+        if: needs.deploy-test.result == 'failure' && vars.EMAIL_NOTIFICATIONS_ENABLED == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.EMAIL_HOST }}
+          server_port: ${{ secrets.EMAIL_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ EduPortal TEST Deploy Failed!"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          priority: high
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f4f5; margin: 0; padding: 20px;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 40px 30px; text-align: center;">
+                  <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 600;">TEST Deploy Failed!</h1>
+                  <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px;">EduPortal CI/CD Pipeline</p>
+                </div>
+                <div style="padding: 30px;">
+                  <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <p style="margin: 0; color: #991b1b; font-size: 14px;">⚠️ Deployment to TEST environment failed. Please check the logs.</p>
+                  </div>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Environment</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;"><span style="background: #ef4444; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">TEST</span></td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Version</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-family: monospace; font-size: 12px;">${{ needs.build-and-push.outputs.version }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Author</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.actor }}</td></tr>
+                    <tr><td style="padding: 12px 0; color: #6b7280; font-size: 13px;">Commit</td><td style="padding: 12px 0; font-family: monospace; font-size: 11px;">${{ github.sha }}</td></tr>
+                  </table>
+                  <div style="text-align: center; margin-top: 30px;">
+                    <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="display: inline-block; padding: 14px 28px; background: #ef4444; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Logs →</a>
+                  </div>
+                </div>
+                <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">🎓 EduPortal Automated CI/CD System</p>
+                </div>
+              </div>
+            </body>
+            </html>
+
       - name: Send Slack notification
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        if: vars.SLACK_NOTIFICATIONS_ENABLED == 'true'
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ needs.deploy-test.result }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-          custom_payload: |
-            {
-              "attachments": [{
-                "color": "${{ needs.deploy-test.result == 'success' && 'good' || 'danger' }}",
-                "title": "EduPortal TEST Deployment",
-                "fields": [
-                  {
-                    "title": "Status",
-                    "value": "${{ needs.deploy-test.result == 'success' && '✅ Success' || '❌ Failed' }}",
-                    "short": true
-                  },
-                  {
-                    "title": "Version",
-                    "value": "${{ needs.build-and-push.outputs.version }}",
-                    "short": true
-                  },
-                  {
-                    "title": "Branch",
-                    "value": "${{ github.ref_name }}",
-                    "short": true
-                  },
-                  {
-                    "title": "Author",
-                    "value": "${{ github.actor }}",
-                    "short": true
-                  }
-                ],
-                "footer": "GitHub Actions",
-                "ts": "${{ github.event.head_commit.timestamp }}"
-              }]
-            }
+          fields: repo,message,commit,author
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

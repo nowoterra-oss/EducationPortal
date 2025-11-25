@@ -32,6 +32,11 @@ env:
   IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/eduportal-api
   DOTNET_VERSION: '8.0.x'
 
+# Prevent concurrent deployments
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   # ===========================================================
   # Build and Push Docker Image
@@ -288,57 +293,135 @@ jobs:
           echo "**Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
 
   # ===========================================================
-  # Notify Slack
+  # Email Notification
   # ===========================================================
   notify:
-    name: Send Notification
+    name: Send Notifications
     runs-on: ubuntu-latest
     needs: [build-and-push, deploy-production]
     if: always()
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 10
+
+      - name: Get changelog
+        id: changelog
+        run: |
+          CHANGELOG=$(git log --oneline --pretty=format:"• %s" -5 2>/dev/null | head -5 || echo "• No recent commits")
+          # Escape for HTML
+          CHANGELOG_HTML=$(echo "$CHANGELOG" | sed 's/$/\<br\>/g' | tr -d '\n')
+          echo "changelog=$CHANGELOG_HTML" >> $GITHUB_OUTPUT
+
+      - name: Send success email
+        if: needs.deploy-production.result == 'success' && vars.EMAIL_NOTIFICATIONS_ENABLED == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.EMAIL_HOST }}
+          server_port: ${{ secrets.EMAIL_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "🚀 EduPortal PRODUCTION Deployed - v${{ needs.build-and-push.outputs.semver }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f4f5; margin: 0; padding: 20px;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center;">
+                  <div style="font-size: 48px; margin-bottom: 10px;">🚀</div>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 600;">PRODUCTION Deploy Successful!</h1>
+                  <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px;">EduPortal CI/CD Pipeline</p>
+                </div>
+                <div style="padding: 30px;">
+                  <div style="background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <p style="margin: 0; color: #047857; font-size: 14px;">🎉 New version deployed to PRODUCTION environment</p>
+                  </div>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Environment</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;"><span style="background: #10b981; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">PRODUCTION</span></td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Version</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-family: monospace; font-size: 12px;">v${{ needs.build-and-push.outputs.semver }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Image Tag</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-family: monospace; font-size: 11px;">${{ needs.build-and-push.outputs.version }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Branch</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.ref_name }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Deployed by</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.actor }}</td></tr>
+                    <tr><td style="padding: 12px 0; color: #6b7280; font-size: 13px;">Commit</td><td style="padding: 12px 0; font-family: monospace; font-size: 11px;">${{ github.sha }}</td></tr>
+                  </table>
+                  <div style="margin-top: 24px; background: #f9fafb; border-radius: 8px; padding: 16px;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #374151;">📝 Recent Changes</h3>
+                    <div style="font-size: 13px; color: #4b5563; line-height: 1.6;">${{ steps.changelog.outputs.changelog }}</div>
+                  </div>
+                  <div style="text-align: center; margin-top: 30px;">
+                    <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="display: inline-block; padding: 14px 28px; background: #10b981; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Deployment →</a>
+                  </div>
+                </div>
+                <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">🎓 EduPortal Automated CI/CD System</p>
+                </div>
+              </div>
+            </body>
+            </html>
+
+      - name: Send failure email
+        if: needs.deploy-production.result == 'failure' && vars.EMAIL_NOTIFICATIONS_ENABLED == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.EMAIL_HOST }}
+          server_port: ${{ secrets.EMAIL_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "🚨 EduPortal PRODUCTION Deploy Failed!"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          priority: high
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f4f5; margin: 0; padding: 20px;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 40px 30px; text-align: center;">
+                  <div style="font-size: 48px; margin-bottom: 10px;">🚨</div>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 600;">PRODUCTION Deploy Failed!</h1>
+                  <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px;">EduPortal CI/CD Pipeline - CRITICAL</p>
+                </div>
+                <div style="padding: 30px;">
+                  <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <p style="margin: 0; color: #991b1b; font-size: 14px;">⚠️ CRITICAL: Deployment to PRODUCTION failed. Immediate attention required!</p>
+                  </div>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Environment</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb;"><span style="background: #ef4444; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">PRODUCTION</span></td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Version</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-family: monospace; font-size: 12px;">v${{ needs.build-and-push.outputs.semver }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Author</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.actor }}</td></tr>
+                    <tr><td style="padding: 12px 0; color: #6b7280; font-size: 13px;">Commit</td><td style="padding: 12px 0; font-family: monospace; font-size: 11px;">${{ github.sha }}</td></tr>
+                  </table>
+                  <div style="margin-top: 24px; background: #fef2f2; border-radius: 8px; padding: 16px;">
+                    <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #991b1b;">🔧 Recommended Actions</h3>
+                    <ul style="margin: 0; padding-left: 20px; color: #7f1d1d; font-size: 13px;">
+                      <li>Check the deployment logs immediately</li>
+                      <li>Verify server connectivity and credentials</li>
+                      <li>Check Docker image build status</li>
+                      <li>Consider running rollback if necessary</li>
+                    </ul>
+                  </div>
+                  <div style="text-align: center; margin-top: 30px;">
+                    <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="display: inline-block; padding: 14px 28px; background: #ef4444; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Logs →</a>
+                  </div>
+                </div>
+                <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">🎓 EduPortal Automated CI/CD System</p>
+                </div>
+              </div>
+            </body>
+            </html>
+
       - name: Send Slack notification
-        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        if: vars.SLACK_NOTIFICATIONS_ENABLED == 'true'
         uses: 8398a7/action-slack@v3
         with:
           status: ${{ needs.deploy-production.result }}
-          fields: repo,message,commit,author,action,eventName,ref,workflow
-          custom_payload: |
-            {
-              "attachments": [{
-                "color": "${{ needs.deploy-production.result == 'success' && 'good' || 'danger' }}",
-                "title": "🚨 EduPortal PRODUCTION Deployment",
-                "fields": [
-                  {
-                    "title": "Status",
-                    "value": "${{ needs.deploy-production.result == 'success' && '✅ Success' || '❌ Failed' }}",
-                    "short": true
-                  },
-                  {
-                    "title": "Version",
-                    "value": "v${{ needs.build-and-push.outputs.semver }}",
-                    "short": true
-                  },
-                  {
-                    "title": "Branch",
-                    "value": "${{ github.ref_name }}",
-                    "short": true
-                  },
-                  {
-                    "title": "Deployed by",
-                    "value": "${{ github.actor }}",
-                    "short": true
-                  }
-                ],
-                "footer": "GitHub Actions - Production",
-                "ts": "${{ github.event.head_commit.timestamp }}"
-              }]
-            }
+          fields: repo,message,commit,author
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-      - name: Send failure alert
-        if: needs.deploy-production.result == 'failure'
-        run: |
-          echo "::error::Production deployment failed! Immediate attention required."
-          # Additional alerting can be added here (PagerDuty, email, etc.)

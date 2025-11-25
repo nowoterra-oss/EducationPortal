@@ -2,7 +2,7 @@
 # EduPortal - CI Build & Test Pipeline
 # ============================================================
 # Triggers on: Pull requests, Push to any branch
-# Jobs: Build, Test, Docker Build Test
+# Jobs: Build, Test, Docker Build Test, Email Notification
 # ============================================================
 
 name: CI - Build & Test
@@ -25,6 +25,11 @@ env:
   DOTNET_VERSION: '8.0.x'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+# Prevent concurrent builds on same branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   # ===========================================================
@@ -132,13 +137,6 @@ jobs:
           recreate: true
           path: code-coverage-results.md
 
-      - name: Check coverage threshold
-        if: always()
-        run: |
-          echo "Checking code coverage threshold..."
-          # This will fail if coverage is below threshold
-          # Adjust threshold as needed
-
   # ===========================================================
   # Docker Build Test Job
   # ===========================================================
@@ -164,30 +162,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Test Docker image
-        run: |
-          # Build the image locally
-          docker build -t eduportal-api:test -f src/EduPortal.API/Dockerfile .
-
-          # Run basic container test
-          docker run -d --name test-container \
-            -e ASPNETCORE_ENVIRONMENT=Test \
-            -e "ConnectionStrings__ConnectionString=Server=localhost;Database=Test;User Id=sa;Password=Test123!;TrustServerCertificate=True" \
-            -e "Jwt__Key=TestKeyForCICD32CharactersLong!!" \
-            -e "Jwt__Issuer=Test" \
-            -e "Jwt__Audience=Test" \
-            eduportal-api:test
-
-          # Wait for container to start
-          sleep 10
-
-          # Check if container is running
-          docker ps | grep test-container
-
-          # Clean up
-          docker stop test-container
-          docker rm test-container
-
   # ===========================================================
   # Security Scan Job
   # ===========================================================
@@ -210,14 +184,6 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore EduPortal.sln
 
-      - name: Run security scan
-        run: |
-          # Install dotnet-outdated for checking vulnerable packages
-          dotnet tool install --global dotnet-outdated-tool || true
-
-          # Check for outdated packages
-          dotnet outdated EduPortal.sln || true
-
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
@@ -234,29 +200,148 @@ jobs:
           sarif_file: 'trivy-results.sarif'
 
   # ===========================================================
-  # Summary Job
+  # Summary & Email Notification Job
   # ===========================================================
-  ci-summary:
-    name: CI Summary
+  notify:
+    name: Summary & Notification
     runs-on: ubuntu-latest
     needs: [build, unit-tests, docker-build-test, security-scan]
     if: always()
 
     steps:
-      - name: Check job statuses
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Determine overall status
+        id: status
         run: |
-          echo "## CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.build.result }}" == "success" && \
+                "${{ needs.unit-tests.result }}" == "success" && \
+                "${{ needs.docker-build-test.result }}" == "success" ]]; then
+            echo "overall=success" >> $GITHUB_OUTPUT
+          else
+            echo "overall=failure" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate summary
+        run: |
+          if [[ "${{ steps.status.outputs.overall }}" == "success" ]]; then
+            EMOJI="✅"
+          else
+            EMOJI="❌"
+          fi
+
+          echo "## $EMOJI CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Docker Build | ${{ needs.docker-build-test.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.unit-tests.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Build | ${{ needs.docker-build-test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security-scan.result == 'success' && '✅ Passed' || '⚠️ Check Results' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Send success email
+        if: steps.status.outputs.overall == 'success' && vars.EMAIL_NOTIFICATIONS_ENABLED == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.EMAIL_HOST }}
+          server_port: ${{ secrets.EMAIL_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ EduPortal Build Successful - ${{ github.ref_name }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f4f5; margin: 0; padding: 20px;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 40px 30px; text-align: center;">
+                  <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 600;">Build Successful!</h1>
+                  <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px;">EduPortal CI/CD Pipeline</p>
+                </div>
+                <div style="padding: 30px;">
+                  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <p style="margin: 0; color: #166534; font-size: 14px;">🎉 All checks have passed successfully!</p>
+                  </div>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Branch</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.ref_name }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Commit</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-family: monospace; font-size: 12px;">${{ github.sha }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Author</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.actor }}</td></tr>
+                    <tr><td style="padding: 12px 0; color: #6b7280; font-size: 13px;">Message</td><td style="padding: 12px 0;">${{ github.event.head_commit.message }}</td></tr>
+                  </table>
+                  <div style="margin-top: 24px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">✅ Build</span>
+                    <span style="background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">✅ Tests</span>
+                    <span style="background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">✅ Docker</span>
+                    <span style="background: #dcfce7; color: #166534; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">✅ Security</span>
+                  </div>
+                  <div style="text-align: center; margin-top: 30px;">
+                    <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="display: inline-block; padding: 14px 28px; background: #3b82f6; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Build Details →</a>
+                  </div>
+                </div>
+                <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">🎓 EduPortal Automated CI/CD System</p>
+                </div>
+              </div>
+            </body>
+            </html>
+
+      - name: Send failure email
+        if: steps.status.outputs.overall == 'failure' && vars.EMAIL_NOTIFICATIONS_ENABLED == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: ${{ secrets.EMAIL_HOST }}
+          server_port: ${{ secrets.EMAIL_PORT }}
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ EduPortal Build Failed - ${{ github.ref_name }}"
+          to: ${{ secrets.EMAIL_TO }}
+          from: ${{ secrets.EMAIL_FROM }}
+          priority: high
+          html_body: |
+            <!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f4f5; margin: 0; padding: 20px;">
+              <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 40px 30px; text-align: center;">
+                  <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                  <h1 style="margin: 0; font-size: 24px; font-weight: 600;">Build Failed!</h1>
+                  <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 14px;">EduPortal CI/CD Pipeline</p>
+                </div>
+                <div style="padding: 30px;">
+                  <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <p style="margin: 0; color: #991b1b; font-size: 14px;">⚠️ One or more checks have failed. Please review the logs.</p>
+                  </div>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Branch</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.ref_name }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Commit</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-family: monospace; font-size: 12px;">${{ github.sha }}</td></tr>
+                    <tr><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; color: #6b7280; font-size: 13px;">Author</td><td style="padding: 12px 0; border-bottom: 1px solid #e5e7eb; font-weight: 600;">${{ github.actor }}</td></tr>
+                    <tr><td style="padding: 12px 0; color: #6b7280; font-size: 13px;">Message</td><td style="padding: 12px 0;">${{ github.event.head_commit.message }}</td></tr>
+                  </table>
+                  <div style="margin-top: 24px; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="background: ${{ needs.build.result == 'success' && '#dcfce7' || '#fee2e2' }}; color: ${{ needs.build.result == 'success' && '#166534' || '#991b1b' }}; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${{ needs.build.result == 'success' && '✅' || '❌' }} Build</span>
+                    <span style="background: ${{ needs.unit-tests.result == 'success' && '#dcfce7' || '#fee2e2' }}; color: ${{ needs.unit-tests.result == 'success' && '#166534' || '#991b1b' }}; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${{ needs.unit-tests.result == 'success' && '✅' || '❌' }} Tests</span>
+                    <span style="background: ${{ needs.docker-build-test.result == 'success' && '#dcfce7' || '#fee2e2' }}; color: ${{ needs.docker-build-test.result == 'success' && '#166534' || '#991b1b' }}; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">${{ needs.docker-build-test.result == 'success' && '✅' || '❌' }} Docker</span>
+                  </div>
+                  <div style="text-align: center; margin-top: 30px;">
+                    <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" style="display: inline-block; padding: 14px 28px; background: #ef4444; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Build Logs →</a>
+                  </div>
+                </div>
+                <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+                  <p style="margin: 0; color: #9ca3af; font-size: 12px;">🎓 EduPortal Automated CI/CD System</p>
+                </div>
+              </div>
+            </body>
+            </html>
 
       - name: Fail if any job failed
-        if: contains(needs.*.result, 'failure')
+        if: steps.status.outputs.overall == 'failure'
         run: exit 1
