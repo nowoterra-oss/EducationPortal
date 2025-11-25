@@ -17,6 +17,12 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Hide ASP.NET and Kestrel version headers for security
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.AddServerHeader = false;
+});
+
 // Get and log connection string
 var connectionString = builder.Configuration.GetConnectionString("ConnectionString");
 Console.WriteLine("=======================================================");
@@ -210,34 +216,48 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// ==========================================
 // Configure the HTTP request pipeline
+// Middleware order is critical for security!
+// ==========================================
+
+// 1. Security Headers (first - applies to ALL responses)
+app.UseSecurityHeaders();
+
+// 2. Request Logging (early - to capture all requests)
+app.UseRequestLogging();
+
+// 3. Exception Handlers
+app.UseValidationExceptionHandler();
+
+// 4. HTTPS Redirection (before other middleware in production)
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+    app.UseHsts();
+}
+
+// 5. Swagger (development only)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// 6. CORS (before rate limiting and auth)
 app.UseCors("AllowAngular");
 
-// Validation Exception Handler Middleware
-app.UseValidationExceptionHandler();
-
-// Rate Limiting Middleware
+// 7. Rate Limiting
 app.UseIpRateLimiting();
 
-// Only use HTTPS redirection in production
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
-
+// 8. Authentication & Authorization
 app.UseAuthentication();
-
-// Audit Middleware
-app.UseMiddleware<AuditMiddleware>();
-
 app.UseAuthorization();
 
+// 9. Audit Middleware (after auth, to capture user info)
+app.UseMiddleware<AuditMiddleware>();
+
+// 10. Endpoints
 app.MapControllers();
 
 app.Run();
