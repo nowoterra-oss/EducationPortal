@@ -1,0 +1,97 @@
+### EduPortal API - Internal Exams Controller
+### Internal exam management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/exams/internal
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL INTERNAL EXAMS - Paginated list
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET INTERNAL EXAM BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET EXAMS BY COURSE
+### ===========================================
+GET {{baseUrl}}/course/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET EXAMS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE INTERNAL EXAM - (Admin, Öğretmen)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "Matematik 1. Dönem Sınavı",
+  "description": "2024-2025 eğitim yılı 1. dönem matematik sınavı",
+  "courseId": 1,
+  "examDate": "2024-12-15T09:00:00Z",
+  "duration": 90,
+  "maxScore": 100,
+  "examType": "MidTerm"
+}
+
+### ===========================================
+### UPDATE INTERNAL EXAM - (Admin, Öğretmen)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "id": 1,
+  "title": "Matematik 1. Dönem Sınavı - Güncelleme",
+  "description": "2024-2025 eğitim yılı 1. dönem matematik sınavı (güncellendi)",
+  "examDate": "2024-12-20T09:00:00Z",
+  "duration": 120,
+  "maxScore": 100
+}
+
+### ===========================================
+### DELETE INTERNAL EXAM - (Admin, Öğretmen)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET EXAM RESULTS - (Admin, Öğretmen)
+### ===========================================
+GET {{baseUrl}}/1/results?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### ADD EXAM RESULT - (Admin, Öğretmen)
+### ===========================================
+POST {{baseUrl}}/results
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "examId": 1,
+  "studentId": 1,
+  "score": 85,
+  "notes": "İyi performans"
+}
+
+### ===========================================
+### GET EXAM STATISTICS - (Admin, Öğretmen)
+### ===========================================
+GET {{baseUrl}}/1/statistics
+Authorization: Bearer {{token}}

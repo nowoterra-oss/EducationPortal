@@ -1,0 +1,69 @@
+### EduPortal API - Hobbies Controller
+### Hobby management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/hobbies
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL HOBBIES
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET HOBBY BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET HOBBIES BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET HOBBIES BY CATEGORY
+### ===========================================
+GET {{baseUrl}}/category/Sports
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE HOBBY
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "name": "Satranç",
+  "category": "Intellectual",
+  "skillLevel": "Advanced",
+  "yearsOfExperience": 5,
+  "achievements": ["Okul şampiyonu", "İl yarışması 3.lük"],
+  "description": "Satranç kulübü üyesi"
+}
+
+### ===========================================
+### UPDATE HOBBY
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "skillLevel": "Expert",
+  "achievements": ["Ulusal turnuva katılımı"],
+  "description": "Güncellenmiş açıklama"
+}
+
+### ===========================================
+### DELETE HOBBY - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

@@ -1,0 +1,107 @@
+### EduPortal API - Classes Controller
+### Class/Section management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/classes
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL CLASSES - Paginated list (Admin, Öğretmen, Kayıtçı)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ALL CLASSES - With grade filter
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10&grade=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ALL CLASSES - With academic year filter
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10&academicYear=2024-2025
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASS BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASS STUDENTS - Paginated list
+### ===========================================
+GET {{baseUrl}}/1/students?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASS SCHEDULE
+### ===========================================
+GET {{baseUrl}}/1/schedule
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASS STATISTICS
+### ===========================================
+GET {{baseUrl}}/1/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE CLASS - (Admin, Kayıtçı)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "10-A",
+  "grade": 10,
+  "section": "A",
+  "academicYear": "2024-2025",
+  "capacity": 30,
+  "classroomId": 1,
+  "advisorTeacherId": 1,
+  "isActive": true
+}
+
+### ===========================================
+### UPDATE CLASS - (Admin, Kayıtçı)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "10-A Fen",
+  "capacity": 35,
+  "classroomId": 2,
+  "advisorTeacherId": 2,
+  "isActive": true
+}
+
+### ===========================================
+### DELETE CLASS - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASSES BY GRADE
+### ===========================================
+GET {{baseUrl}}/by-grade/10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASSES BY ACADEMIC YEAR
+### ===========================================
+GET {{baseUrl}}/by-academic-year/2024-2025
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE CLASSES
+### ===========================================
+GET {{baseUrl}}/active
+Authorization: Bearer {{token}}

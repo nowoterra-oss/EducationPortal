@@ -1,0 +1,91 @@
+### EduPortal API - Audit Logs Controller
+### Audit log management endpoints (Admin only)
+### Base URL: http://localhost:5000
+### Requires Authentication (Admin role)
+
+@baseUrl = http://localhost:5000/api/auditLogs
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET AUDIT LOGS - Paginated and filtered
+### ===========================================
+GET {{baseUrl}}?PageNumber=1&PageSize=20
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AUDIT LOGS - With date filter
+### ===========================================
+GET {{baseUrl}}?PageNumber=1&PageSize=20&StartDate=2024-11-01&EndDate=2024-11-30
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AUDIT LOGS - By entity type
+### ===========================================
+GET {{baseUrl}}?PageNumber=1&PageSize=20&EntityType=Student
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AUDIT LOGS - By action type
+### ===========================================
+GET {{baseUrl}}?PageNumber=1&PageSize=20&Action=Create
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AUDIT LOG BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET USER'S AUDIT LOGS
+### ===========================================
+GET {{baseUrl}}/user/user-guid-here?count=50
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ENTITY'S AUDIT LOGS
+### ===========================================
+GET {{baseUrl}}/entity/Student/1?count=50
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AUDIT STATISTICS
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AUDIT STATISTICS - With date range
+### ===========================================
+GET {{baseUrl}}/statistics?startDate=2024-11-01&endDate=2024-11-30
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET RECENT FAILED LOGS
+### ===========================================
+GET {{baseUrl}}/failed/recent?count=20
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CLEANUP OLD LOGS
+### ===========================================
+DELETE {{baseUrl}}/cleanup?daysToKeep=90
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE MANUAL AUDIT LOG
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "action": "ManualEntry",
+  "entityType": "System",
+  "entityId": "0",
+  "description": "Manuel sistem kontrolü yapıldı",
+  "oldValues": null,
+  "newValues": null,
+  "isSuccess": true
+}

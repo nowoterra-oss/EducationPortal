@@ -1,0 +1,64 @@
+### EduPortal API - Competitions Controller
+### Competition and award management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/competitions
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL COMPETITIONS - Paginated
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET COMPETITION BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET COMPETITIONS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE COMPETITION - (Admin, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "name": "TÜBİTAK Bilim Olimpiyatları",
+  "category": "Science",
+  "level": "National",
+  "date": "2024-05-15",
+  "result": "Gold Medal",
+  "rank": 1,
+  "description": "Fizik dalında birinci"
+}
+
+### ===========================================
+### UPDATE COMPETITION - (Admin, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "result": "Gold Medal",
+  "rank": 1,
+  "description": "Güncellenmiş açıklama"
+}
+
+### ===========================================
+### DELETE COMPETITION - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

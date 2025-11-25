@@ -1,0 +1,115 @@
+### EduPortal API - Messages Controller
+### Messaging system endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/messages
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL MESSAGES - Paginated list
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET MESSAGE BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEND MESSAGE
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "recipientId": "user-guid-here",
+  "subject": "Merhaba",
+  "body": "Bu bir test mesajıdır.",
+  "attachmentUrl": null
+}
+
+### ===========================================
+### REPLY TO MESSAGE
+### ===========================================
+POST {{baseUrl}}/1/reply
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "recipientId": "user-guid-here",
+  "subject": null,
+  "body": "Teşekkür ederim, mesajını aldım."
+}
+
+### ===========================================
+### DELETE MESSAGE
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET INBOX
+### ===========================================
+GET {{baseUrl}}/inbox?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SENT MESSAGES
+### ===========================================
+GET {{baseUrl}}/sent?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET UNREAD MESSAGES
+### ===========================================
+GET {{baseUrl}}/unread?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### MARK MESSAGE AS READ
+### ===========================================
+PATCH {{baseUrl}}/1/read
+Authorization: Bearer {{token}}
+
+### ===========================================
+### MARK MESSAGE AS UNREAD
+### ===========================================
+PATCH {{baseUrl}}/1/unread
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CONVERSATION WITH USER
+### ===========================================
+GET {{baseUrl}}/conversation/user-guid-here?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEARCH MESSAGES
+### ===========================================
+GET {{baseUrl}}/search?term=merhaba&pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET UNREAD COUNT
+### ===========================================
+GET {{baseUrl}}/unread/count
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEND BULK MESSAGE - (Admin, Öğretmen, Danışman)
+### ===========================================
+POST {{baseUrl}}/bulk
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "recipientIds": ["user-guid-1", "user-guid-2", "user-guid-3"],
+  "subject": "Duyuru",
+  "body": "Bu bir toplu duyuru mesajıdır.",
+  "attachmentUrl": null
+}

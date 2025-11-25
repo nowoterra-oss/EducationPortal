@@ -1,0 +1,108 @@
+### EduPortal API - AGP Controller
+### Academic Development Plan (Akademik Gelişim Planı) endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/agp
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL AGP RECORDS - (Admin, Danışman)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AGP BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AGP BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AGP GOALS
+### ===========================================
+GET {{baseUrl}}/1/goals
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AGP PROGRESS
+### ===========================================
+GET {{baseUrl}}/1/progress
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE AGP - (Admin, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "title": "2024-2025 Akademik Gelişim Planı",
+  "description": "Yıllık akademik hedefler ve gelişim planı",
+  "startDate": "2024-09-01",
+  "endDate": "2025-06-30",
+  "status": "Active"
+}
+
+### ===========================================
+### UPDATE AGP - (Admin, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "2024-2025 Akademik Gelişim Planı - Güncellendi",
+  "description": "Revize edilmiş hedefler",
+  "status": "Active"
+}
+
+### ===========================================
+### DELETE AGP - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### ADD GOAL TO AGP - (Admin, Danışman)
+### ===========================================
+POST {{baseUrl}}/1/goals
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "SAT Sınavı Hazırlığı",
+  "description": "SAT sınavından 1400+ puan almak",
+  "targetDate": "2025-03-01",
+  "status": "InProgress",
+  "priority": "High"
+}
+
+### ===========================================
+### UPDATE GOAL - (Admin, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1/goals/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "SAT Sınavı Hazırlığı - Güncellendi",
+  "targetDate": "2025-05-01",
+  "status": "Completed",
+  "completionNotes": "1450 puan alındı"
+}
+
+### ===========================================
+### DELETE GOAL - (Admin, Danışman)
+### ===========================================
+DELETE {{baseUrl}}/1/goals/1
+Authorization: Bearer {{token}}

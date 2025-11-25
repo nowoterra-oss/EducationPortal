@@ -1,0 +1,83 @@
+### EduPortal API - School Recommendations Controller
+### School recommendation management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/school-recommendations
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL RECOMMENDATIONS
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET RECOMMENDATION SUMMARIES
+### ===========================================
+GET {{baseUrl}}/summaries
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET RECOMMENDATION BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET RECOMMENDATIONS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET RECOMMENDATIONS BY COACH
+### ===========================================
+GET {{baseUrl}}/coach/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET RECOMMENDATION STATISTICS
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE RECOMMENDATION - (Admin, Coach, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "coachId": 1,
+  "schoolName": "MIT",
+  "programName": "Computer Science",
+  "category": "Reach",
+  "acceptanceRate": 4.0,
+  "averageSAT": 1550,
+  "tuitionFee": 55000,
+  "recommendationReason": "Güçlü mühendislik programı",
+  "notes": "İlk tercih"
+}
+
+### ===========================================
+### UPDATE RECOMMENDATION - (Admin, Coach, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "category": "Target",
+  "notes": "Güncellenmiş değerlendirme"
+}
+
+### ===========================================
+### DELETE RECOMMENDATION - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

@@ -1,0 +1,107 @@
+### EduPortal API - University Applications Controller
+### University application management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/university-applications
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL APPLICATIONS - (Admin, Danışman)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET APPLICATION BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET APPLICATIONS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET APPLICATIONS BY STATUS - (Admin, Danışman)
+### Status options: Draft, Submitted, UnderReview, Accepted, Rejected, Waitlisted
+### ===========================================
+GET {{baseUrl}}/status/Submitted?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET APPLICATION TIMELINE
+### ===========================================
+GET {{baseUrl}}/1/timeline
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET APPLICATION STATISTICS - (Admin, Danışman)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE APPLICATION
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "universityName": "MIT",
+  "programName": "Computer Science",
+  "applicationDeadline": "2025-01-15",
+  "applicationType": "EarlyAction",
+  "status": "Draft",
+  "notes": "İlk tercih"
+}
+
+### ===========================================
+### UPDATE APPLICATION
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "status": "Submitted",
+  "submissionDate": "2024-11-15",
+  "notes": "Başvuru tamamlandı"
+}
+
+### ===========================================
+### UPDATE APPLICATION STATUS - (Admin, Danışman)
+### ===========================================
+PATCH {{baseUrl}}/1/status
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "status": "Accepted",
+  "notes": "Kabul mektubu alındı",
+  "decisionDate": "2025-03-15"
+}
+
+### ===========================================
+### ADD DOCUMENT TO APPLICATION
+### ===========================================
+POST {{baseUrl}}/1/documents
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "documentType": "Transcript",
+  "title": "Transkript",
+  "fileUrl": "https://storage.example.com/docs/transcript.pdf"
+}
+
+### ===========================================
+### DELETE APPLICATION - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

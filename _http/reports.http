@@ -1,0 +1,77 @@
+### EduPortal API - Reports Controller
+### Report generation endpoints (Not fully implemented)
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/reports
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET STUDENT PROGRESS REPORT
+### ===========================================
+GET {{baseUrl}}/student/1/progress
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET STUDENT ACADEMIC REPORT
+### ===========================================
+GET {{baseUrl}}/student/1/academic
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET STUDENT ATTENDANCE REPORT
+### ===========================================
+GET {{baseUrl}}/student/1/attendance
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET COURSE PERFORMANCE REPORT - (Admin, Öğretmen, Danışman)
+### ===========================================
+GET {{baseUrl}}/course/1/performance
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET FINANCIAL REPORT - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/financial?startDate=2024-01-01&endDate=2024-12-31
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET TEACHER PERFORMANCE REPORT - (Admin only)
+### ===========================================
+GET {{baseUrl}}/teacher/1/performance
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ENROLLMENT REPORT - (Admin, Kayıtçı)
+### ===========================================
+GET {{baseUrl}}/enrollment?startDate=2024-01-01&endDate=2024-12-31
+Authorization: Bearer {{token}}
+
+### ===========================================
+### EXPORT REPORT TO PDF
+### ===========================================
+POST {{baseUrl}}/export/pdf
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "reportType": "StudentProgress",
+  "studentId": 1,
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31"
+}
+
+### ===========================================
+### EXPORT REPORT TO EXCEL
+### ===========================================
+POST {{baseUrl}}/export/excel
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "reportType": "Financial",
+  "startDate": "2024-01-01",
+  "endDate": "2024-12-31"
+}

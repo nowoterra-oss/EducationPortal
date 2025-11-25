@@ -1,0 +1,66 @@
+### EduPortal API - Performance Controller
+### Student performance tracking endpoints (Not yet implemented)
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/performance
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL PERFORMANCE RECORDS - (Admin, Danışman, Öğretmen)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PERFORMANCE BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PERFORMANCE BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PERFORMANCE BY COURSE - (Admin, Öğretmen, Danışman)
+### ===========================================
+GET {{baseUrl}}/course/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE PERFORMANCE RECORD - (Admin, Öğretmen)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "courseId": 1,
+  "score": 85.5,
+  "period": "2024-2025 Güz",
+  "notes": "İyi performans"
+}
+
+### ===========================================
+### UPDATE PERFORMANCE RECORD - (Admin, Öğretmen)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "score": 90.0,
+  "notes": "Performans güncellendi"
+}
+
+### ===========================================
+### DELETE PERFORMANCE RECORD - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

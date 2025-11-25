@@ -1,0 +1,90 @@
+### EduPortal API - Student Package Purchases Controller
+### Student package purchase management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/student-package-purchases
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL PURCHASES
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE PURCHASES
+### ===========================================
+GET {{baseUrl}}/active
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PURCHASE SUMMARIES
+### ===========================================
+GET {{baseUrl}}/summaries
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PURCHASE BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PURCHASES BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PURCHASES BY PACKAGE
+### ===========================================
+GET {{baseUrl}}/package/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET STATISTICS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE PURCHASE - (Admin, Kayıtçı, Muhasebe)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "packageId": 1,
+  "purchaseDate": "2024-11-25",
+  "totalAmount": 25000.00,
+  "paymentMethod": "CreditCard",
+  "notes": "Premium paket satışı"
+}
+
+### ===========================================
+### UPDATE PURCHASE - (Admin, Muhasebe)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "notes": "Güncellenen notlar",
+  "expiryDate": "2025-11-25"
+}
+
+### ===========================================
+### USE SESSION - (Admin, Coach, Öğretmen)
+### ===========================================
+POST {{baseUrl}}/1/use-session
+Authorization: Bearer {{token}}
+
+### ===========================================
+### DELETE PURCHASE - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

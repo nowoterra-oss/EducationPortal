@@ -1,0 +1,83 @@
+### EduPortal API - Calendar Controller
+### Calendar and event management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/calendar
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL EVENTS - Paginated list
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET EVENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET EVENTS BY DATE RANGE
+### ===========================================
+GET {{baseUrl}}/range?startDate=2024-11-01&endDate=2024-11-30
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET STUDENT EVENTS
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET UPCOMING EVENTS (default: 7 days)
+### ===========================================
+GET {{baseUrl}}/upcoming?days=7
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASS EVENTS
+### ===========================================
+GET {{baseUrl}}/class/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE EVENT - (Admin, Öğretmen, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "Veli Toplantısı",
+  "description": "2024-2025 Eğitim Yılı 1. Dönem Veli Toplantısı",
+  "startDate": "2024-12-15T14:00:00Z",
+  "endDate": "2024-12-15T16:00:00Z",
+  "eventType": "Meeting",
+  "location": "Konferans Salonu",
+  "isAllDay": false,
+  "classId": 1
+}
+
+### ===========================================
+### UPDATE EVENT - (Admin, Öğretmen, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "Veli Toplantısı - Güncellendi",
+  "description": "2024-2025 Eğitim Yılı 1. Dönem Veli Toplantısı (Güncellendi)",
+  "startDate": "2024-12-16T14:00:00Z",
+  "endDate": "2024-12-16T16:00:00Z",
+  "location": "Ana Salon"
+}
+
+### ===========================================
+### DELETE EVENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

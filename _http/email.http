@@ -1,0 +1,114 @@
+### EduPortal API - Email Controller
+### Email management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/email
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### SEND EMAIL - (Admin, Öğretmen)
+### ===========================================
+POST {{baseUrl}}/send
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "to": "recipient@example.com",
+  "subject": "Test Email",
+  "body": "Bu bir test emailidir.",
+  "isHtml": false
+}
+
+### ===========================================
+### SEND BULK EMAIL - (Admin only)
+### ===========================================
+POST {{baseUrl}}/send-bulk
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "recipients": ["user1@example.com", "user2@example.com"],
+  "subject": "Toplu Email",
+  "body": "<h1>Duyuru</h1><p>Bu bir toplu emaildir.</p>",
+  "isHtml": true
+}
+
+### ===========================================
+### GET ALL EMAIL TEMPLATES - (Admin only)
+### ===========================================
+GET {{baseUrl}}/templates
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET TEMPLATE BY ID - (Admin only)
+### ===========================================
+GET {{baseUrl}}/templates/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE EMAIL TEMPLATE - (Admin only)
+### ===========================================
+POST {{baseUrl}}/templates
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "templateName": "Hoşgeldiniz",
+  "subject": "EduPortal'a Hoşgeldiniz",
+  "body": "<h1>Hoşgeldiniz {{FirstName}}</h1><p>EduPortal'a kayıt olduğunuz için teşekkürler.</p>",
+  "isHtml": true,
+  "isActive": true
+}
+
+### ===========================================
+### UPDATE EMAIL TEMPLATE - (Admin only)
+### ===========================================
+PUT {{baseUrl}}/templates/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "templateName": "Hoşgeldiniz - Güncellenmiş",
+  "subject": "EduPortal'a Hoşgeldiniz!",
+  "body": "<h1>Merhaba {{FirstName}}</h1><p>EduPortal ailesine katıldığınız için çok mutluyuz.</p>",
+  "isHtml": true,
+  "isActive": true
+}
+
+### ===========================================
+### DELETE EMAIL TEMPLATE - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/templates/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEND PAYMENT NOTIFICATION - (Admin, Muhasebe)
+### ===========================================
+POST {{baseUrl}}/notifications/veli-odeme/1/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEND HOMEWORK NOTIFICATION - (Admin, Öğretmen)
+### ===========================================
+POST {{baseUrl}}/notifications/odev/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEND EXAM RESULT NOTIFICATION - (Admin, Öğretmen)
+### ===========================================
+POST {{baseUrl}}/notifications/sinav-sonuc/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEND ABSENCE WARNING - (Admin, Öğretmen)
+### ===========================================
+POST {{baseUrl}}/notifications/devamsizlik/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEND INSTALLMENT REMINDER - (Admin, Muhasebe)
+### ===========================================
+POST {{baseUrl}}/notifications/taksit/1
+Authorization: Bearer {{token}}

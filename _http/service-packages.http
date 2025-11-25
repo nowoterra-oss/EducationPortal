@@ -1,0 +1,77 @@
+### EduPortal API - Service Packages Controller
+### Service package management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/service-packages
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL PACKAGES
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE PACKAGES
+### ===========================================
+GET {{baseUrl}}/active
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PACKAGE SUMMARIES
+### ===========================================
+GET {{baseUrl}}/summaries
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PACKAGE BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET STATISTICS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE PACKAGE - (Admin only)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "Premium Paket",
+  "description": "10 seans koçluk + SAT hazırlık",
+  "price": 25000.00,
+  "totalSessions": 10,
+  "validityDays": 180,
+  "includesServices": ["Koçluk", "SAT Hazırlık", "Üniversite Danışmanlığı"],
+  "isActive": true
+}
+
+### ===========================================
+### UPDATE PACKAGE - (Admin only)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "Premium Paket Plus",
+  "description": "15 seans koçluk + SAT hazırlık + TOEFL",
+  "price": 30000.00,
+  "totalSessions": 15,
+  "validityDays": 365,
+  "isActive": true
+}
+
+### ===========================================
+### DELETE PACKAGE - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

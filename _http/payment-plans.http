@@ -1,0 +1,74 @@
+### EduPortal API - Payment Plans Controller
+### Payment plan management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/payment-plans
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL PAYMENT PLANS
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE PAYMENT PLANS
+### ===========================================
+GET {{baseUrl}}/active
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PAYMENT PLAN BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE PAYMENT PLAN - (Admin, Muhasebe)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "12 Taksit",
+  "description": "12 ay eşit taksitli ödeme planı",
+  "numberOfInstallments": 12,
+  "interestRate": 0,
+  "isActive": true
+}
+
+### ===========================================
+### UPDATE PAYMENT PLAN - (Admin, Muhasebe)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "12 Taksit - Güncellenmiş",
+  "description": "12 ay eşit taksitli ödeme planı (faizsiz)",
+  "numberOfInstallments": 12,
+  "interestRate": 0,
+  "isActive": true
+}
+
+### ===========================================
+### DELETE PAYMENT PLAN - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### ACTIVATE PAYMENT PLAN - (Admin, Muhasebe)
+### ===========================================
+PATCH {{baseUrl}}/1/activate
+Authorization: Bearer {{token}}
+
+### ===========================================
+### DEACTIVATE PAYMENT PLAN - (Admin, Muhasebe)
+### ===========================================
+PATCH {{baseUrl}}/1/deactivate
+Authorization: Bearer {{token}}

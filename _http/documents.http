@@ -1,0 +1,89 @@
+### EduPortal API - Documents Controller
+### Document management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/documents
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL DOCUMENTS - Paginated list (Admin, Danışman)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET DOCUMENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### UPLOAD DOCUMENT - (Admin, Danışman, Öğretmen)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "title": "Transkript",
+  "description": "2024 yılı transkript belgesi",
+  "documentType": "Transcript",
+  "fileUrl": "https://storage.example.com/docs/transcript.pdf",
+  "fileName": "transcript.pdf",
+  "fileSize": 1024000,
+  "mimeType": "application/pdf"
+}
+
+### ===========================================
+### UPDATE DOCUMENT - (Admin, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "Transkript - Güncellenmiş",
+  "description": "2024-2025 eğitim yılı transkripti",
+  "isActive": true
+}
+
+### ===========================================
+### DELETE DOCUMENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET DOCUMENTS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET DOCUMENTS BY TYPE - (Admin, Danışman)
+### DocumentType options: Transcript, Certificate, IdentityDocument, Other
+### ===========================================
+GET {{baseUrl}}/type/Transcript?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### DOWNLOAD DOCUMENT
+### ===========================================
+GET {{baseUrl}}/1/download
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SHARE DOCUMENT - (Admin, Danışman, Öğretmen)
+### ===========================================
+POST {{baseUrl}}/1/share
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "userId": "user-guid-here",
+  "permission": "Read",
+  "expiresAt": "2025-12-31T23:59:59Z"
+}

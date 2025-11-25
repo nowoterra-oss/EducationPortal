@@ -1,0 +1,82 @@
+### EduPortal API - Clubs Controller
+### Club management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/clubs
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL CLUBS
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLUB BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLUB MEMBERS - Paginated list
+### ===========================================
+GET {{baseUrl}}/1/members?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLUBS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE CLUB - (Admin only)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "Matematik Kulübü",
+  "description": "Matematik severlerin buluşma noktası",
+  "category": "Academic",
+  "advisorTeacherId": 1,
+  "maxMembers": 30,
+  "meetingDay": "Wednesday",
+  "meetingTime": "15:00",
+  "isActive": true
+}
+
+### ===========================================
+### JOIN CLUB
+### ===========================================
+POST {{baseUrl}}/1/join?studentId=1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### LEAVE CLUB
+### ===========================================
+POST {{baseUrl}}/1/leave?studentId=1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### UPDATE CLUB - (Admin only)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "Matematik ve Fen Kulübü",
+  "description": "Matematik ve fen bilimleri severlerin buluşma noktası",
+  "maxMembers": 40,
+  "isActive": true
+}
+
+### ===========================================
+### DELETE CLUB - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

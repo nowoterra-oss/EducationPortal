@@ -1,0 +1,99 @@
+### EduPortal API - Payments Controller
+### Payment management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/payments
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL PAYMENTS - Paginated list (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PAYMENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE PAYMENT - (Admin, Muhasebe)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "amount": 5000.00,
+  "paymentType": "Tuition",
+  "description": "2024-2025 Eğitim Dönemi Ödemesi",
+  "dueDate": "2024-09-01T00:00:00Z"
+}
+
+### ===========================================
+### UPDATE PAYMENT - (Admin, Muhasebe)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "amount": 5500.00,
+  "paymentType": "Tuition",
+  "description": "2024-2025 Eğitim Dönemi Ödemesi (Güncellenmiş)",
+  "dueDate": "2024-09-15T00:00:00Z"
+}
+
+### ===========================================
+### DELETE PAYMENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET STUDENT PAYMENTS
+### ===========================================
+GET {{baseUrl}}/student/1?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PAYMENTS BY STATUS
+### Status options: Pending, Completed, Failed, Refunded, Cancelled
+### ===========================================
+GET {{baseUrl}}/status/Pending?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PENDING PAYMENTS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/pending?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET OVERDUE PAYMENTS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/overdue?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### PROCESS PAYMENT - (Admin, Muhasebe)
+### ===========================================
+POST {{baseUrl}}/1/process
+Authorization: Bearer {{token}}
+
+### ===========================================
+### DOWNLOAD RECEIPT
+### ===========================================
+GET {{baseUrl}}/1/receipt
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PAYMENT STATISTICS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}

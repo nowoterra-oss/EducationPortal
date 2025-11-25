@@ -1,0 +1,88 @@
+### EduPortal API - Study Abroad Controller
+### Study abroad program management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/study-abroad
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL PROGRAMS - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE PROGRAMS - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/active
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PROGRAM SUMMARIES - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/summaries
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PROGRAM BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PROGRAMS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PROGRAMS BY COACH - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/coach/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET STATISTICS - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE PROGRAM - (Admin, Coach, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "coachId": 1,
+  "programName": "USA Summer Program",
+  "university": "Harvard University",
+  "country": "USA",
+  "city": "Cambridge",
+  "startDate": "2025-06-01",
+  "endDate": "2025-08-31",
+  "status": "Applied",
+  "notes": "Yaz okulu başvurusu"
+}
+
+### ===========================================
+### UPDATE PROGRAM - (Admin, Coach, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "status": "Accepted",
+  "notes": "Başvuru kabul edildi, vize sürecine geçilecek"
+}
+
+### ===========================================
+### DELETE PROGRAM - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

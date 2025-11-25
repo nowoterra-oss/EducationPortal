@@ -1,0 +1,52 @@
+### EduPortal API - Auth Controller
+### Authentication and user management endpoints
+### Base URL: http://localhost:5000
+
+@baseUrl = http://localhost:5000/api/auth
+@contentType = application/json
+
+### ===========================================
+### REGISTER - Create a new user
+### ===========================================
+POST {{baseUrl}}/register
+Content-Type: {{contentType}}
+
+{
+  "email": "user@example.com",
+  "password": "Password123!",
+  "confirmPassword": "Password123!",
+  "firstName": "Test",
+  "lastName": "User",
+  "phoneNumber": "+905551234567"
+}
+
+### ===========================================
+### LOGIN - User login
+### ===========================================
+# @name login
+POST {{baseUrl}}/login
+Content-Type: {{contentType}}
+
+{
+  "email": "admin@eduportal.com",
+  "password": "Admin123!"
+}
+
+### ===========================================
+### CHANGE PASSWORD - Change user password (Requires Auth)
+### ===========================================
+POST {{baseUrl}}/change-password
+Content-Type: {{contentType}}
+Authorization: Bearer {{login.response.body.data.token}}
+
+{
+  "currentPassword": "OldPassword123!",
+  "newPassword": "NewPassword123!",
+  "confirmNewPassword": "NewPassword123!"
+}
+
+### ===========================================
+### GET CURRENT USER - Get authenticated user info (Requires Auth)
+### ===========================================
+GET {{baseUrl}}/me
+Authorization: Bearer {{login.response.body.data.token}}

@@ -1,0 +1,68 @@
+### EduPortal API - Attendance Controller
+### Attendance management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/attendance
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL ATTENDANCE RECORDS - Paginated list (Admin only)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### Note: The following endpoints are commented out in the controller
+### but are documented here for future implementation
+### ===========================================
+
+### GET ATTENDANCE BY ID (Not implemented yet)
+# GET {{baseUrl}}/1
+# Authorization: Bearer {{token}}
+
+### CREATE ATTENDANCE RECORD (Not implemented yet)
+# POST {{baseUrl}}
+# Content-Type: {{contentType}}
+# Authorization: Bearer {{token}}
+#
+# {
+#   "studentId": 1,
+#   "courseId": 1,
+#   "date": "2024-11-25",
+#   "status": "Present",
+#   "notes": ""
+# }
+
+### BULK CREATE ATTENDANCE (Not implemented yet)
+# POST {{baseUrl}}/bulk
+# Content-Type: {{contentType}}
+# Authorization: Bearer {{token}}
+#
+# [
+#   {
+#     "studentId": 1,
+#     "courseId": 1,
+#     "date": "2024-11-25",
+#     "status": "Present"
+#   },
+#   {
+#     "studentId": 2,
+#     "courseId": 1,
+#     "date": "2024-11-25",
+#     "status": "Absent"
+#   }
+# ]
+
+### GET ATTENDANCE BY STUDENT (Not implemented yet)
+# GET {{baseUrl}}/student/1?pageNumber=1&pageSize=10
+# Authorization: Bearer {{token}}
+
+### GET ATTENDANCE BY COURSE (Not implemented yet)
+# GET {{baseUrl}}/course/1?pageNumber=1&pageSize=10
+# Authorization: Bearer {{token}}
+
+### GET STUDENT ATTENDANCE SUMMARY (Not implemented yet)
+# GET {{baseUrl}}/student/1/summary
+# Authorization: Bearer {{token}}

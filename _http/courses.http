@@ -1,0 +1,113 @@
+### EduPortal API - Courses Controller
+### Course management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/courses
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL COURSES - Paginated list
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET COURSE BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE COURSE - (Admin only)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "Matematik 10",
+  "code": "MAT10",
+  "description": "10. sınıf matematik dersi",
+  "credits": 4,
+  "teacherId": 1,
+  "branchId": 1,
+  "isActive": true
+}
+
+### ===========================================
+### UPDATE COURSE - (Admin, Öğretmen)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "Matematik 10 - Gelişmiş",
+  "description": "10. sınıf gelişmiş matematik dersi",
+  "credits": 5,
+  "isActive": true
+}
+
+### ===========================================
+### DELETE COURSE - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET COURSE CURRICULUM
+### ===========================================
+GET {{baseUrl}}/1/curriculum
+Authorization: Bearer {{token}}
+
+### ===========================================
+### UPDATE COURSE CURRICULUM - (Admin, Öğretmen)
+### ===========================================
+PUT {{baseUrl}}/1/curriculum
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "items": [
+    {
+      "title": "Üniteler ve Kümeler",
+      "description": "Kümeler ve işlemleri",
+      "weekNumber": 1,
+      "order": 1
+    },
+    {
+      "title": "Fonksiyonlar",
+      "description": "Fonksiyon kavramı ve çeşitleri",
+      "weekNumber": 2,
+      "order": 2
+    }
+  ]
+}
+
+### ===========================================
+### GET COURSE RESOURCES
+### ===========================================
+GET {{baseUrl}}/1/resources
+Authorization: Bearer {{token}}
+
+### ===========================================
+### ADD COURSE RESOURCE - (Admin, Öğretmen)
+### ===========================================
+POST {{baseUrl}}/1/resources
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "Ders Notları - Ünite 1",
+  "description": "İlk ünite ders notları",
+  "resourceType": "PDF",
+  "url": "https://example.com/resources/unit1.pdf"
+}
+
+### ===========================================
+### DELETE COURSE RESOURCE - (Admin, Öğretmen)
+### ===========================================
+DELETE {{baseUrl}}/1/resources/1
+Authorization: Bearer {{token}}

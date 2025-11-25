@@ -1,0 +1,112 @@
+### EduPortal API - Weekly Schedules Controller
+### Weekly lesson schedule management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/weeklySchedules
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL WEEKLY SCHEDULES - Paginated list
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SCHEDULE BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SCHEDULE BY CLASS
+### ===========================================
+GET {{baseUrl}}/class/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SCHEDULE BY TEACHER
+### ===========================================
+GET {{baseUrl}}/teacher/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SCHEDULE BY CLASSROOM
+### ===========================================
+GET {{baseUrl}}/classroom/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET TODAY'S LESSONS
+### ===========================================
+GET {{baseUrl}}/today
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE WEEKLY SCHEDULE - (Admin, Kayıtçı)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "classId": 1,
+  "courseId": 1,
+  "teacherId": 1,
+  "classroomId": 1,
+  "dayOfWeek": 1,
+  "lessonHour": 1,
+  "startTime": "09:00:00",
+  "endTime": "09:45:00"
+}
+
+### ===========================================
+### BULK CREATE WEEKLY SCHEDULES - (Admin, Kayıtçı)
+### ===========================================
+POST {{baseUrl}}/bulk
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+[
+  {
+    "classId": 1,
+    "courseId": 1,
+    "teacherId": 1,
+    "classroomId": 1,
+    "dayOfWeek": 1,
+    "lessonHour": 1,
+    "startTime": "09:00:00",
+    "endTime": "09:45:00"
+  },
+  {
+    "classId": 1,
+    "courseId": 2,
+    "teacherId": 2,
+    "classroomId": 1,
+    "dayOfWeek": 1,
+    "lessonHour": 2,
+    "startTime": "10:00:00",
+    "endTime": "10:45:00"
+  }
+]
+
+### ===========================================
+### UPDATE WEEKLY SCHEDULE - (Admin, Kayıtçı)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "classroomId": 2,
+  "lessonHour": 3,
+  "startTime": "11:00:00",
+  "endTime": "11:45:00"
+}
+
+### ===========================================
+### DELETE WEEKLY SCHEDULE - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

@@ -1,0 +1,74 @@
+### EduPortal API - Students Controller
+### Student management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/students
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL STUDENTS - Paginated list (Admin, Danışman, Öğretmen)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET STUDENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEARCH STUDENTS - Search by name, email, or student number
+### ===========================================
+GET {{baseUrl}}/search?term=ahmet&pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET BY STUDENT NUMBER
+### ===========================================
+GET {{baseUrl}}/student-no/STU2024001
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE STUDENT - (Admin, Kayıtçı)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "firstName": "Ali",
+  "lastName": "Yılmaz",
+  "email": "ali.yilmaz@student.com",
+  "phoneNumber": "+905551234567",
+  "dateOfBirth": "2008-05-15",
+  "address": "İstanbul, Türkiye",
+  "tcKimlikNo": "12345678901",
+  "schoolName": "Örnek Lise",
+  "grade": 10,
+  "classId": 1,
+  "parentId": 1
+}
+
+### ===========================================
+### UPDATE STUDENT - (Admin, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "id": 1,
+  "phoneNumber": "+905559876543",
+  "address": "Ankara, Türkiye",
+  "grade": 11,
+  "classId": 2
+}
+
+### ===========================================
+### DELETE STUDENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

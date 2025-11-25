@@ -1,0 +1,83 @@
+### EduPortal API - Accommodation Arrangements Controller
+### Study abroad accommodation management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/accommodation-arrangements
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL ARRANGEMENTS - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE ARRANGEMENTS - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/active
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ARRANGEMENT SUMMARIES - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/summaries
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ARRANGEMENT BY ID - (Admin, Coach, Danışman, Ogrenci)
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ARRANGEMENTS BY PROGRAM - (Admin, Coach, Danışman, Ogrenci)
+### ===========================================
+GET {{baseUrl}}/program/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACCOMMODATION STATISTICS - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE ARRANGEMENT - (Admin, Coach, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studyAbroadProgramId": 1,
+  "accommodationType": "Dormitory",
+  "facilityName": "University Residence Hall",
+  "address": "123 Campus Drive, Boston, MA",
+  "checkInDate": "2024-08-25",
+  "checkOutDate": "2025-05-15",
+  "monthlyRent": 1200.00,
+  "isPaid": false,
+  "notes": "Tek kişilik oda"
+}
+
+### ===========================================
+### UPDATE ARRANGEMENT - (Admin, Coach, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "monthlyRent": 1250.00,
+  "isPaid": true,
+  "notes": "Ödeme tamamlandı"
+}
+
+### ===========================================
+### DELETE ARRANGEMENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

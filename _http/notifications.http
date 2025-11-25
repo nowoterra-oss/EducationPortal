@@ -1,0 +1,72 @@
+### EduPortal API - Notifications Controller
+### Notification management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/notifications
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET USER NOTIFICATIONS - Paginated list
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET NOTIFICATION BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### MARK NOTIFICATION AS READ
+### ===========================================
+PATCH {{baseUrl}}/1/read
+Authorization: Bearer {{token}}
+
+### ===========================================
+### MARK ALL NOTIFICATIONS AS READ
+### ===========================================
+PATCH {{baseUrl}}/read-all
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET UNREAD COUNT
+### ===========================================
+GET {{baseUrl}}/unread/count
+Authorization: Bearer {{token}}
+
+### ===========================================
+### DELETE NOTIFICATION
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SEND NOTIFICATION - (Admin only)
+### ===========================================
+POST {{baseUrl}}/send
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "userId": "user-guid-here",
+  "title": "Duyuru",
+  "message": "Yarınki toplantı saat 10:00'da başlayacaktır.",
+  "type": "Announcement"
+}
+
+### ===========================================
+### SEND BULK NOTIFICATIONS - (Admin only)
+### ===========================================
+POST {{baseUrl}}/bulk
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "userIds": ["user-guid-1", "user-guid-2", "user-guid-3"],
+  "title": "Genel Duyuru",
+  "message": "Tüm öğrencilere önemli duyuru.",
+  "type": "General"
+}

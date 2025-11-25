@@ -1,0 +1,82 @@
+### EduPortal API - Career Assessments Controller
+### Career assessment management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/career-assessments
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL CAREER ASSESSMENTS
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CAREER ASSESSMENT SUMMARIES
+### ===========================================
+GET {{baseUrl}}/summaries
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CAREER ASSESSMENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CAREER ASSESSMENTS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CAREER ASSESSMENTS BY COACH
+### ===========================================
+GET {{baseUrl}}/coach/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CAREER ASSESSMENT STATISTICS
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE CAREER ASSESSMENT - (Admin, Coach, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "coachId": 1,
+  "assessmentDate": "2024-11-15",
+  "careerInterests": ["Engineering", "Technology"],
+  "strengths": ["Problem Solving", "Analytical Thinking"],
+  "areasForImprovement": ["Communication"],
+  "recommendedPaths": ["Computer Science", "Data Science"],
+  "notes": "Kariyer değerlendirmesi"
+}
+
+### ===========================================
+### UPDATE CAREER ASSESSMENT - (Admin, Coach, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "careerInterests": ["Engineering", "Research"],
+  "recommendedPaths": ["AI Research", "Machine Learning"],
+  "notes": "Güncellenmiş değerlendirme"
+}
+
+### ===========================================
+### DELETE CAREER ASSESSMENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

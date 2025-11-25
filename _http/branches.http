@@ -1,0 +1,83 @@
+### EduPortal API - Branches Controller
+### Branch management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/branches
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL BRANCHES
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET BRANCH BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE BRANCH - (Admin only)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "Matematik Bölümü",
+  "branchCode": "MAT",
+  "type": "Academic",
+  "description": "Matematik ve Geometri Bölümü",
+  "phone": "+902121234567",
+  "openingDate": "2020-09-01",
+  "isActive": true
+}
+
+### ===========================================
+### UPDATE BRANCH - (Admin, BranchManager)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "Matematik ve Fen Bölümü",
+  "description": "Matematik, Geometri ve Fen Bilimleri",
+  "phone": "+902129876543",
+  "isActive": true
+}
+
+### ===========================================
+### DELETE BRANCH - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET BRANCH STATISTICS
+### ===========================================
+GET {{baseUrl}}/1/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PERFORMANCE COMPARISON - (Admin only)
+### ===========================================
+GET {{baseUrl}}/performance-comparison
+Authorization: Bearer {{token}}
+
+### ===========================================
+### TRANSFER STUDENT - (Admin, BranchManager)
+### ===========================================
+POST {{baseUrl}}/transfer-student
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "fromBranchId": 1,
+  "toBranchId": 2,
+  "reason": "Bölüm değişikliği talebi"
+}

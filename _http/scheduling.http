@@ -1,0 +1,107 @@
+### EduPortal API - Scheduling Controller
+### Calendar and availability management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/scheduling
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### STUDENT CALENDAR & AVAILABILITY
+### ===========================================
+
+### Get Student Weekly Calendar
+GET {{baseUrl}}/student/1/calendar
+Authorization: Bearer {{token}}
+
+### Get Student Availability
+GET {{baseUrl}}/student/1/availability
+Authorization: Bearer {{token}}
+
+### Create Student Availability - (Admin, Kayitci, Öğrenci)
+POST {{baseUrl}}/student/availability
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "dayOfWeek": 1,
+  "startTime": "14:00",
+  "endTime": "18:00",
+  "isRecurring": true
+}
+
+### Delete Student Availability - (Admin, Kayitci, Öğrenci)
+DELETE {{baseUrl}}/student/availability/1
+Authorization: Bearer {{token}}
+
+### Get Student Lessons
+GET {{baseUrl}}/student/1/lessons
+Authorization: Bearer {{token}}
+
+### ===========================================
+### TEACHER CALENDAR & AVAILABILITY
+### ===========================================
+
+### Get Teacher Weekly Calendar
+GET {{baseUrl}}/teacher/1/calendar
+Authorization: Bearer {{token}}
+
+### Get Teacher Availability
+GET {{baseUrl}}/teacher/1/availability
+Authorization: Bearer {{token}}
+
+### Create Teacher Availability - (Admin, Kayitci, Öğretmen)
+POST {{baseUrl}}/teacher/availability
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "teacherId": 1,
+  "dayOfWeek": 2,
+  "startTime": "09:00",
+  "endTime": "17:00",
+  "isRecurring": true
+}
+
+### Delete Teacher Availability - (Admin, Kayitci, Öğretmen)
+DELETE {{baseUrl}}/teacher/availability/1
+Authorization: Bearer {{token}}
+
+### Get Teacher Lessons
+GET {{baseUrl}}/teacher/1/lessons
+Authorization: Bearer {{token}}
+
+### ===========================================
+### MATCHING & LESSON SCHEDULING
+### ===========================================
+
+### Find Matching Slots (All days)
+GET {{baseUrl}}/match?studentId=1&teacherId=1
+Authorization: Bearer {{token}}
+
+### Find Matching Slots (Specific day)
+GET {{baseUrl}}/match?studentId=1&teacherId=1&dayOfWeek=1
+Authorization: Bearer {{token}}
+
+### Create Lesson Schedule - (Admin, Kayitci)
+POST {{baseUrl}}/lesson
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "teacherId": 1,
+  "courseId": 1,
+  "dayOfWeek": 1,
+  "startTime": "14:00",
+  "endTime": "15:00",
+  "startDate": "2024-09-02",
+  "isRecurring": true
+}
+
+### Cancel Lesson - (Admin, Kayitci)
+PATCH {{baseUrl}}/lesson/1/cancel
+Authorization: Bearer {{token}}
+

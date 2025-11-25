@@ -1,0 +1,82 @@
+### EduPortal API - Parents Controller
+### Parent management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/parents
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL PARENTS - Paginated list (Admin, Danışman)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PARENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PARENTS BY STUDENT ID
+### ===========================================
+GET {{baseUrl}}/by-student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE PARENT - (Admin, Kayıtçı)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "firstName": "Ahmet",
+  "lastName": "Yılmaz",
+  "email": "ahmet.yilmaz@parent.com",
+  "phoneNumber": "+905551234567",
+  "address": "İstanbul, Türkiye",
+  "occupation": "Mühendis",
+  "relationshipType": "Baba"
+}
+
+### ===========================================
+### UPDATE PARENT - (Admin only)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "firstName": "Ahmet",
+  "lastName": "Yılmaz",
+  "phoneNumber": "+905559876543",
+  "address": "Ankara, Türkiye",
+  "occupation": "Yönetici"
+}
+
+### ===========================================
+### DELETE PARENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### ADD STUDENT RELATIONSHIP - (Admin, Kayıtçı)
+### ===========================================
+POST {{baseUrl}}/1/students
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "relationshipType": "Anne"
+}
+
+### ===========================================
+### REMOVE STUDENT RELATIONSHIP - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1/students/1
+Authorization: Bearer {{token}}

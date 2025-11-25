@@ -1,0 +1,67 @@
+### EduPortal API - Academic Terms Controller
+### Academic term management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/academicTerms
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL ACADEMIC TERMS - Paginated list
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET TERM BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE TERM
+### ===========================================
+GET {{baseUrl}}/active
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE ACADEMIC TERM - (Admin only)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "2024-2025 Güz Dönemi",
+  "academicYear": "2024-2025",
+  "semester": 1,
+  "startDate": "2024-09-02",
+  "endDate": "2025-01-17",
+  "isActive": false
+}
+
+### ===========================================
+### UPDATE ACADEMIC TERM - (Admin only)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "2024-2025 Güz Dönemi (Güncellenmiş)",
+  "startDate": "2024-09-09",
+  "endDate": "2025-01-24"
+}
+
+### ===========================================
+### ACTIVATE ACADEMIC TERM - (Admin only)
+### ===========================================
+PATCH {{baseUrl}}/1/activate
+Authorization: Bearer {{token}}
+
+### ===========================================
+### DELETE ACADEMIC TERM - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

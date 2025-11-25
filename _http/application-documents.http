@@ -1,0 +1,81 @@
+### EduPortal API - Application Documents Controller
+### Study abroad application document management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/application-documents
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL DOCUMENTS - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET DOCUMENTS BY PROGRAM - (Admin, Coach, Danışman, Ogrenci)
+### ===========================================
+GET {{baseUrl}}/program/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET DOCUMENT CHECKLIST - (Admin, Coach, Danışman, Ogrenci)
+### ===========================================
+GET {{baseUrl}}/program/1/checklist
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET EXPIRING DOCUMENTS - (Admin, Coach, Danışman)
+### Default: 30 days
+### ===========================================
+GET {{baseUrl}}/expiring?days=30
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET DOCUMENT STATISTICS - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET DOCUMENT BY ID - (Admin, Coach, Danışman, Ogrenci)
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE DOCUMENT - (Admin, Coach, Danışman, Ogrenci)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studyAbroadProgramId": 1,
+  "documentType": "Passport",
+  "name": "Pasaport Kopyası",
+  "fileUrl": "https://storage.example.com/docs/passport.pdf",
+  "expiryDate": "2029-05-15",
+  "status": "Pending",
+  "notes": "Pasaport yüklendi"
+}
+
+### ===========================================
+### UPDATE DOCUMENT - (Admin, Coach, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "status": "Approved",
+  "notes": "Belge onaylandı"
+}
+
+### ===========================================
+### DELETE DOCUMENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

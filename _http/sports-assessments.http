@@ -1,0 +1,83 @@
+### EduPortal API - Sports Assessments Controller
+### Sports assessment management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/sports-assessments
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL SPORTS ASSESSMENTS
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SPORTS ASSESSMENT SUMMARIES
+### ===========================================
+GET {{baseUrl}}/summaries
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SPORTS ASSESSMENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SPORTS ASSESSMENTS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SPORTS ASSESSMENTS BY COACH
+### ===========================================
+GET {{baseUrl}}/coach/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SPORTS ASSESSMENT STATISTICS
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE SPORTS ASSESSMENT - (Admin, Coach, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "coachId": 1,
+  "assessmentDate": "2024-11-15",
+  "sportType": "Basketball",
+  "skillLevel": "Intermediate",
+  "athleticAbilities": ["Speed", "Agility", "Teamwork"],
+  "achievements": ["Okul takımı kaptanı"],
+  "recruitmentPotential": "D3",
+  "notes": "Spor değerlendirmesi"
+}
+
+### ===========================================
+### UPDATE SPORTS ASSESSMENT - (Admin, Coach, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "skillLevel": "Advanced",
+  "recruitmentPotential": "D2",
+  "notes": "Gelişme kaydedildi"
+}
+
+### ===========================================
+### DELETE SPORTS ASSESSMENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

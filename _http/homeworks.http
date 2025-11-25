@@ -1,0 +1,108 @@
+### EduPortal API - Homeworks Controller
+### Homework management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/homeworks
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL HOMEWORKS - Paginated list
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET HOMEWORK BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET HOMEWORKS BY COURSE
+### ===========================================
+GET {{baseUrl}}/course/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET HOMEWORKS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE HOMEWORK - (Admin, Öğretmen)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "Matematik Ödevi - Türev",
+  "description": "Türev konusu ile ilgili 10 soru çözünüz",
+  "courseId": 1,
+  "dueDate": "2024-12-15T23:59:59Z",
+  "maxScore": 100,
+  "attachmentUrl": null
+}
+
+### ===========================================
+### UPDATE HOMEWORK - (Admin, Öğretmen)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "id": 1,
+  "title": "Matematik Ödevi - Türev ve İntegral",
+  "description": "Türev ve integral konuları ile ilgili 15 soru çözünüz",
+  "dueDate": "2024-12-20T23:59:59Z",
+  "maxScore": 100
+}
+
+### ===========================================
+### DELETE HOMEWORK - (Admin, Öğretmen)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET HOMEWORK SUBMISSIONS - (Admin, Öğretmen)
+### ===========================================
+GET {{baseUrl}}/1/submissions?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### SUBMIT HOMEWORK - (Öğrenci)
+### ===========================================
+POST {{baseUrl}}/submit
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "homeworkId": 1,
+  "studentId": 1,
+  "comment": "Ödevimi tamamladım",
+  "submissionUrl": "https://example.com/submissions/homework1.pdf"
+}
+
+### ===========================================
+### GRADE SUBMISSION - (Admin, Öğretmen)
+### ===========================================
+PUT {{baseUrl}}/submissions/grade
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "submissionId": 1,
+  "score": 85,
+  "teacherFeedback": "Güzel çalışma, ancak 3. soruda eksik var."
+}
+
+### ===========================================
+### GET STUDENT SUBMISSIONS
+### ===========================================
+GET {{baseUrl}}/student/1/submissions
+Authorization: Bearer {{token}}

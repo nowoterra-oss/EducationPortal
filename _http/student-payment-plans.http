@@ -1,0 +1,75 @@
+### EduPortal API - Student Payment Plans Controller
+### Student payment plan management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/student-payment-plans
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL PAYMENT PLANS - (Admin, Muhasebe, Kayitci)
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PAYMENT PLAN BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PAYMENT PLANS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE PAYMENT PLAN BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1/active
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PAYMENT PLAN STATISTICS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET OVERDUE PAYMENT PLANS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/overdue
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE PAYMENT PLAN - (Admin, Muhasebe, Kayitci)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "totalAmount": 50000.00,
+  "numberOfInstallments": 10,
+  "startDate": "2024-09-01",
+  "notes": "2024-2025 eğitim ödemesi"
+}
+
+### ===========================================
+### CANCEL PAYMENT PLAN - (Admin, Muhasebe)
+### ===========================================
+PATCH {{baseUrl}}/1/cancel
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+"Öğrenci kaydı iptal edildi"
+
+### ===========================================
+### COMPLETE PAYMENT PLAN - (Admin, Muhasebe)
+### ===========================================
+PATCH {{baseUrl}}/1/complete
+Authorization: Bearer {{token}}
+

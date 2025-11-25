@@ -1,0 +1,104 @@
+### EduPortal API - Student Teacher Assignments Controller
+### Student-teacher assignment management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/student-teacher-assignments
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL ASSIGNMENTS - (Admin, Kayitci)
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ASSIGNMENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ASSIGNMENTS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ASSIGNMENTS BY TEACHER
+### ===========================================
+GET {{baseUrl}}/teacher/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ASSIGNMENTS BY COURSE - (Admin, Ogretmen, Kayitci)
+### ===========================================
+GET {{baseUrl}}/course/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE ASSIGNMENT - (Admin, Kayitci)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "teacherId": 1,
+  "courseId": 1,
+  "startDate": "2024-09-02",
+  "isActive": true,
+  "notes": "Yeni öğrenci-öğretmen ataması"
+}
+
+### ===========================================
+### BULK CREATE ASSIGNMENTS - (Admin, Kayitci)
+### ===========================================
+POST {{baseUrl}}/bulk
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+[
+  {
+    "studentId": 1,
+    "teacherId": 1,
+    "courseId": 1,
+    "startDate": "2024-09-02",
+    "isActive": true
+  },
+  {
+    "studentId": 2,
+    "teacherId": 1,
+    "courseId": 1,
+    "startDate": "2024-09-02",
+    "isActive": true
+  }
+]
+
+### ===========================================
+### UPDATE ASSIGNMENT - (Admin, Kayitci)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "endDate": "2025-01-17",
+  "isActive": false,
+  "notes": "Dönem sonu"
+}
+
+### ===========================================
+### DEACTIVATE ASSIGNMENT - (Admin, Kayitci)
+### ===========================================
+PATCH {{baseUrl}}/1/deactivate
+Authorization: Bearer {{token}}
+
+### ===========================================
+### DELETE ASSIGNMENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

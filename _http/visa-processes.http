@@ -1,0 +1,95 @@
+### EduPortal API - Visa Processes Controller
+### Visa process management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/visa-processes
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL VISA PROCESSES - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE VISA PROCESSES - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/active
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PENDING VISA PROCESSES - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/pending
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET EXPIRING VISAS - (Admin, Coach, Danışman)
+### Default: 90 days
+### ===========================================
+GET {{baseUrl}}/expiring?days=90
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET VISA PROCESS BY ID - (Admin, Coach, Danışman, Ogrenci)
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET VISA PROCESSES BY PROGRAM - (Admin, Coach, Danışman, Ogrenci)
+### ===========================================
+GET {{baseUrl}}/program/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET VISA TIMELINE - (Admin, Coach, Danışman, Ogrenci)
+### ===========================================
+GET {{baseUrl}}/1/timeline
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET VISA STATISTICS - (Admin, Coach, Danışman)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE VISA PROCESS - (Admin, Coach, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studyAbroadProgramId": 1,
+  "visaType": "F1",
+  "applicationDate": "2024-06-01",
+  "appointmentDate": "2024-07-15",
+  "status": "DocumentPreparation",
+  "notes": "Vize başvurusu başlatıldı"
+}
+
+### ===========================================
+### UPDATE VISA PROCESS - (Admin, Coach, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "status": "Approved",
+  "approvalDate": "2024-07-20",
+  "visaNumber": "VN123456789",
+  "expiryDate": "2029-07-20",
+  "notes": "Vize onaylandı"
+}
+
+### ===========================================
+### DELETE VISA PROCESS - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
+

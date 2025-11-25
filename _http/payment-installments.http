@@ -1,0 +1,58 @@
+### EduPortal API - Payment Installments Controller
+### Payment installment management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/payment-installments
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET INSTALLMENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET INSTALLMENTS BY PLAN
+### ===========================================
+GET {{baseUrl}}/plan/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET INSTALLMENTS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET OVERDUE INSTALLMENTS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/overdue
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET UPCOMING INSTALLMENTS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/upcoming?days=7
+Authorization: Bearer {{token}}
+
+### ===========================================
+### PAY INSTALLMENT - (Admin, Muhasebe)
+### ===========================================
+POST {{baseUrl}}/1/pay
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "paidAmount": 5000.00,
+  "paymentMethod": "CreditCard",
+  "transactionId": "TXN123456789",
+  "notes": "Ödeme başarılı"
+}
+
+### ===========================================
+### GET STATISTICS - (Admin, Muhasebe)
+### ===========================================
+GET {{baseUrl}}/statistics
+Authorization: Bearer {{token}}

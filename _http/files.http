@@ -1,0 +1,30 @@
+### EduPortal API - Files Controller
+### File upload and management endpoints (Not fully implemented)
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/files
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### UPLOAD FILE
+### Note: Use multipart/form-data for actual file upload
+### ===========================================
+# POST {{baseUrl}}/upload?category=documents
+# Content-Type: multipart/form-data
+# Authorization: Bearer {{token}}
+#
+# [file content]
+
+### ===========================================
+### DOWNLOAD FILE
+### ===========================================
+GET {{baseUrl}}/download/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### DELETE FILE
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

@@ -1,0 +1,72 @@
+### EduPortal API - Counseling Controller
+### Counseling session management endpoints (Not fully implemented)
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/counseling
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL COUNSELING SESSIONS - (Admin, Danışman)
+### Note: Service not yet implemented
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SESSION BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SESSIONS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET SESSIONS BY COUNSELOR - (Admin, Danışman)
+### ===========================================
+GET {{baseUrl}}/counselor/1?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET UPCOMING SESSIONS
+### ===========================================
+GET {{baseUrl}}/upcoming
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE SESSION - (Admin, Danışman)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "counselorId": 1,
+  "scheduledDate": "2024-12-15T10:00:00Z",
+  "type": "Academic",
+  "notes": "Akademik performans değerlendirmesi"
+}
+
+### ===========================================
+### UPDATE SESSION - (Admin, Danışman)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "scheduledDate": "2024-12-16T14:00:00Z",
+  "notes": "Güncellenen notlar"
+}
+
+### ===========================================
+### DELETE SESSION - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

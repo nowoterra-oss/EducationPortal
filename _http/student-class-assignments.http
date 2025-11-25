@@ -1,0 +1,104 @@
+### EduPortal API - Student Class Assignments Controller
+### Student-class assignment management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/studentClassAssignments
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL ASSIGNMENTS - (Admin, Kayıtçı)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ASSIGNMENTS - Active filter
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10&isActive=true
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ASSIGNMENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ASSIGNMENTS BY STUDENT
+### ===========================================
+GET {{baseUrl}}/student/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ASSIGNMENTS BY CLASS - Paginated
+### ===========================================
+GET {{baseUrl}}/class/1?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE ASSIGNMENT - (Admin, Kayıtçı)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "studentId": 1,
+  "classId": 1,
+  "academicTermId": 1,
+  "startDate": "2024-09-02",
+  "isActive": true,
+  "notes": "Yeni kayıt"
+}
+
+### ===========================================
+### BULK CREATE ASSIGNMENTS - (Admin, Kayıtçı)
+### ===========================================
+POST {{baseUrl}}/bulk
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+[
+  {
+    "studentId": 1,
+    "classId": 1,
+    "academicTermId": 1,
+    "startDate": "2024-09-02",
+    "isActive": true
+  },
+  {
+    "studentId": 2,
+    "classId": 1,
+    "academicTermId": 1,
+    "startDate": "2024-09-02",
+    "isActive": true
+  },
+  {
+    "studentId": 3,
+    "classId": 1,
+    "academicTermId": 1,
+    "startDate": "2024-09-02",
+    "isActive": true
+  }
+]
+
+### ===========================================
+### UPDATE ASSIGNMENT - (Admin, Kayıtçı)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "endDate": "2025-01-17",
+  "isActive": false,
+  "notes": "Sınıf değişikliği"
+}
+
+### ===========================================
+### DELETE ASSIGNMENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

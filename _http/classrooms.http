@@ -1,0 +1,79 @@
+### EduPortal API - Classrooms Controller
+### Classroom management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/classrooms
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL CLASSROOMS - Paginated list (Admin, Öğretmen, Kayıtçı)
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASSROOMS WITH FILTERS
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10&buildingName=A Blok&isLab=false
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASSROOM BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET AVAILABLE CLASSROOMS
+### ===========================================
+GET {{baseUrl}}/available?dayOfWeek=Monday&startTime=09:00:00&endTime=10:00:00
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET CLASSROOM SCHEDULE
+### ===========================================
+GET {{baseUrl}}/1/schedule
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE CLASSROOM - (Admin, Kayıtçı)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "A101",
+  "buildingName": "A Blok",
+  "floor": 1,
+  "capacity": 30,
+  "type": "Standard",
+  "isLab": false,
+  "hasProjector": true,
+  "hasWhiteboard": true,
+  "isActive": true
+}
+
+### ===========================================
+### UPDATE CLASSROOM - (Admin, Kayıtçı)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "name": "A101 - Yenilenmiş",
+  "capacity": 35,
+  "hasProjector": true,
+  "hasWhiteboard": true,
+  "hasSmartBoard": true,
+  "isActive": true
+}
+
+### ===========================================
+### DELETE CLASSROOM - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}

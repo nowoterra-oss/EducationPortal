@@ -1,0 +1,91 @@
+### EduPortal API - Announcements Controller
+### Announcement management endpoints
+### Base URL: http://localhost:5000
+### Requires Authentication
+
+@baseUrl = http://localhost:5000/api/announcements
+@contentType = application/json
+@token = {{$dotenv TOKEN}}
+
+### ===========================================
+### GET ALL ANNOUNCEMENTS - Paginated list
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ANNOUNCEMENTS BY TYPE
+### Type options: General, Academic, Event, Emergency, etc.
+### ===========================================
+GET {{baseUrl}}?pageNumber=1&pageSize=10&type=General
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ANNOUNCEMENT BY ID
+### ===========================================
+GET {{baseUrl}}/1
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET ACTIVE ANNOUNCEMENTS
+### ===========================================
+GET {{baseUrl}}/active?pageNumber=1&pageSize=10
+Authorization: Bearer {{token}}
+
+### ===========================================
+### GET PINNED ANNOUNCEMENTS
+### ===========================================
+GET {{baseUrl}}/pinned
+Authorization: Bearer {{token}}
+
+### ===========================================
+### CREATE ANNOUNCEMENT - (Admin only)
+### ===========================================
+POST {{baseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "Yeni Dönem Başlangıcı",
+  "content": "2024-2025 eğitim yılı 2 Eylül tarihinde başlayacaktır.",
+  "type": "Academic",
+  "startDate": "2024-08-01T00:00:00Z",
+  "endDate": "2024-09-30T23:59:59Z",
+  "isPinned": true,
+  "isActive": true
+}
+
+### ===========================================
+### UPDATE ANNOUNCEMENT - (Admin only)
+### ===========================================
+PUT {{baseUrl}}/1
+Content-Type: {{contentType}}
+Authorization: Bearer {{token}}
+
+{
+  "title": "Yeni Dönem Başlangıcı - Güncelleme",
+  "content": "2024-2025 eğitim yılı 9 Eylül tarihinde başlayacaktır.",
+  "type": "Academic",
+  "startDate": "2024-08-01T00:00:00Z",
+  "endDate": "2024-10-31T23:59:59Z",
+  "isPinned": true,
+  "isActive": true
+}
+
+### ===========================================
+### PIN ANNOUNCEMENT - (Admin only)
+### ===========================================
+PATCH {{baseUrl}}/1/pin
+Authorization: Bearer {{token}}
+
+### ===========================================
+### UNPIN ANNOUNCEMENT - (Admin only)
+### ===========================================
+PATCH {{baseUrl}}/1/unpin
+Authorization: Bearer {{token}}
+
+### ===========================================
+### DELETE ANNOUNCEMENT - (Admin only)
+### ===========================================
+DELETE {{baseUrl}}/1
+Authorization: Bearer {{token}}
