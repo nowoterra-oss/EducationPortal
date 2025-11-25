@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using EduPortal.API.Middleware;
 using EduPortal.Application;
 using EduPortal.Domain.Entities;
@@ -122,6 +123,15 @@ builder.Services.AddCors(options =>
 // Add Controllers
 builder.Services.AddControllers();
 
+// Add Rate Limiting
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+builder.Services.AddInMemoryRateLimiting();
+
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -184,6 +194,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAngular");
+
+// Rate Limiting Middleware
+app.UseIpRateLimiting();
 
 // Only use HTTPS redirection in production
 if (!app.Environment.IsDevelopment())
