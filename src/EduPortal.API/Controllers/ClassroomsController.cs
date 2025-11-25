@@ -1,4 +1,6 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.Classroom;
+using EduPortal.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,131 +15,179 @@ namespace EduPortal.API.Controllers;
 [Authorize]
 public class ClassroomsController : ControllerBase
 {
-    // TODO: Implement IClassroomService
+    private readonly IClassroomService _classroomService;
     private readonly ILogger<ClassroomsController> _logger;
 
-    public ClassroomsController(ILogger<ClassroomsController> logger)
+    public ClassroomsController(IClassroomService classroomService, ILogger<ClassroomsController> logger)
     {
+        _classroomService = classroomService;
         _logger = logger;
     }
 
     /// <summary>
     /// Tüm derslikleri listele
     /// </summary>
-    /// <param name="pageNumber">Sayfa numarası</param>
-    /// <param name="pageSize">Sayfa başına kayıt</param>
-    /// <param name="buildingName">Bina filtresi (opsiyonel)</param>
-    /// <param name="isLab">Laboratuvar filtresi (opsiyonel)</param>
-    /// <returns>Sayfalanmış derslik listesi</returns>
     [HttpGet]
     [Authorize(Roles = "Admin,Öğretmen,Kayitci")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetAll(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<ClassroomDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<ClassroomDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? buildingName = null,
         [FromQuery] bool? isLab = null)
     {
-        // TODO: Implement service
-        _logger.LogWarning("ClassroomsController.GetAll called but service not implemented yet");
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _classroomService.GetAllPagedAsync(pageNumber, pageSize, buildingName, isLab);
+            var response = new PagedResponse<ClassroomDto>(items.ToList(), pageNumber, pageSize, totalCount);
+            return Ok(ApiResponse<PagedResponse<ClassroomDto>>.SuccessResponse(response));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving classrooms");
+            return StatusCode(500, ApiResponse<PagedResponse<ClassroomDto>>.ErrorResponse("Derslikler alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// ID ile derslik detayı getir
     /// </summary>
-    /// <param name="id">Derslik ID</param>
-    /// <returns>Derslik detayları</returns>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ClassroomDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<ClassroomDto>>> GetById(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("ClassroomsController.GetById called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var classroom = await _classroomService.GetByIdAsync(id);
+            if (classroom == null)
+                return NotFound(ApiResponse<ClassroomDto>.ErrorResponse("Derslik bulunamadı"));
+
+            return Ok(ApiResponse<ClassroomDto>.SuccessResponse(classroom));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving classroom {ClassroomId}", id);
+            return StatusCode(500, ApiResponse<ClassroomDto>.ErrorResponse("Derslik alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Müsait derslikleri getir
     /// </summary>
-    /// <param name="dayOfWeek">Haftanın günü (0-6)</param>
-    /// <param name="startTime">Başlangıç saati</param>
-    /// <param name="endTime">Bitiş saati</param>
-    /// <returns>Müsait derslik listesi</returns>
     [HttpGet("available")]
     [Authorize(Roles = "Admin,Öğretmen,Kayitci")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetAvailable(
-        [FromQuery] int dayOfWeek,
+    [ProducesResponseType(typeof(ApiResponse<List<ClassroomDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<ClassroomDto>>>> GetAvailable(
+        [FromQuery] DayOfWeek dayOfWeek,
         [FromQuery] TimeSpan startTime,
         [FromQuery] TimeSpan endTime)
     {
-        // TODO: Implement service
-        _logger.LogWarning("ClassroomsController.GetAvailable called but service not implemented yet");
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var classrooms = await _classroomService.GetAvailableAsync(dayOfWeek, startTime, endTime);
+            return Ok(ApiResponse<List<ClassroomDto>>.SuccessResponse(classrooms.ToList()));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving available classrooms");
+            return StatusCode(500, ApiResponse<List<ClassroomDto>>.ErrorResponse("Müsait derslikler alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Derslik kullanım programını getir
     /// </summary>
-    /// <param name="id">Derslik ID</param>
-    /// <returns>Haftalık kullanım programı</returns>
     [HttpGet("{id}/schedule")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetSchedule(int id)
+    [ProducesResponseType(typeof(ApiResponse<List<ClassroomScheduleDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<ClassroomScheduleDto>>>> GetSchedule(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("ClassroomsController.GetSchedule called but service not implemented yet");
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var schedule = await _classroomService.GetScheduleAsync(id);
+            return Ok(ApiResponse<List<ClassroomScheduleDto>>.SuccessResponse(schedule.ToList()));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving classroom schedule {ClassroomId}", id);
+            return StatusCode(500, ApiResponse<List<ClassroomScheduleDto>>.ErrorResponse("Derslik programı alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Yeni derslik ekle
     /// </summary>
-    /// <param name="createDto">Derslik bilgileri</param>
-    /// <returns>Oluşturulan derslik</returns>
     [HttpPost]
     [Authorize(Roles = "Admin,Kayitci")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ClassroomDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<object>>> Create([FromBody] object createDto)
+    public async Task<ActionResult<ApiResponse<ClassroomDto>>> Create([FromBody] CreateClassroomDto dto)
     {
-        // TODO: Implement service
-        _logger.LogWarning("ClassroomsController.Create called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<ClassroomDto>.ErrorResponse("Geçersiz veri"));
+
+            var classroom = await _classroomService.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = classroom.Id },
+                ApiResponse<ClassroomDto>.SuccessResponse(classroom, "Derslik başarıyla oluşturuldu"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating classroom");
+            return StatusCode(500, ApiResponse<ClassroomDto>.ErrorResponse("Derslik oluşturulurken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Derslik bilgilerini güncelle
     /// </summary>
-    /// <param name="id">Derslik ID</param>
-    /// <param name="updateDto">Güncellenecek bilgiler</param>
-    /// <returns>Güncellenmiş derslik</returns>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin,Kayitci")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ClassroomDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Update(int id, [FromBody] object updateDto)
+    public async Task<ActionResult<ApiResponse<ClassroomDto>>> Update(int id, [FromBody] UpdateClassroomDto dto)
     {
-        // TODO: Implement service
-        _logger.LogWarning("ClassroomsController.Update called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<ClassroomDto>.ErrorResponse("Geçersiz veri"));
+
+            var classroom = await _classroomService.UpdateAsync(id, dto);
+            return Ok(ApiResponse<ClassroomDto>.SuccessResponse(classroom, "Derslik başarıyla güncellendi"));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(ApiResponse<ClassroomDto>.ErrorResponse("Derslik bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating classroom {ClassroomId}", id);
+            return StatusCode(500, ApiResponse<ClassroomDto>.ErrorResponse("Derslik güncellenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Dersliği sil
     /// </summary>
-    /// <param name="id">Derslik ID</param>
-    /// <returns>Silme işlemi sonucu</returns>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("ClassroomsController.Delete called but service not implemented yet");
-        return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var result = await _classroomService.DeleteAsync(id);
+            if (!result)
+                return NotFound(ApiResponse<bool>.ErrorResponse("Derslik bulunamadı"));
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Derslik başarıyla silindi"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting classroom {ClassroomId}", id);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Derslik silinirken bir hata oluştu"));
+        }
     }
 }

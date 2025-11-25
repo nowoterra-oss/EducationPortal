@@ -1,6 +1,10 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.Announcement;
+using EduPortal.Application.Interfaces;
+using EduPortal.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EduPortal.API.Controllers;
 
@@ -13,156 +17,227 @@ namespace EduPortal.API.Controllers;
 [Authorize]
 public class AnnouncementsController : ControllerBase
 {
-    // TODO: Implement IAnnouncementService
+    private readonly IAnnouncementService _announcementService;
     private readonly ILogger<AnnouncementsController> _logger;
 
-    public AnnouncementsController(ILogger<AnnouncementsController> logger)
+    public AnnouncementsController(IAnnouncementService announcementService, ILogger<AnnouncementsController> logger)
     {
+        _announcementService = announcementService;
         _logger = logger;
     }
 
     /// <summary>
     /// Tüm duyuruları listele
     /// </summary>
-    /// <param name="pageNumber">Sayfa numarası</param>
-    /// <param name="pageSize">Sayfa başına kayıt</param>
-    /// <param name="type">Duyuru tipi filtresi (opsiyonel)</param>
-    /// <returns>Sayfalanmış duyuru listesi</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetAll(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<AnnouncementDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<AnnouncementDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? type = null)
+        [FromQuery] AnnouncementType? type = null)
     {
-        // TODO: Implement service
-        _logger.LogWarning("AnnouncementsController.GetAll called but service not implemented yet");
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _announcementService.GetAllPagedAsync(pageNumber, pageSize, type);
+            var response = new PagedResponse<AnnouncementDto>(items.ToList(), pageNumber, pageSize, totalCount);
+            return Ok(ApiResponse<PagedResponse<AnnouncementDto>>.SuccessResponse(response));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving announcements");
+            return StatusCode(500, ApiResponse<PagedResponse<AnnouncementDto>>.ErrorResponse("Duyurular alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// ID ile duyuru detayı getir
     /// </summary>
-    /// <param name="id">Duyuru ID</param>
-    /// <returns>Duyuru detayları</returns>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> GetById(int id)
+    public async Task<ActionResult<ApiResponse<AnnouncementDto>>> GetById(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("AnnouncementsController.GetById called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var announcement = await _announcementService.GetByIdAsync(id);
+            if (announcement == null)
+                return NotFound(ApiResponse<AnnouncementDto>.ErrorResponse("Duyuru bulunamadı"));
+
+            return Ok(ApiResponse<AnnouncementDto>.SuccessResponse(announcement));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving announcement {AnnouncementId}", id);
+            return StatusCode(500, ApiResponse<AnnouncementDto>.ErrorResponse("Duyuru alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Aktif duyuruları listele
     /// </summary>
-    /// <param name="pageNumber">Sayfa numarası</param>
-    /// <param name="pageSize">Sayfa başına kayıt</param>
-    /// <returns>Aktif duyurular</returns>
     [HttpGet("active")]
-    [ProducesResponseType(typeof(ApiResponse<PagedResponse<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<PagedResponse<object>>>> GetActive(
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<AnnouncementDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<AnnouncementDto>>>> GetActive(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // TODO: Implement service
-        _logger.LogWarning("AnnouncementsController.GetActive called but service not implemented yet");
-        return Ok(ApiResponse<PagedResponse<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var (items, totalCount) = await _announcementService.GetActiveAsync(pageNumber, pageSize);
+            var response = new PagedResponse<AnnouncementDto>(items.ToList(), pageNumber, pageSize, totalCount);
+            return Ok(ApiResponse<PagedResponse<AnnouncementDto>>.SuccessResponse(response));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving active announcements");
+            return StatusCode(500, ApiResponse<PagedResponse<AnnouncementDto>>.ErrorResponse("Aktif duyurular alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Sabitlenmiş duyuruları listele
     /// </summary>
-    /// <returns>Sabitlenmiş duyurular</returns>
     [HttpGet("pinned")]
-    [ProducesResponseType(typeof(ApiResponse<List<object>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<object>>>> GetPinned()
+    [ProducesResponseType(typeof(ApiResponse<List<AnnouncementDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<AnnouncementDto>>>> GetPinned()
     {
-        // TODO: Implement service
-        _logger.LogWarning("AnnouncementsController.GetPinned called but service not implemented yet");
-        return Ok(ApiResponse<List<object>>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var announcements = await _announcementService.GetPinnedAsync();
+            return Ok(ApiResponse<List<AnnouncementDto>>.SuccessResponse(announcements.ToList()));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving pinned announcements");
+            return StatusCode(500, ApiResponse<List<AnnouncementDto>>.ErrorResponse("Sabitlenmiş duyurular alınırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Yeni duyuru oluştur (Admin only)
     /// </summary>
-    /// <param name="createDto">Duyuru bilgileri</param>
-    /// <returns>Oluşturulan duyuru</returns>
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<ApiResponse<object>>> Create([FromBody] object createDto)
+    public async Task<ActionResult<ApiResponse<AnnouncementDto>>> Create([FromBody] CreateAnnouncementDto dto)
     {
-        // TODO: Implement service
-        _logger.LogWarning("AnnouncementsController.Create called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<AnnouncementDto>.ErrorResponse("Geçersiz veri"));
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
+            var announcement = await _announcementService.CreateAsync(dto, userId);
+            return CreatedAtAction(nameof(GetById), new { id = announcement.Id },
+                ApiResponse<AnnouncementDto>.SuccessResponse(announcement, "Duyuru başarıyla oluşturuldu"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating announcement");
+            return StatusCode(500, ApiResponse<AnnouncementDto>.ErrorResponse("Duyuru oluşturulurken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Duyuru bilgilerini güncelle (Admin only)
     /// </summary>
-    /// <param name="id">Duyuru ID</param>
-    /// <param name="updateDto">Güncellenecek bilgiler</param>
-    /// <returns>Güncellenmiş duyuru</returns>
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Update(int id, [FromBody] object updateDto)
+    public async Task<ActionResult<ApiResponse<AnnouncementDto>>> Update(int id, [FromBody] UpdateAnnouncementDto dto)
     {
-        // TODO: Implement service
-        _logger.LogWarning("AnnouncementsController.Update called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<AnnouncementDto>.ErrorResponse("Geçersiz veri"));
+
+            var announcement = await _announcementService.UpdateAsync(id, dto);
+            return Ok(ApiResponse<AnnouncementDto>.SuccessResponse(announcement, "Duyuru başarıyla güncellendi"));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(ApiResponse<AnnouncementDto>.ErrorResponse("Duyuru bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating announcement {AnnouncementId}", id);
+            return StatusCode(500, ApiResponse<AnnouncementDto>.ErrorResponse("Duyuru güncellenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Duyuruyu sabitle (Admin only)
     /// </summary>
-    /// <param name="id">Duyuru ID</param>
-    /// <returns>Sabitlenmiş duyuru</returns>
     [HttpPatch("{id}/pin")]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Pin(int id)
+    public async Task<ActionResult<ApiResponse<AnnouncementDto>>> Pin(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("AnnouncementsController.Pin called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var announcement = await _announcementService.PinAsync(id);
+            return Ok(ApiResponse<AnnouncementDto>.SuccessResponse(announcement, "Duyuru sabitlendi"));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(ApiResponse<AnnouncementDto>.ErrorResponse("Duyuru bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error pinning announcement {AnnouncementId}", id);
+            return StatusCode(500, ApiResponse<AnnouncementDto>.ErrorResponse("Duyuru sabitlenirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Duyurunun sabitlemeyi kaldır (Admin only)
     /// </summary>
-    /// <param name="id">Duyuru ID</param>
-    /// <returns>Güncellenmiş duyuru</returns>
     [HttpPatch("{id}/unpin")]
     [Authorize(Roles = "Admin")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<object>>> Unpin(int id)
+    public async Task<ActionResult<ApiResponse<AnnouncementDto>>> Unpin(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("AnnouncementsController.Unpin called but service not implemented yet");
-        return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var announcement = await _announcementService.UnpinAsync(id);
+            return Ok(ApiResponse<AnnouncementDto>.SuccessResponse(announcement, "Duyuru sabitlemesi kaldırıldı"));
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(ApiResponse<AnnouncementDto>.ErrorResponse("Duyuru bulunamadı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error unpinning announcement {AnnouncementId}", id);
+            return StatusCode(500, ApiResponse<AnnouncementDto>.ErrorResponse("Duyuru sabitlemesi kaldırılırken bir hata oluştu"));
+        }
     }
 
     /// <summary>
     /// Duyuruyu sil (Admin only)
     /// </summary>
-    /// <param name="id">Duyuru ID</param>
-    /// <returns>Silme işlemi sonucu</returns>
     [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
     {
-        // TODO: Implement service
-        _logger.LogWarning("AnnouncementsController.Delete called but service not implemented yet");
-        return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
+        try
+        {
+            var result = await _announcementService.DeleteAsync(id);
+            if (!result)
+                return NotFound(ApiResponse<bool>.ErrorResponse("Duyuru bulunamadı"));
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Duyuru başarıyla silindi"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting announcement {AnnouncementId}", id);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Duyuru silinirken bir hata oluştu"));
+        }
     }
 }

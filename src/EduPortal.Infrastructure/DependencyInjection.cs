@@ -33,6 +33,13 @@ public static class DependencyInjection
         services.AddScoped<IUniversityApplicationService, UniversityApplicationService>();
         services.AddScoped<ICourseService, CourseService>();
         services.AddScoped<IStudentClassAssignmentService, StudentClassAssignmentService>();
+        services.AddScoped<IAnnouncementService, AnnouncementService>();
+        services.AddScoped<IAcademicTermService, AcademicTermService>();
+        services.AddScoped<IClassroomService, ClassroomService>();
+        services.AddScoped<IClubService, ClubService>();
+        services.AddScoped<IHobbyService, HobbyService>();
+        services.AddScoped<ICompetitionService, CompetitionService>();
+        services.AddScoped<IScheduleService, ScheduleService>();
 
         // Register Application Services (using DbContext)
         services.AddScoped<ICoachingSessionService, CoachingSessionService>();
