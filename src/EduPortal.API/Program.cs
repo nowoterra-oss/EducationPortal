@@ -84,7 +84,14 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Add CORS
+// Add CORS (Configuration-based)
+var corsSettings = builder.Configuration.GetSection("Cors");
+var allowedOrigins = corsSettings.GetSection("AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+var allowedMethods = corsSettings.GetSection("AllowedMethods").Get<string[]>() ?? new[] { "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS" };
+var allowedHeaders = corsSettings.GetSection("AllowedHeaders").Get<string[]>() ?? new[] { "*" };
+var allowCredentials = corsSettings.GetValue<bool>("AllowCredentials", true);
+var maxAge = corsSettings.GetValue<int>("MaxAge", 3600);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular",
@@ -92,31 +99,40 @@ builder.Services.AddCors(options =>
         {
             if (builder.Environment.IsDevelopment())
             {
-                // Development: Allow all localhost origins
+                // Development: Allow all localhost origins + configured origins
                 policy.SetIsOriginAllowed(origin =>
                 {
                     var uri = new Uri(origin);
-                    return uri.Host == "localhost" || uri.Host == "127.0.0.1";
-                })
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
+                    if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
+                        return true;
+                    // Also allow configured origins in development
+                    return allowedOrigins.Contains(origin);
+                });
             }
             else
             {
-                // Production: Specify allowed origins
-                policy.WithOrigins(
-                    "http://localhost:4200",
-                    "https://localhost:4200",
-                    "http://localhost:3000",
-                    "https://localhost:3000",
-                    "http://localhost:5173",
-                    "https://localhost:5173"
-                )
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
+                // Production: Only allow configured origins
+                policy.WithOrigins(allowedOrigins);
             }
+
+            // Apply configured methods
+            if (allowedMethods.Contains("*"))
+                policy.AllowAnyMethod();
+            else
+                policy.WithMethods(allowedMethods);
+
+            // Apply configured headers
+            if (allowedHeaders.Contains("*"))
+                policy.AllowAnyHeader();
+            else
+                policy.WithHeaders(allowedHeaders);
+
+            // Allow credentials if configured
+            if (allowCredentials)
+                policy.AllowCredentials();
+
+            // Set preflight max age
+            policy.SetPreflightMaxAge(TimeSpan.FromSeconds(maxAge));
         });
 });
 
