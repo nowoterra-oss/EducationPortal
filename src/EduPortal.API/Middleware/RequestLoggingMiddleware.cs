@@ -59,6 +59,9 @@ public class RequestLoggingMiddleware
             // Log response
             await LogResponse(context, requestId, clientIp, stopwatch.ElapsedMilliseconds);
 
+            // Reset position before copying back to original stream
+            responseBody.Seek(0, SeekOrigin.Begin);
+
             // Copy the response body back to the original stream
             await responseBody.CopyToAsync(originalBodyStream);
         }
