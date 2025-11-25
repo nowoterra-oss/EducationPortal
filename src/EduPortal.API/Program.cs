@@ -1,10 +1,13 @@
 using AspNetCoreRateLimit;
 using EduPortal.API.Middleware;
 using EduPortal.Application;
+using EduPortal.Application.Validators.Auth;
 using EduPortal.Domain.Entities;
 using EduPortal.Infrastructure;
 using EduPortal.Infrastructure.Configuration;
 using EduPortal.Infrastructure.Data;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -136,8 +139,13 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Add Controllers
+// Add Controllers with FluentValidation
 builder.Services.AddControllers();
+
+// Add FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddFluentValidationClientsideAdapters();
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
 
 // Add Rate Limiting
 builder.Services.AddMemoryCache();
@@ -210,6 +218,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAngular");
+
+// Validation Exception Handler Middleware
+app.UseValidationExceptionHandler();
 
 // Rate Limiting Middleware
 app.UseIpRateLimiting();
