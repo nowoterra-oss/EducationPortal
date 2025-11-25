@@ -1,0 +1,85 @@
+# ============================================================
+# EduPortal Docker Ignore File
+# ============================================================
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE and Editor
+.idea
+.vscode
+*.swp
+*.swo
+*~
+
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+
+# Test results
+**/TestResults/
+**/coverage/
+
+# NuGet
+*.nupkg
+**/packages/
+
+# Logs
+*.log
+logs/
+
+# Environment files (copied separately)
+.env
+.env.*
+!.env.example
+
+# Documentation
+*.md
+!README.md
+
+# Docker files (no need to copy into context)
+docker-compose*.yml
+Dockerfile*
+
+# Scripts
+scripts/
+
+# Systemd
+systemd/
+
+# Nginx configs
+nginx/
+
+# HTTP test files
+*.http
+_http/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+
+# Build artifacts
+publish/
+artifacts/
+
+# Database files
+*.mdf
+*.ldf
+*.sql
+
+# Debian packages
+*.deb
+
+# Shell scripts in root
+*.sh
+*.ps1

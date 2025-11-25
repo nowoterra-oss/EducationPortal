@@ -1,0 +1,80 @@
+# ============================================================
+# EduPortal - PRODUCTION Environment Docker Compose
+# ============================================================
+# API Only - MSSQL runs on external server
+#
+# Usage:
+#   docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+#   docker-compose -f docker-compose.prod.yml --env-file .env.prod down
+#
+# Ports:
+#   - API:   localhost:8081 -> container:8080
+#   - MSSQL: External server (configured in .env.prod)
+#
+# Note: Update .env.prod with actual production DB credentials
+# ============================================================
+
+name: eduportal-prod
+
+services:
+  # ===========================================================
+  # EduPortal API - Production Environment
+  # ===========================================================
+  api-prod:
+    build:
+      context: .
+      dockerfile: src/EduPortal.API/Dockerfile
+    image: eduportal-api:prod
+    container_name: eduportal-api-prod
+    hostname: api-prod
+    restart: unless-stopped
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      # Connection string from environment variables
+      - ConnectionStrings__ConnectionString=Server=${DB_HOST},${DB_PORT};Database=${DB_NAME};User Id=${DB_USER};Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True;Connection Timeout=30;ConnectRetryCount=3;ConnectRetryInterval=10;
+      # JWT Settings
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      # Email Settings (optional)
+      - EmailSettings__SmtpServer=${SMTP_SERVER:-smtp.gmail.com}
+      - EmailSettings__SmtpPort=${SMTP_PORT:-587}
+      - EmailSettings__SenderEmail=${SMTP_SENDER_EMAIL:-noreply@eduportal.com}
+      - EmailSettings__SenderName=${SMTP_SENDER_NAME:-EduPortal}
+      - EmailSettings__Username=${SMTP_USERNAME:-}
+      - EmailSettings__Password=${SMTP_PASSWORD:-}
+      # Timezone
+      - TZ=Europe/Istanbul
+    ports:
+      - "127.0.0.1:8081:8080"
+    networks:
+      - eduportal-prod-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+    # Extra hosts for accessing host machine or other services
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+# ===========================================================
+# Networks
+# ===========================================================
+networks:
+  eduportal-prod-network:
+    name: eduportal-prod-network
+    driver: bridge

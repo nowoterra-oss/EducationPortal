@@ -1,0 +1,107 @@
+# ============================================================
+# EduPortal - TEST Environment Docker Compose
+# ============================================================
+# API + MSSQL - Everything runs in Docker containers
+#
+# Usage:
+#   docker-compose -f docker-compose.test.yml --env-file .env.test up -d
+#   docker-compose -f docker-compose.test.yml --env-file .env.test down
+#
+# Ports:
+#   - API:   localhost:8080
+#   - MSSQL: localhost:1433
+# ============================================================
+
+name: eduportal-test
+
+services:
+  # ===========================================================
+  # MSSQL Server - Test Database
+  # ===========================================================
+  mssql-test:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: eduportal-mssql-test
+    hostname: mssql-test
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${MSSQL_SA_PASSWORD}
+      - MSSQL_PID=Developer
+      - TZ=Europe/Istanbul
+    ports:
+      - "127.0.0.1:1433:1433"
+    volumes:
+      - mssql-test-data:/var/opt/mssql
+    networks:
+      - eduportal-test-network
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$${MSSQL_SA_PASSWORD}" -C -Q "SELECT 1" || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # ===========================================================
+  # EduPortal API - Test Environment
+  # ===========================================================
+  api-test:
+    build:
+      context: .
+      dockerfile: src/EduPortal.API/Dockerfile
+    image: eduportal-api:test
+    container_name: eduportal-api-test
+    hostname: api-test
+    restart: unless-stopped
+    depends_on:
+      mssql-test:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Test
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__ConnectionString=Server=${DB_HOST},${DB_PORT};Database=${DB_NAME};User Id=${DB_USER};Password=${MSSQL_SA_PASSWORD};Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True;Connection Timeout=30;ConnectRetryCount=3;ConnectRetryInterval=10;
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - TZ=Europe/Istanbul
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - eduportal-test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+# ===========================================================
+# Networks
+# ===========================================================
+networks:
+  eduportal-test-network:
+    name: eduportal-test-network
+    driver: bridge
+
+# ===========================================================
+# Volumes
+# ===========================================================
+volumes:
+  mssql-test-data:
+    name: eduportal-mssql-test-data

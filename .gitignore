@@ -410,3 +410,23 @@ FodyWeavers.xsd
 eduportal.db
 eduportal.db-shm
 eduportal.db-wal
+
+# ============================================================
+# Docker & Deployment
+# ============================================================
+
+# Environment files (contain sensitive data)
+.env
+.env.test
+.env.prod
+.env.local
+.env.*.local
+!.env.example
+
+# Database backups
+backups/
+*.bak
+
+# Docker volumes (if mounted locally)
+docker-data/
+mssql-data/

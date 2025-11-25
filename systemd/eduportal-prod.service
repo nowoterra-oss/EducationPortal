@@ -1,0 +1,50 @@
+# ============================================================
+# EduPortal PRODUCTION Environment - Systemd Service
+# ============================================================
+# Installation:
+#   sudo cp systemd/eduportal-prod.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable eduportal-prod
+#   sudo systemctl start eduportal-prod
+#
+# Management:
+#   sudo systemctl status eduportal-prod
+#   sudo systemctl restart eduportal-prod
+#   sudo journalctl -u eduportal-prod -f
+# ============================================================
+
+[Unit]
+Description=EduPortal PRODUCTION Environment (API Only)
+Documentation=https://github.com/your-org/EducationPortal
+After=docker.service network-online.target
+Requires=docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=root
+Group=docker
+
+# Set working directory (UPDATE THIS PATH)
+WorkingDirectory=/opt/eduportal
+
+# Start command
+ExecStart=/usr/bin/docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+
+# Stop command
+ExecStop=/usr/bin/docker-compose -f docker-compose.prod.yml --env-file .env.prod down
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+
+# Timeout settings
+TimeoutStartSec=300
+TimeoutStopSec=60
+
+# Environment
+Environment=DOCKER_HOST=unix:///var/run/docker.sock
+
+[Install]
+WantedBy=multi-user.target

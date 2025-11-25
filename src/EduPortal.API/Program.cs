@@ -257,7 +257,16 @@ app.UseAuthorization();
 // 9. Audit Middleware (after auth, to capture user info)
 app.UseMiddleware<AuditMiddleware>();
 
-// 10. Endpoints
+// 10. Health Check Endpoint
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    timestamp = DateTime.UtcNow,
+    environment = app.Environment.EnvironmentName,
+    version = "1.0.0"
+})).AllowAnonymous();
+
+// 11. Endpoints
 app.MapControllers();
 
 app.Run();
