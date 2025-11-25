@@ -2,7 +2,7 @@
 ### Authentication and user management endpoints
 ### Base URL: http://localhost:5000
 
-@baseUrl = http://localhost:5000/api/auth
+@baseUrl = http://localhost:5129/api/auth
 @contentType = application/json
 
 ### ===========================================
@@ -29,7 +29,7 @@ Content-Type: {{contentType}}
 
 {
   "email": "admin@eduportal.com",
-  "password": "Admin123!"
+  "password": "Admin@123"
 }
 
 ### ===========================================
