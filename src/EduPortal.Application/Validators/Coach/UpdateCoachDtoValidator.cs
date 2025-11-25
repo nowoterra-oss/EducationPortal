@@ -12,16 +12,15 @@ public class UpdateCoachDtoValidator : AbstractValidator<UpdateCoachDto>
             .When(x => x.BranchId.HasValue);
 
         RuleFor(x => x.Specialization)
-            .MaximumLength(200).WithMessage("Uzmanlık alanı en fazla 200 karakter olabilir")
-            .When(x => !string.IsNullOrEmpty(x.Specialization));
+            .NotEmpty().WithMessage("Uzmanlık alanı zorunludur")
+            .MaximumLength(200).WithMessage("Uzmanlık alanı en fazla 200 karakter olabilir");
 
         RuleFor(x => x.Qualifications)
             .MaximumLength(1000).WithMessage("Nitelikler en fazla 1000 karakter olabilir")
             .When(x => !string.IsNullOrEmpty(x.Qualifications));
 
         RuleFor(x => x.ExperienceYears)
-            .InclusiveBetween(0, 50).WithMessage("Deneyim yılı 0-50 arasında olmalıdır")
-            .When(x => x.ExperienceYears.HasValue);
+            .InclusiveBetween(0, 50).WithMessage("Deneyim yılı 0-50 arasında olmalıdır");
 
         RuleFor(x => x.HourlyRate)
             .GreaterThan(0).WithMessage("Saatlik ücret 0'dan büyük olmalıdır")

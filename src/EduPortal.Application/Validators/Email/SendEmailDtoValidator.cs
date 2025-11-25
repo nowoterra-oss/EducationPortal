@@ -55,20 +55,22 @@ public class CreateEmailTemplateDtoValidator : AbstractValidator<CreateEmailTemp
 {
     public CreateEmailTemplateDtoValidator()
     {
-        RuleFor(x => x.Name)
+        RuleFor(x => x.TemplateName)
             .NotEmpty().WithMessage("Şablon adı zorunludur")
             .MaximumLength(200).WithMessage("Şablon adı en fazla 200 karakter olabilir");
 
+        RuleFor(x => x.TemplateType)
+            .GreaterThanOrEqualTo(0).WithMessage("Geçerli bir şablon tipi giriniz");
+
         RuleFor(x => x.Subject)
             .NotEmpty().WithMessage("Konu zorunludur")
-            .MaximumLength(500).WithMessage("Konu en fazla 500 karakter olabilir");
+            .MaximumLength(300).WithMessage("Konu en fazla 300 karakter olabilir");
 
         RuleFor(x => x.Body)
-            .NotEmpty().WithMessage("İçerik zorunludur")
-            .MaximumLength(50000).WithMessage("İçerik en fazla 50000 karakter olabilir");
+            .NotEmpty().WithMessage("İçerik zorunludur");
 
-        RuleFor(x => x.Category)
-            .MaximumLength(100).WithMessage("Kategori en fazla 100 karakter olabilir")
-            .When(x => !string.IsNullOrEmpty(x.Category));
+        RuleFor(x => x.VariablesJson)
+            .MaximumLength(1000).WithMessage("Değişkenler en fazla 1000 karakter olabilir")
+            .When(x => !string.IsNullOrEmpty(x.VariablesJson));
     }
 }
