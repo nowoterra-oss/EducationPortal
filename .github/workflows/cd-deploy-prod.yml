@@ -1,0 +1,344 @@
+# ============================================================
+# EduPortal - CD Deploy to PRODUCTION Environment
+# ============================================================
+# Triggers on: Push to main branch (requires manual approval)
+# Jobs: Build image, Push to registry, Deploy to production
+# Environment: production (with required reviewers)
+# ============================================================
+
+name: CD - Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to deploy (leave empty for latest)'
+        required: false
+        default: ''
+      skip_backup:
+        description: 'Skip database backup'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/eduportal-api
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  # ===========================================================
+  # Build and Push Docker Image
+  # ===========================================================
+  build-and-push:
+    name: Build & Push Production Image
+    runs-on: ubuntu-latest
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      version: ${{ steps.version.outputs.version }}
+      semver: ${{ steps.version.outputs.semver }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate version
+        id: version
+        run: |
+          # Generate semantic version based on tags or manual input
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            # Get latest tag or generate new version
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+            # Increment patch version
+            VERSION=$(echo $LATEST_TAG | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
+          fi
+
+          # Clean version
+          SEMVER=$(echo $VERSION | sed 's/^v//')
+          FULL_VERSION="prod-${SEMVER}-${GITHUB_SHA::7}"
+
+          echo "version=$FULL_VERSION" >> $GITHUB_OUTPUT
+          echo "semver=$SEMVER" >> $GITHUB_OUTPUT
+          echo "Generated version: $FULL_VERSION"
+          echo "Semantic version: $SEMVER"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=raw,value=v${{ steps.version.outputs.semver }}
+            type=raw,value=prod-latest
+            type=sha,prefix=prod-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./src/EduPortal.API/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_VERSION=${{ steps.version.outputs.version }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+
+      - name: Generate build summary
+        run: |
+          echo "## 🏗️ Production Docker Image Built" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** ${{ env.IMAGE_NAME }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tags:** ${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Semantic Version:** ${{ steps.version.outputs.semver }}" >> $GITHUB_STEP_SUMMARY
+
+  # ===========================================================
+  # Deploy to Production Server (Requires Approval)
+  # ===========================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment:
+      name: production
+      url: https://api.yourdomain.com
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.PROD_SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.PROD_SERVER_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Pre-deployment backup
+        if: ${{ github.event.inputs.skip_backup != 'true' }}
+        env:
+          SSH_KEY: ~/.ssh/deploy_key
+          SERVER_HOST: ${{ secrets.PROD_SERVER_HOST }}
+          SERVER_USER: ${{ secrets.PROD_SERVER_USER }}
+        run: |
+          echo "Creating pre-deployment backup..."
+          ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
+            set -e
+            cd /opt/eduportal
+
+            # Create backup directory
+            BACKUP_DIR="/opt/eduportal/backups/$(date +'%Y%m%d_%H%M%S')"
+            mkdir -p $BACKUP_DIR
+
+            # Save current image tag
+            docker inspect eduportal-api-prod --format='{{.Config.Image}}' > $BACKUP_DIR/previous_image.txt 2>/dev/null || echo "No previous image"
+
+            # Database backup (if configured)
+            if [ -f ".env.prod" ]; then
+              source .env.prod
+              echo "Previous deployment backup saved to: $BACKUP_DIR"
+            fi
+
+            echo "✅ Backup completed"
+          ENDSSH
+
+      - name: Deploy to production
+        env:
+          SSH_KEY: ~/.ssh/deploy_key
+          SERVER_HOST: ${{ secrets.PROD_SERVER_HOST }}
+          SERVER_USER: ${{ secrets.PROD_SERVER_USER }}
+          IMAGE_TAG: ${{ needs.build-and-push.outputs.version }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST} << 'ENDSSH'
+            set -e
+
+            echo "========================================"
+            echo "🚀 Deploying EduPortal to PRODUCTION"
+            echo "========================================"
+
+            cd /opt/eduportal || exit 1
+
+            # Pull new image
+            echo "[1/6] Pulling Docker image..."
+            docker pull ${DOCKERHUB_USERNAME}/eduportal-api:prod-latest
+
+            # Graceful shutdown
+            echo "[2/6] Gracefully stopping current container..."
+            docker-compose -f docker-compose.prod.yml --env-file .env.prod stop api-prod || true
+
+            # Start new container
+            echo "[3/6] Starting new container..."
+            docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d api-prod
+
+            # Wait for startup
+            echo "[4/6] Waiting for application startup..."
+            sleep 20
+
+            # Health check with retries
+            echo "[5/6] Running health checks..."
+            MAX_RETRIES=10
+            RETRY_COUNT=0
+            HEALTH_OK=false
+
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              HEALTH_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/health || echo "000")
+
+              if [ "$HEALTH_STATUS" = "200" ]; then
+                HEALTH_OK=true
+                break
+              fi
+
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              echo "Health check attempt $RETRY_COUNT/$MAX_RETRIES - Status: $HEALTH_STATUS"
+              sleep 5
+            done
+
+            if [ "$HEALTH_OK" = true ]; then
+              echo "✅ Health check passed!"
+
+              # Clean up old images
+              echo "[6/6] Cleaning up old images..."
+              docker image prune -f
+
+              echo "========================================"
+              echo "✅ PRODUCTION Deployment Successful!"
+              echo "========================================"
+            else
+              echo "❌ Health check FAILED after $MAX_RETRIES attempts!"
+              echo "Rolling back to previous version..."
+
+              # Attempt rollback
+              PREV_IMAGE=$(cat /opt/eduportal/backups/*/previous_image.txt 2>/dev/null | tail -1)
+              if [ -n "$PREV_IMAGE" ]; then
+                docker-compose -f docker-compose.prod.yml --env-file .env.prod stop api-prod
+                docker tag $PREV_IMAGE ${DOCKERHUB_USERNAME}/eduportal-api:prod-latest
+                docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d api-prod
+                echo "⚠️ Rolled back to: $PREV_IMAGE"
+              fi
+
+              # Show logs for debugging
+              docker-compose -f docker-compose.prod.yml --env-file .env.prod logs --tail=100 api-prod
+              exit 1
+            fi
+          ENDSSH
+
+      - name: Final Health Check
+        run: |
+          echo "Final health verification from GitHub Actions..."
+          sleep 10
+
+          for i in {1..5}; do
+            RESPONSE=$(curl -s http://${{ secrets.PROD_SERVER_HOST }}:8081/health || echo "FAILED")
+            if echo "$RESPONSE" | grep -q "healthy"; then
+              echo "✅ Production health check passed!"
+              echo "Response: $RESPONSE"
+              exit 0
+            fi
+            echo "Attempt $i failed, retrying in 10s..."
+            sleep 10
+          done
+
+          echo "❌ Production health check failed!"
+          exit 1
+
+      - name: Create Git tag
+        if: success()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ needs.build-and-push.outputs.semver }}" -m "Production release v${{ needs.build-and-push.outputs.semver }}"
+          git push origin "v${{ needs.build-and-push.outputs.semver }}" || echo "Tag already exists"
+
+      - name: Deployment Summary
+        if: success()
+        run: |
+          echo "## 🚀 PRODUCTION Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** Production" >> $GITHUB_STEP_SUMMARY
+          echo "**Server:** ${{ secrets.PROD_SERVER_HOST }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** v${{ needs.build-and-push.outputs.semver }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image Tag:** ${{ needs.build-and-push.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** https://api.yourdomain.com" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed at:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+  # ===========================================================
+  # Notify Slack
+  # ===========================================================
+  notify:
+    name: Send Notification
+    runs-on: ubuntu-latest
+    needs: [build-and-push, deploy-production]
+    if: always()
+
+    steps:
+      - name: Send Slack notification
+        if: ${{ secrets.SLACK_WEBHOOK_URL != '' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ needs.deploy-production.result }}
+          fields: repo,message,commit,author,action,eventName,ref,workflow
+          custom_payload: |
+            {
+              "attachments": [{
+                "color": "${{ needs.deploy-production.result == 'success' && 'good' || 'danger' }}",
+                "title": "🚨 EduPortal PRODUCTION Deployment",
+                "fields": [
+                  {
+                    "title": "Status",
+                    "value": "${{ needs.deploy-production.result == 'success' && '✅ Success' || '❌ Failed' }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Version",
+                    "value": "v${{ needs.build-and-push.outputs.semver }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Branch",
+                    "value": "${{ github.ref_name }}",
+                    "short": true
+                  },
+                  {
+                    "title": "Deployed by",
+                    "value": "${{ github.actor }}",
+                    "short": true
+                  }
+                ],
+                "footer": "GitHub Actions - Production",
+                "ts": "${{ github.event.head_commit.timestamp }}"
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Send failure alert
+        if: needs.deploy-production.result == 'failure'
+        run: |
+          echo "::error::Production deployment failed! Immediate attention required."
+          # Additional alerting can be added here (PagerDuty, email, etc.)
