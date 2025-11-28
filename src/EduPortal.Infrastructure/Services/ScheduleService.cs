@@ -188,11 +188,17 @@ public class ScheduleService : IScheduleService
     private async Task<bool> CheckScheduleConflictAsync(int studentId, int teacherId, DayOfWeek dayOfWeek, TimeSpan startTime, TimeSpan endTime, DateTime effectiveFrom, DateTime? effectiveTo, int? excludeId = null)
     {
         var query = _context.LessonSchedules
-            .Where(s => s.DayOfWeek == dayOfWeek &&
+            .Where(s => !s.IsDeleted &&
+                       s.Status == LessonStatus.Scheduled &&
+                       s.DayOfWeek == dayOfWeek &&
                        (s.StudentId == studentId || s.TeacherId == teacherId) &&
+                       // Time overlap check
                        ((s.StartTime <= startTime && s.EndTime > startTime) ||
                         (s.StartTime < endTime && s.EndTime >= endTime) ||
-                        (s.StartTime >= startTime && s.EndTime <= endTime)));
+                        (s.StartTime >= startTime && s.EndTime <= endTime)) &&
+                       // Date range overlap check
+                       s.EffectiveFrom <= (effectiveTo ?? DateTime.MaxValue) &&
+                       (s.EffectiveTo == null || s.EffectiveTo >= effectiveFrom));
 
         if (excludeId.HasValue)
             query = query.Where(s => s.Id != excludeId.Value);

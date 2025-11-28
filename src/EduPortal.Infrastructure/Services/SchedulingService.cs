@@ -288,11 +288,15 @@ public class SchedulingService : ISchedulingService
             var hasConflict = await _context.LessonSchedules
                 .AnyAsync(ls => !ls.IsDeleted &&
                                ls.Status == LessonStatus.Scheduled &&
-                               ((ls.StudentId == dto.StudentId || ls.TeacherId == dto.TeacherId)) &&
+                               (ls.StudentId == dto.StudentId || ls.TeacherId == dto.TeacherId) &&
                                ls.DayOfWeek == dto.DayOfWeek &&
+                               // Time overlap check
                                ((dto.StartTime >= ls.StartTime && dto.StartTime < ls.EndTime) ||
                                 (dto.EndTime > ls.StartTime && dto.EndTime <= ls.EndTime) ||
-                                (dto.StartTime <= ls.StartTime && dto.EndTime >= ls.EndTime)));
+                                (dto.StartTime <= ls.StartTime && dto.EndTime >= ls.EndTime)) &&
+                               // Date range overlap check
+                               ls.EffectiveFrom <= (dto.EffectiveTo ?? DateTime.MaxValue) &&
+                               (ls.EffectiveTo == null || ls.EffectiveTo >= dto.EffectiveFrom));
 
             if (hasConflict)
                 return ApiResponse<LessonScheduleDto>.ErrorResponse("Bu zaman diliminde çakışma var");
