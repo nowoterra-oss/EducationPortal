@@ -15,7 +15,6 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
-using EduPortal.API.Converters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -151,9 +150,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        // Custom DayOfWeek converter: supports 0-6 (standard) and 7 (ISO Sunday)
-        options.JsonSerializerOptions.Converters.Add(new DayOfWeekConverter());
-        // Serialize other enums as strings for better API compatibility
+        // Serialize enums as strings for better API compatibility
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 

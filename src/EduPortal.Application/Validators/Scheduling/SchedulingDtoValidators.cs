@@ -21,7 +21,7 @@ public class CreateLessonScheduleDtoValidator : AbstractValidator<CreateLessonSc
 
         RuleFor(x => x.DayOfWeek)
             .IsInEnum()
-            .WithMessage("Geçersiz gün değeri. Pazar=0/7, Pazartesi=1, Salı=2, Çarşamba=3, Perşembe=4, Cuma=5, Cumartesi=6");
+            .WithMessage("Geçersiz gün değeri. Pazar=0, Pazartesi=1, Salı=2, Çarşamba=3, Perşembe=4, Cuma=5, Cumartesi=6");
 
         RuleFor(x => x.StartTime)
             .NotEmpty()
@@ -54,7 +54,7 @@ public class CreateStudentAvailabilityDtoValidator : AbstractValidator<CreateStu
 
         RuleFor(x => x.DayOfWeek)
             .IsInEnum()
-            .WithMessage("Geçersiz gün değeri. Pazar=0/7, Pazartesi=1, Salı=2, Çarşamba=3, Perşembe=4, Cuma=5, Cumartesi=6");
+            .WithMessage("Geçersiz gün değeri. Pazar=0, Pazartesi=1, Salı=2, Çarşamba=3, Perşembe=4, Cuma=5, Cumartesi=6");
 
         RuleFor(x => x.StartTime)
             .NotEmpty()
@@ -82,7 +82,7 @@ public class CreateTeacherAvailabilityDtoValidator : AbstractValidator<CreateTea
 
         RuleFor(x => x.DayOfWeek)
             .IsInEnum()
-            .WithMessage("Geçersiz gün değeri. Pazar=0/7, Pazartesi=1, Salı=2, Çarşamba=3, Perşembe=4, Cuma=5, Cumartesi=6");
+            .WithMessage("Geçersiz gün değeri. Pazar=0, Pazartesi=1, Salı=2, Çarşamba=3, Perşembe=4, Cuma=5, Cumartesi=6");
 
         RuleFor(x => x.StartTime)
             .NotEmpty()
