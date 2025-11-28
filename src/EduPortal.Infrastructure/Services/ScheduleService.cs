@@ -72,10 +72,24 @@ public class ScheduleService : IScheduleService
         if (course == null)
             throw new KeyNotFoundException("Ders bulunamadı");
 
-        // Check for schedule conflicts
-        var hasConflict = await CheckScheduleConflictAsync(dto.StudentId, dto.TeacherId, dto.DayOfWeek, dto.StartTime, dto.EndTime, dto.EffectiveFrom, dto.EffectiveTo);
-        if (hasConflict)
-            throw new InvalidOperationException("Bu zaman diliminde çakışan bir program var");
+        // Check for schedule conflicts with detailed info
+        var conflictingSchedule = await GetConflictingScheduleAsync(dto.StudentId, dto.TeacherId, dto.DayOfWeek, dto.StartTime, dto.EndTime, dto.EffectiveFrom, dto.EffectiveTo);
+        if (conflictingSchedule != null)
+        {
+            var conflictType = conflictingSchedule.StudentId == dto.StudentId ? "Öğrenci" : "Öğretmen";
+            var studentName = $"{conflictingSchedule.Student?.User?.FirstName} {conflictingSchedule.Student?.User?.LastName}";
+            var teacherName = $"{conflictingSchedule.Teacher?.User?.FirstName} {conflictingSchedule.Teacher?.User?.LastName}";
+            var courseName = conflictingSchedule.Course?.CourseName ?? "Bilinmeyen Ders";
+            var timeRange = $"{conflictingSchedule.StartTime:hh\\:mm}-{conflictingSchedule.EndTime:hh\\:mm}";
+            var dateRange = conflictingSchedule.EffectiveTo.HasValue
+                ? $"{conflictingSchedule.EffectiveFrom:dd.MM.yyyy} - {conflictingSchedule.EffectiveTo:dd.MM.yyyy}"
+                : $"{conflictingSchedule.EffectiveFrom:dd.MM.yyyy} - Süresiz";
+
+            throw new InvalidOperationException(
+                $"Çakışma tespit edildi! {conflictType} meşgul. " +
+                $"Mevcut ders: {courseName} ({studentName} - {teacherName}), " +
+                $"Saat: {timeRange}, Tarih: {dateRange}");
+        }
 
         var schedule = new LessonSchedule
         {
@@ -204,6 +218,30 @@ public class ScheduleService : IScheduleService
             query = query.Where(s => s.Id != excludeId.Value);
 
         return await query.AnyAsync();
+    }
+
+    private async Task<LessonSchedule?> GetConflictingScheduleAsync(int studentId, int teacherId, DayOfWeek dayOfWeek, TimeSpan startTime, TimeSpan endTime, DateTime effectiveFrom, DateTime? effectiveTo, int? excludeId = null)
+    {
+        var query = _context.LessonSchedules
+            .Include(s => s.Student).ThenInclude(st => st.User)
+            .Include(s => s.Teacher).ThenInclude(t => t.User)
+            .Include(s => s.Course)
+            .Where(s => !s.IsDeleted &&
+                       s.Status == LessonStatus.Scheduled &&
+                       s.DayOfWeek == dayOfWeek &&
+                       (s.StudentId == studentId || s.TeacherId == teacherId) &&
+                       // Time overlap check
+                       ((s.StartTime <= startTime && s.EndTime > startTime) ||
+                        (s.StartTime < endTime && s.EndTime >= endTime) ||
+                        (s.StartTime >= startTime && s.EndTime <= endTime)) &&
+                       // Date range overlap check
+                       s.EffectiveFrom <= (effectiveTo ?? DateTime.MaxValue) &&
+                       (s.EffectiveTo == null || s.EffectiveTo >= effectiveFrom));
+
+        if (excludeId.HasValue)
+            query = query.Where(s => s.Id != excludeId.Value);
+
+        return await query.FirstOrDefaultAsync();
     }
 
     private static ScheduleDto MapToDto(LessonSchedule s)

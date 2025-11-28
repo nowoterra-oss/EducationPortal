@@ -284,9 +284,12 @@ public class SchedulingService : ISchedulingService
     {
         try
         {
-            // Check for conflicts
-            var hasConflict = await _context.LessonSchedules
-                .AnyAsync(ls => !ls.IsDeleted &&
+            // Check for conflicts and get the conflicting lesson details
+            var conflictingLesson = await _context.LessonSchedules
+                .Include(ls => ls.Student).ThenInclude(s => s.User)
+                .Include(ls => ls.Teacher).ThenInclude(t => t.User)
+                .Include(ls => ls.Course)
+                .FirstOrDefaultAsync(ls => !ls.IsDeleted &&
                                ls.Status == LessonStatus.Scheduled &&
                                (ls.StudentId == dto.StudentId || ls.TeacherId == dto.TeacherId) &&
                                ls.DayOfWeek == dto.DayOfWeek &&
@@ -298,8 +301,23 @@ public class SchedulingService : ISchedulingService
                                ls.EffectiveFrom <= (dto.EffectiveTo ?? DateTime.MaxValue) &&
                                (ls.EffectiveTo == null || ls.EffectiveTo >= dto.EffectiveFrom));
 
-            if (hasConflict)
-                return ApiResponse<LessonScheduleDto>.ErrorResponse("Bu zaman diliminde çakışma var");
+            if (conflictingLesson != null)
+            {
+                var conflictType = conflictingLesson.StudentId == dto.StudentId ? "Öğrenci" : "Öğretmen";
+                var studentName = $"{conflictingLesson.Student.User.FirstName} {conflictingLesson.Student.User.LastName}";
+                var teacherName = $"{conflictingLesson.Teacher.User.FirstName} {conflictingLesson.Teacher.User.LastName}";
+                var courseName = conflictingLesson.Course?.CourseName ?? "Bilinmeyen Ders";
+                var timeRange = $"{conflictingLesson.StartTime:hh\\:mm}-{conflictingLesson.EndTime:hh\\:mm}";
+                var dateRange = conflictingLesson.EffectiveTo.HasValue
+                    ? $"{conflictingLesson.EffectiveFrom:dd.MM.yyyy} - {conflictingLesson.EffectiveTo:dd.MM.yyyy}"
+                    : $"{conflictingLesson.EffectiveFrom:dd.MM.yyyy} - Süresiz";
+
+                var errorMessage = $"Çakışma tespit edildi! {conflictType} meşgul. " +
+                    $"Mevcut ders: {courseName} ({studentName} - {teacherName}), " +
+                    $"Saat: {timeRange}, Tarih: {dateRange}";
+
+                return ApiResponse<LessonScheduleDto>.ErrorResponse(errorMessage);
+            }
 
             var lesson = new LessonSchedule
             {
