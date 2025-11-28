@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -145,8 +146,13 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Add Controllers with FluentValidation
-builder.Services.AddControllers();
+// Add Controllers with FluentValidation and JSON options
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Serialize enums as strings for better API compatibility
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 
 // Add FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
