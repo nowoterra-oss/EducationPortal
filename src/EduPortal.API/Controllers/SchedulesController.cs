@@ -119,11 +119,6 @@ public class SchedulesController : ControllerBase
     {
         try
         {
-            // Debug log - gelen verileri kontrol et
-            Console.WriteLine($"[DEBUG] SchedulesController.Create - StudentId: {dto.StudentId}, TeacherId: {dto.TeacherId}, " +
-                $"DayOfWeek: {dto.DayOfWeek}, StartTime: {dto.StartTime}, EndTime: {dto.EndTime}, " +
-                $"EffectiveFrom: {dto.EffectiveFrom}, EffectiveTo: {dto.EffectiveTo}");
-
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponse<ScheduleDto>.ErrorResponse("Geçersiz veri"));
 

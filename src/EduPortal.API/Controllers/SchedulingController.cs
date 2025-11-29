@@ -171,11 +171,6 @@ public class SchedulingController : ControllerBase
     [ProducesResponseType(typeof(ApiResponse<LessonScheduleDto>), StatusCodes.Status201Created)]
     public async Task<ActionResult<ApiResponse<LessonScheduleDto>>> CreateLesson([FromBody] CreateLessonScheduleDto dto)
     {
-        // Debug log - gelen verileri kontrol et
-        Console.WriteLine($"[DEBUG] CreateLesson - StudentId: {dto.StudentId}, TeacherId: {dto.TeacherId}, " +
-            $"DayOfWeek: {dto.DayOfWeek}, StartTime: {dto.StartTime}, EndTime: {dto.EndTime}, " +
-            $"EffectiveFrom: {dto.EffectiveFrom}, EffectiveTo: {dto.EffectiveTo}");
-
         var result = await _schedulingService.CreateLessonScheduleAsync(dto);
         if (result.Success)
             return CreatedAtAction(nameof(GetStudentCalendar), new { studentId = dto.StudentId }, result);
