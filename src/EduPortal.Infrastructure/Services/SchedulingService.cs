@@ -284,12 +284,21 @@ public class SchedulingService : ISchedulingService
     {
         try
         {
-            // Validate: EffectiveFrom cannot be in the past
+            // Validate and adjust EffectiveFrom: must be today or future, and match the DayOfWeek
             var today = DateTime.Today;
+
+            // If EffectiveFrom is in the past, calculate the next occurrence of the selected DayOfWeek
             if (dto.EffectiveFrom.Date < today)
             {
-                dto.EffectiveFrom = today;
-                _logger.LogWarning("EffectiveFrom date was in the past, adjusted to today: {Today}", today);
+                dto.EffectiveFrom = GetNextDayOfWeek(today, dto.DayOfWeek);
+                _logger.LogWarning("EffectiveFrom was in the past, adjusted to next {DayOfWeek}: {Date}",
+                    dto.DayOfWeek, dto.EffectiveFrom);
+            }
+            // If EffectiveFrom is today or future but doesn't match DayOfWeek, adjust to next matching day
+            else if (dto.EffectiveFrom.DayOfWeek != dto.DayOfWeek)
+            {
+                dto.EffectiveFrom = GetNextDayOfWeek(dto.EffectiveFrom, dto.DayOfWeek);
+                _logger.LogWarning("EffectiveFrom DayOfWeek mismatch, adjusted to: {Date}", dto.EffectiveFrom);
             }
 
             // Check for conflicts and get the conflicting lesson details
@@ -643,6 +652,14 @@ public class SchedulingService : ISchedulingService
         // Get Monday as start of week
         var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
         return date.AddDays(-diff).Date;
+    }
+
+    private static DateTime GetNextDayOfWeek(DateTime fromDate, DayOfWeek targetDay)
+    {
+        // Calculate days until next target day
+        var daysUntilTarget = ((int)targetDay - (int)fromDate.DayOfWeek + 7) % 7;
+        // If today is the target day, use today (daysUntilTarget would be 0)
+        return fromDate.AddDays(daysUntilTarget).Date;
     }
 
     private string GetAvailabilityTitle(AvailabilityType type) => type switch

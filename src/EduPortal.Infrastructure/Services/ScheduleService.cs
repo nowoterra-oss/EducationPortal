@@ -72,11 +72,15 @@ public class ScheduleService : IScheduleService
         if (course == null)
             throw new KeyNotFoundException("Ders bulunamadı");
 
-        // Validate: EffectiveFrom cannot be in the past
+        // Validate and adjust EffectiveFrom: must be today or future, and match the DayOfWeek
         var today = DateTime.Today;
         if (dto.EffectiveFrom.Date < today)
         {
-            dto.EffectiveFrom = today;
+            dto.EffectiveFrom = GetNextDayOfWeek(today, dto.DayOfWeek);
+        }
+        else if (dto.EffectiveFrom.DayOfWeek != dto.DayOfWeek)
+        {
+            dto.EffectiveFrom = GetNextDayOfWeek(dto.EffectiveFrom, dto.DayOfWeek);
         }
 
         // Check for schedule conflicts with detailed info
@@ -249,6 +253,12 @@ public class ScheduleService : IScheduleService
             query = query.Where(s => s.Id != excludeId.Value);
 
         return await query.FirstOrDefaultAsync();
+    }
+
+    private static DateTime GetNextDayOfWeek(DateTime fromDate, DayOfWeek targetDay)
+    {
+        var daysUntilTarget = ((int)targetDay - (int)fromDate.DayOfWeek + 7) % 7;
+        return fromDate.AddDays(daysUntilTarget).Date;
     }
 
     private static ScheduleDto MapToDto(LessonSchedule s)
