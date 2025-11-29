@@ -241,7 +241,12 @@ public class SchedulingService : ISchedulingService
                 .Include(ls => ls.Teacher).ThenInclude(t => t.User)
                 .Include(ls => ls.Course)
                 .Include(ls => ls.Classroom)
-                .Where(ls => ls.StudentId == studentId && !ls.IsDeleted)
+                .Where(ls => !ls.IsDeleted &&
+                       ls.Status == LessonStatus.Scheduled &&
+                       ls.StudentId == studentId &&
+                       (ls.IsRecurring ||
+                        (DateTime.Today >= ls.EffectiveFrom.Date &&
+                         DateTime.Today <= (ls.EffectiveTo ?? DateTime.MaxValue).Date)))
                 .OrderBy(ls => ls.DayOfWeek)
                 .ThenBy(ls => ls.StartTime)
                 .ToListAsync();
@@ -265,7 +270,12 @@ public class SchedulingService : ISchedulingService
                 .Include(ls => ls.Teacher).ThenInclude(t => t.User)
                 .Include(ls => ls.Course)
                 .Include(ls => ls.Classroom)
-                .Where(ls => ls.TeacherId == teacherId && !ls.IsDeleted)
+                .Where(ls => !ls.IsDeleted &&
+                       ls.Status == LessonStatus.Scheduled &&
+                       ls.TeacherId == teacherId &&
+                       (ls.IsRecurring ||
+                        (DateTime.Today >= ls.EffectiveFrom.Date &&
+                         DateTime.Today <= (ls.EffectiveTo ?? DateTime.MaxValue).Date)))
                 .OrderBy(ls => ls.DayOfWeek)
                 .ThenBy(ls => ls.StartTime)
                 .ToListAsync();
