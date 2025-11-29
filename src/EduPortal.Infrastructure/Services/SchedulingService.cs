@@ -348,7 +348,8 @@ public class SchedulingService : ISchedulingService
                 EffectiveTo = dto.EffectiveTo,
                 ClassroomId = dto.ClassroomId,
                 Notes = dto.Notes,
-                Status = LessonStatus.Scheduled
+                Status = LessonStatus.Scheduled,
+                IsRecurring = dto.IsRecurring
             };
 
             _context.LessonSchedules.Add(lesson);

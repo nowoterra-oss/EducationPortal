@@ -31,4 +31,5 @@ public class CreateLessonScheduleDto
     public DateTime? EffectiveTo { get; set; }
     public int? ClassroomId { get; set; }
     public string? Notes { get; set; }
+    public bool IsRecurring { get; set; } = true;
 }
