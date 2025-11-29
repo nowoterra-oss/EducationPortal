@@ -22,8 +22,8 @@ public interface ISchedulingService
     Task<ApiResponse<bool>> CancelLessonAsync(int lessonId);
 
     // Weekly Calendar View
-    Task<ApiResponse<WeeklyCalendarDto>> GetStudentWeeklyCalendarAsync(int studentId);
-    Task<ApiResponse<WeeklyCalendarDto>> GetTeacherWeeklyCalendarAsync(int teacherId);
+    Task<ApiResponse<WeeklyCalendarDto>> GetStudentWeeklyCalendarAsync(int studentId, DateTime? weekStartDate = null);
+    Task<ApiResponse<WeeklyCalendarDto>> GetTeacherWeeklyCalendarAsync(int teacherId, DateTime? weekStartDate = null);
 
     // Matching Logic
     Task<ApiResponse<MatchingResultDto>> FindMatchingSlotsAsync(int studentId, int teacherId, DayOfWeek? dayOfWeek = null);

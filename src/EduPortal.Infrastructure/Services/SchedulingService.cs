@@ -388,7 +388,7 @@ public class SchedulingService : ISchedulingService
     // WEEKLY CALENDAR
     // ===============================================
 
-    public async Task<ApiResponse<WeeklyCalendarDto>> GetStudentWeeklyCalendarAsync(int studentId)
+    public async Task<ApiResponse<WeeklyCalendarDto>> GetStudentWeeklyCalendarAsync(int studentId, DateTime? weekStartDate = null)
     {
         try
         {
@@ -398,6 +398,10 @@ public class SchedulingService : ISchedulingService
 
             if (student == null)
                 return ApiResponse<WeeklyCalendarDto>.ErrorResponse("Öğrenci bulunamadı");
+
+            // Calculate week boundaries
+            var weekStart = weekStartDate?.Date ?? GetWeekStartDate(DateTime.Today);
+            var weekEnd = weekStart.AddDays(7);
 
             var calendar = new WeeklyCalendarDto
             {
@@ -431,11 +435,15 @@ public class SchedulingService : ISchedulingService
                 });
             }
 
-            // Get scheduled lessons
+            // Get scheduled lessons - filter by week date range
             var lessons = await _context.LessonSchedules
                 .Include(ls => ls.Teacher).ThenInclude(t => t.User)
                 .Include(ls => ls.Course)
-                .Where(ls => ls.StudentId == studentId && !ls.IsDeleted && ls.Status == LessonStatus.Scheduled)
+                .Where(ls => ls.StudentId == studentId &&
+                            !ls.IsDeleted &&
+                            ls.Status == LessonStatus.Scheduled &&
+                            ls.EffectiveFrom <= weekEnd &&
+                            (ls.EffectiveTo == null || ls.EffectiveTo >= weekStart))
                 .ToListAsync();
 
             foreach (var lesson in lessons)
@@ -468,7 +476,7 @@ public class SchedulingService : ISchedulingService
         }
     }
 
-    public async Task<ApiResponse<WeeklyCalendarDto>> GetTeacherWeeklyCalendarAsync(int teacherId)
+    public async Task<ApiResponse<WeeklyCalendarDto>> GetTeacherWeeklyCalendarAsync(int teacherId, DateTime? weekStartDate = null)
     {
         try
         {
@@ -478,6 +486,10 @@ public class SchedulingService : ISchedulingService
 
             if (teacher == null)
                 return ApiResponse<WeeklyCalendarDto>.ErrorResponse("Öğretmen bulunamadı");
+
+            // Calculate week boundaries
+            var weekStart = weekStartDate?.Date ?? GetWeekStartDate(DateTime.Today);
+            var weekEnd = weekStart.AddDays(7);
 
             var calendar = new WeeklyCalendarDto
             {
@@ -510,11 +522,15 @@ public class SchedulingService : ISchedulingService
                 });
             }
 
-            // Get scheduled lessons
+            // Get scheduled lessons - filter by week date range
             var lessons = await _context.LessonSchedules
                 .Include(ls => ls.Student).ThenInclude(s => s.User)
                 .Include(ls => ls.Course)
-                .Where(ls => ls.TeacherId == teacherId && !ls.IsDeleted && ls.Status == LessonStatus.Scheduled)
+                .Where(ls => ls.TeacherId == teacherId &&
+                            !ls.IsDeleted &&
+                            ls.Status == LessonStatus.Scheduled &&
+                            ls.EffectiveFrom <= weekEnd &&
+                            (ls.EffectiveTo == null || ls.EffectiveTo >= weekStart))
                 .ToListAsync();
 
             foreach (var lesson in lessons)
@@ -621,6 +637,13 @@ public class SchedulingService : ISchedulingService
     // ===============================================
     // HELPER METHODS
     // ===============================================
+
+    private static DateTime GetWeekStartDate(DateTime date)
+    {
+        // Get Monday as start of week
+        var diff = (7 + (date.DayOfWeek - DayOfWeek.Monday)) % 7;
+        return date.AddDays(-diff).Date;
+    }
 
     private string GetAvailabilityTitle(AvailabilityType type) => type switch
     {

@@ -28,9 +28,9 @@ public class SchedulingController : ControllerBase
     /// </summary>
     [HttpGet("student/{studentId}/calendar")]
     [ProducesResponseType(typeof(ApiResponse<WeeklyCalendarDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<WeeklyCalendarDto>>> GetStudentCalendar(int studentId)
+    public async Task<ActionResult<ApiResponse<WeeklyCalendarDto>>> GetStudentCalendar(int studentId, [FromQuery] DateTime? weekStartDate = null)
     {
-        var result = await _schedulingService.GetStudentWeeklyCalendarAsync(studentId);
+        var result = await _schedulingService.GetStudentWeeklyCalendarAsync(studentId, weekStartDate);
         return Ok(result);
     }
 
@@ -91,9 +91,9 @@ public class SchedulingController : ControllerBase
     /// </summary>
     [HttpGet("teacher/{teacherId}/calendar")]
     [ProducesResponseType(typeof(ApiResponse<WeeklyCalendarDto>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<WeeklyCalendarDto>>> GetTeacherCalendar(int teacherId)
+    public async Task<ActionResult<ApiResponse<WeeklyCalendarDto>>> GetTeacherCalendar(int teacherId, [FromQuery] DateTime? weekStartDate = null)
     {
-        var result = await _schedulingService.GetTeacherWeeklyCalendarAsync(teacherId);
+        var result = await _schedulingService.GetTeacherWeeklyCalendarAsync(teacherId, weekStartDate);
         return Ok(result);
     }
 
