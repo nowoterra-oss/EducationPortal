@@ -72,6 +72,13 @@ public class ScheduleService : IScheduleService
         if (course == null)
             throw new KeyNotFoundException("Ders bulunamadı");
 
+        // Validate: EffectiveFrom cannot be in the past
+        var today = DateTime.Today;
+        if (dto.EffectiveFrom.Date < today)
+        {
+            dto.EffectiveFrom = today;
+        }
+
         // Check for schedule conflicts with detailed info
         var conflictingSchedule = await GetConflictingScheduleAsync(dto.StudentId, dto.TeacherId, dto.DayOfWeek, dto.StartTime, dto.EndTime, dto.EffectiveFrom, dto.EffectiveTo);
         if (conflictingSchedule != null)

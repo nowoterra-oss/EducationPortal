@@ -284,6 +284,14 @@ public class SchedulingService : ISchedulingService
     {
         try
         {
+            // Validate: EffectiveFrom cannot be in the past
+            var today = DateTime.Today;
+            if (dto.EffectiveFrom.Date < today)
+            {
+                dto.EffectiveFrom = today;
+                _logger.LogWarning("EffectiveFrom date was in the past, adjusted to today: {Today}", today);
+            }
+
             // Check for conflicts and get the conflicting lesson details
             var conflictingLesson = await _context.LessonSchedules
                 .Include(ls => ls.Student).ThenInclude(s => s.User)
