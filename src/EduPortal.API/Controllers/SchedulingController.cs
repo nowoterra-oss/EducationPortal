@@ -76,9 +76,12 @@ public class SchedulingController : ControllerBase
     /// </summary>
     [HttpGet("student/{studentId}/lessons")]
     [ProducesResponseType(typeof(ApiResponse<List<LessonScheduleDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<LessonScheduleDto>>>> GetStudentLessons(int studentId)
+    public async Task<ActionResult<ApiResponse<List<LessonScheduleDto>>>> GetStudentLessons(
+        int studentId,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
     {
-        var result = await _schedulingService.GetStudentLessonsAsync(studentId);
+        var result = await _schedulingService.GetStudentLessonsAsync(studentId, startDate, endDate);
         return Ok(result);
     }
 
@@ -139,9 +142,12 @@ public class SchedulingController : ControllerBase
     /// </summary>
     [HttpGet("teacher/{teacherId}/lessons")]
     [ProducesResponseType(typeof(ApiResponse<List<LessonScheduleDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<LessonScheduleDto>>>> GetTeacherLessons(int teacherId)
+    public async Task<ActionResult<ApiResponse<List<LessonScheduleDto>>>> GetTeacherLessons(
+        int teacherId,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
     {
-        var result = await _schedulingService.GetTeacherLessonsAsync(teacherId);
+        var result = await _schedulingService.GetTeacherLessonsAsync(teacherId, startDate, endDate);
         return Ok(result);
     }
 

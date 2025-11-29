@@ -232,16 +232,26 @@ public class SchedulingService : ISchedulingService
     // LESSON SCHEDULE
     // ===============================================
 
-    public async Task<ApiResponse<List<LessonScheduleDto>>> GetStudentLessonsAsync(int studentId)
+    public async Task<ApiResponse<List<LessonScheduleDto>>> GetStudentLessonsAsync(int studentId, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
         {
-            var lessons = await _context.LessonSchedules
+            var query = _context.LessonSchedules
                 .Include(ls => ls.Student).ThenInclude(s => s.User)
                 .Include(ls => ls.Teacher).ThenInclude(t => t.User)
                 .Include(ls => ls.Course)
                 .Include(ls => ls.Classroom)
-                .Where(ls => ls.StudentId == studentId && !ls.IsDeleted)
+                .Where(ls => ls.StudentId == studentId && !ls.IsDeleted && ls.Status == LessonStatus.Scheduled);
+
+            // Tarih filtresi uygula
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                query = query.Where(ls =>
+                    ls.EffectiveFrom <= endDate.Value &&
+                    (ls.EffectiveTo == null || ls.EffectiveTo >= startDate.Value));
+            }
+
+            var lessons = await query
                 .OrderBy(ls => ls.DayOfWeek)
                 .ThenBy(ls => ls.StartTime)
                 .ToListAsync();
@@ -256,16 +266,26 @@ public class SchedulingService : ISchedulingService
         }
     }
 
-    public async Task<ApiResponse<List<LessonScheduleDto>>> GetTeacherLessonsAsync(int teacherId)
+    public async Task<ApiResponse<List<LessonScheduleDto>>> GetTeacherLessonsAsync(int teacherId, DateTime? startDate = null, DateTime? endDate = null)
     {
         try
         {
-            var lessons = await _context.LessonSchedules
+            var query = _context.LessonSchedules
                 .Include(ls => ls.Student).ThenInclude(s => s.User)
                 .Include(ls => ls.Teacher).ThenInclude(t => t.User)
                 .Include(ls => ls.Course)
                 .Include(ls => ls.Classroom)
-                .Where(ls => ls.TeacherId == teacherId && !ls.IsDeleted)
+                .Where(ls => ls.TeacherId == teacherId && !ls.IsDeleted && ls.Status == LessonStatus.Scheduled);
+
+            // Tarih filtresi uygula
+            if (startDate.HasValue && endDate.HasValue)
+            {
+                query = query.Where(ls =>
+                    ls.EffectiveFrom <= endDate.Value &&
+                    (ls.EffectiveTo == null || ls.EffectiveTo >= startDate.Value));
+            }
+
+            var lessons = await query
                 .OrderBy(ls => ls.DayOfWeek)
                 .ThenBy(ls => ls.StartTime)
                 .ToListAsync();

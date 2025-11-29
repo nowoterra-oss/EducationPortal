@@ -16,8 +16,8 @@ public interface ISchedulingService
     Task<ApiResponse<bool>> DeleteTeacherAvailabilityAsync(int id);
 
     // Lesson Schedule
-    Task<ApiResponse<List<LessonScheduleDto>>> GetStudentLessonsAsync(int studentId);
-    Task<ApiResponse<List<LessonScheduleDto>>> GetTeacherLessonsAsync(int teacherId);
+    Task<ApiResponse<List<LessonScheduleDto>>> GetStudentLessonsAsync(int studentId, DateTime? startDate = null, DateTime? endDate = null);
+    Task<ApiResponse<List<LessonScheduleDto>>> GetTeacherLessonsAsync(int teacherId, DateTime? startDate = null, DateTime? endDate = null);
     Task<ApiResponse<LessonScheduleDto>> CreateLessonScheduleAsync(CreateLessonScheduleDto dto);
     Task<ApiResponse<bool>> CancelLessonAsync(int lessonId);
 
