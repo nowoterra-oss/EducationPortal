@@ -180,12 +180,18 @@ public class SchedulingController : ControllerBase
     /// <summary>
     /// Dersi iptal et
     /// </summary>
+    /// <param name="lessonId">Ders ID</param>
+    /// <param name="cancelAll">true: Tüm tekrarları iptal et, false: Sadece belirtilen tarihi iptal et</param>
+    /// <param name="cancelDate">İptal edilecek tarih (cancelAll=false ise zorunlu)</param>
     [HttpPatch("lesson/{lessonId}/cancel")]
     [Authorize(Roles = "Admin,Kayitci")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<bool>>> CancelLesson(int lessonId)
+    public async Task<ActionResult<ApiResponse<bool>>> CancelLesson(
+        int lessonId,
+        [FromQuery] bool cancelAll = true,
+        [FromQuery] DateTime? cancelDate = null)
     {
-        var result = await _schedulingService.CancelLessonAsync(lessonId);
+        var result = await _schedulingService.CancelLessonAsync(lessonId, cancelAll, cancelDate);
         return Ok(result);
     }
 }

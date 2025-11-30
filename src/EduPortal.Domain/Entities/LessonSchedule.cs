@@ -35,6 +35,12 @@ public class LessonSchedule : BaseAuditableEntity
 
     public bool IsRecurring { get; set; } = true;
 
+    /// <summary>
+    /// İptal edilen tekrar tarihleri (virgülle ayrılmış: "2024-01-15,2024-01-22")
+    /// </summary>
+    [MaxLength(2000)]
+    public string? CancelledDates { get; set; }
+
     public LessonStatus Status { get; set; } = LessonStatus.Scheduled;
 
     public int? ClassroomId { get; set; }

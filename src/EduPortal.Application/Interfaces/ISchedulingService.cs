@@ -19,7 +19,7 @@ public interface ISchedulingService
     Task<ApiResponse<List<LessonScheduleDto>>> GetStudentLessonsAsync(int studentId);
     Task<ApiResponse<List<LessonScheduleDto>>> GetTeacherLessonsAsync(int teacherId);
     Task<ApiResponse<LessonScheduleDto>> CreateLessonScheduleAsync(CreateLessonScheduleDto dto);
-    Task<ApiResponse<bool>> CancelLessonAsync(int lessonId);
+    Task<ApiResponse<bool>> CancelLessonAsync(int lessonId, bool cancelAll = true, DateTime? cancelDate = null);
 
     // Weekly Calendar View
     Task<ApiResponse<WeeklyCalendarDto>> GetStudentWeeklyCalendarAsync(int studentId, DateTime? weekStartDate = null);

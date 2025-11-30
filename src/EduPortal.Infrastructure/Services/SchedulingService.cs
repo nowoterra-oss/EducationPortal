@@ -382,7 +382,7 @@ public class SchedulingService : ISchedulingService
         }
     }
 
-    public async Task<ApiResponse<bool>> CancelLessonAsync(int lessonId)
+    public async Task<ApiResponse<bool>> CancelLessonAsync(int lessonId, bool cancelAll = true, DateTime? cancelDate = null)
     {
         try
         {
@@ -390,10 +390,32 @@ public class SchedulingService : ISchedulingService
             if (lesson == null)
                 return ApiResponse<bool>.ErrorResponse("Ders bulunamadı");
 
-            lesson.Status = LessonStatus.Cancelled;
-            await _context.SaveChangesAsync();
+            if (cancelAll)
+            {
+                // Tüm tekrarlı dersleri iptal et
+                lesson.Status = LessonStatus.Cancelled;
+                await _context.SaveChangesAsync();
+                return ApiResponse<bool>.SuccessResponse(true, "Tüm dersler iptal edildi");
+            }
+            else if (cancelDate.HasValue)
+            {
+                // Sadece belirtilen tarihteki dersi iptal et
+                var dateStr = cancelDate.Value.ToString("yyyy-MM-dd");
+                var cancelledDates = string.IsNullOrEmpty(lesson.CancelledDates)
+                    ? new List<string>()
+                    : lesson.CancelledDates.Split(',').ToList();
 
-            return ApiResponse<bool>.SuccessResponse(true, "Ders iptal edildi");
+                if (!cancelledDates.Contains(dateStr))
+                {
+                    cancelledDates.Add(dateStr);
+                    lesson.CancelledDates = string.Join(",", cancelledDates);
+                    await _context.SaveChangesAsync();
+                }
+
+                return ApiResponse<bool>.SuccessResponse(true, $"{cancelDate.Value:dd.MM.yyyy} tarihli ders iptal edildi");
+            }
+
+            return ApiResponse<bool>.ErrorResponse("İptal tarihi belirtilmeli");
         }
         catch (Exception ex)
         {
