@@ -17,6 +17,8 @@ public class LessonScheduleDto
     public string Status { get; set; } = string.Empty;
     public int? ClassroomId { get; set; }
     public string? ClassroomName { get; set; }
+    public bool IsRecurring { get; set; }
+    public List<string> CancelledDates { get; set; } = new();
 }
 
 public class CreateLessonScheduleDto

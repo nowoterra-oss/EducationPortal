@@ -739,7 +739,11 @@ public class SchedulingService : ISchedulingService
             EffectiveTo = lesson.EffectiveTo,
             Status = lesson.Status.ToString(),
             ClassroomId = lesson.ClassroomId,
-            ClassroomName = lesson.Classroom?.RoomNumber
+            ClassroomName = lesson.Classroom?.RoomNumber,
+            IsRecurring = lesson.IsRecurring,
+            CancelledDates = string.IsNullOrEmpty(lesson.CancelledDates)
+                ? new List<string>()
+                : lesson.CancelledDates.Split(',').ToList()
         };
     }
 }
