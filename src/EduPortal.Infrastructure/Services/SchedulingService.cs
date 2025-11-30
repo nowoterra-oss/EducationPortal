@@ -328,6 +328,24 @@ public class SchedulingService : ISchedulingService
 
             if (conflictingLesson != null)
             {
+                // Tek seferlik ders ekleniyor ve çakışan dersin iptal edilmiş tarihlerinde ise çakışma yok
+                if (!dto.IsRecurring)
+                {
+                    var newLessonDate = dto.EffectiveFrom.ToString("yyyy-MM-dd");
+                    var cancelledDates = string.IsNullOrEmpty(conflictingLesson.CancelledDates)
+                        ? new List<string>()
+                        : conflictingLesson.CancelledDates.Split(',').ToList();
+
+                    if (cancelledDates.Contains(newLessonDate))
+                    {
+                        // Bu tarih iptal edilmiş, çakışma yok - devam et
+                        conflictingLesson = null;
+                    }
+                }
+            }
+
+            if (conflictingLesson != null)
+            {
                 var conflictType = conflictingLesson.StudentId == dto.StudentId ? "Öğrenci" : "Öğretmen";
                 var studentName = $"{conflictingLesson.Student.User.FirstName} {conflictingLesson.Student.User.LastName}";
                 var teacherName = $"{conflictingLesson.Teacher.User.FirstName} {conflictingLesson.Teacher.User.LastName}";
