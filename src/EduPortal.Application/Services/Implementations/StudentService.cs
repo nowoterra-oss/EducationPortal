@@ -162,10 +162,12 @@ public class StudentService : IStudentService
             var student = _mapper.Map<Student>(dto);
             student.UserId = user.Id;
             student.StudentNo = studentNo; // Otomatik oluşturulan numara
+            student.User = user; // User navigation property'sini set et (response için gerekli)
 
             await _studentRepository.AddAsync(student);
 
             var studentDto = _mapper.Map<StudentDto>(student);
+            studentDto.StudentNo = studentNo; // Öğrenci numarasını response'a ekle
             return ApiResponse<StudentDto>.SuccessResponse(studentDto, "Öğrenci başarıyla oluşturuldu");
         }
         catch (Exception ex)
