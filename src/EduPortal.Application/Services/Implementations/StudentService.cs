@@ -149,7 +149,7 @@ public class StudentService : IStudentService
             }
 
             // Assign Student role
-            await _userManager.AddToRoleAsync(user, "Student");
+            await _userManager.AddToRoleAsync(user, "Ogrenci");
 
             // Create Student entity
             var student = _mapper.Map<Student>(dto);

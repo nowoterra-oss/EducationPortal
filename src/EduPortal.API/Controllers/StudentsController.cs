@@ -161,7 +161,7 @@ public class StudentsController : ControllerBase
     /// <returns>Sonraki öğrenci numarası</returns>
     /// <response code="200">Öğrenci numarası başarıyla alındı</response>
     [HttpGet("next-student-no")]
-    [Authorize(Roles = "Admin,Kayıtçı")]
+    [Authorize(Roles = "Admin,Kayitci")]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<string>>> GetNextStudentNo()
     {
@@ -187,7 +187,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpPost]
-    [Authorize(Roles = "Admin,Kayıtçı")]
+    [Authorize(Roles = "Admin,Kayitci")]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
