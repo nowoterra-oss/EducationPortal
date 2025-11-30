@@ -86,15 +86,44 @@ public class StudentService : IStudentService
         }
     }
 
+    public async Task<string> GenerateStudentNoAsync()
+    {
+        var currentYear = DateTime.UtcNow.Year;
+        var yearPrefix = (currentYear % 100).ToString("D2"); // 2025 -> "25"
+
+        var lastSequence = await _studentRepository.GetLastStudentSequenceForYearAsync(currentYear);
+        var newSequence = lastSequence + 1;
+
+        // Format: YY + 3 basamaklı sıra numarası (örn: 25001)
+        return $"{yearPrefix}{newSequence:D3}";
+    }
+
+    public async Task<ApiResponse<string>> GetNextStudentNoPreviewAsync()
+    {
+        try
+        {
+            var nextNo = await GenerateStudentNoAsync();
+            return ApiResponse<string>.SuccessResponse(nextNo, "Sonraki öğrenci numarası");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<string>.ErrorResponse($"Hata: {ex.Message}");
+        }
+    }
+
     public async Task<ApiResponse<StudentDto>> CreateAsync(StudentCreateDto dto)
     {
         try
         {
-            // Check if student number already exists
-            var exists = await _studentRepository.StudentNoExistsAsync(dto.StudentNo);
+            // Öğrenci numarasını otomatik oluştur
+            var studentNo = await GenerateStudentNoAsync();
+
+            // Benzersizlik kontrolü (ekstra güvenlik)
+            var exists = await _studentRepository.StudentNoExistsAsync(studentNo);
             if (exists)
             {
-                return ApiResponse<StudentDto>.ErrorResponse("Bu öğrenci numarası zaten kullanılıyor");
+                // Çakışma durumunda tekrar dene (çok nadir durum)
+                studentNo = await GenerateStudentNoAsync();
             }
 
             // Create ApplicationUser first
@@ -110,7 +139,7 @@ public class StudentService : IStudentService
             };
 
             // Generate a default password (in production, this should be sent via email or set by user)
-            var defaultPassword = $"Student{dto.StudentNo}!";
+            var defaultPassword = $"Student{studentNo}!";
             var result = await _userManager.CreateAsync(user, defaultPassword);
 
             if (!result.Succeeded)
@@ -125,6 +154,7 @@ public class StudentService : IStudentService
             // Create Student entity
             var student = _mapper.Map<Student>(dto);
             student.UserId = user.Id;
+            student.StudentNo = studentNo; // Otomatik oluşturulan numara
 
             await _studentRepository.AddAsync(student);
 

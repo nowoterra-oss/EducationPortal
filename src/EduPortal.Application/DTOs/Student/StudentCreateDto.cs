@@ -20,9 +20,7 @@ public class StudentCreateDto
     [Phone]
     public string? PhoneNumber { get; set; }
 
-    [Required(ErrorMessage = "Öğrenci numarası zorunludur")]
-    [StringLength(20)]
-    public string StudentNo { get; set; } = string.Empty;
+    // StudentNo backend tarafından otomatik oluşturulacak
 
     [Required(ErrorMessage = "Okul adı zorunludur")]
     [StringLength(200)]

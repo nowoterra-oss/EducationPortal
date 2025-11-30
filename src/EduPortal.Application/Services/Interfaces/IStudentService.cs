@@ -12,4 +12,14 @@ public interface IStudentService
     Task<ApiResponse<StudentDto>> UpdateAsync(StudentUpdateDto dto);
     Task<ApiResponse<bool>> DeleteAsync(int id);
     Task<ApiResponse<List<StudentDto>>> SearchAsync(string searchTerm);
+
+    /// <summary>
+    /// Yeni öğrenci için otomatik öğrenci numarası oluşturur
+    /// </summary>
+    Task<string> GenerateStudentNoAsync();
+
+    /// <summary>
+    /// Oluşturulacak bir sonraki öğrenci numarasını önizleme olarak döner
+    /// </summary>
+    Task<ApiResponse<string>> GetNextStudentNoPreviewAsync();
 }

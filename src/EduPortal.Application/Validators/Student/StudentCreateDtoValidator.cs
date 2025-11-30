@@ -26,10 +26,7 @@ public class StudentCreateDtoValidator : AbstractValidator<StudentCreateDto>
             .Matches(@"^(\+90|0)?[0-9]{10}$").WithMessage("Geçerli bir telefon numarası giriniz")
             .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
 
-        RuleFor(x => x.StudentNo)
-            .NotEmpty().WithMessage("Öğrenci numarası zorunludur")
-            .MaximumLength(20).WithMessage("Öğrenci numarası en fazla 20 karakter olabilir")
-            .Matches(@"^[A-Z0-9-]+$").WithMessage("Öğrenci numarası sadece büyük harf, rakam ve tire içerebilir");
+        // StudentNo backend tarafından otomatik oluşturulacak, validasyon gereksiz
 
         RuleFor(x => x.SchoolName)
             .NotEmpty().WithMessage("Okul adı zorunludur")

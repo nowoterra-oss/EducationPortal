@@ -156,6 +156,28 @@ public class StudentsController : ControllerBase
     }
 
     /// <summary>
+    /// Oluşturulacak bir sonraki öğrenci numarasını önizle
+    /// </summary>
+    /// <returns>Sonraki öğrenci numarası</returns>
+    /// <response code="200">Öğrenci numarası başarıyla alındı</response>
+    [HttpGet("next-student-no")]
+    [Authorize(Roles = "Admin,Kayıtçı")]
+    [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<string>>> GetNextStudentNo()
+    {
+        try
+        {
+            var result = await _studentService.GetNextStudentNoPreviewAsync();
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting next student number preview");
+            return StatusCode(500, ApiResponse<string>.ErrorResponse("Öğrenci numarası önizlemesi alınırken hata oluştu"));
+        }
+    }
+
+    /// <summary>
     /// Create a new student
     /// </summary>
     /// <param name="studentCreateDto">Student creation data</param>

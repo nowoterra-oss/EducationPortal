@@ -10,4 +10,9 @@ public interface IStudentRepository : IGenericRepository<Student>
     Task<IEnumerable<Student>> GetStudentsByGradeAsync(int grade, CancellationToken cancellationToken = default);
     Task<IEnumerable<Student>> SearchStudentsAsync(string searchTerm, CancellationToken cancellationToken = default);
     Task<bool> StudentNoExistsAsync(string studentNo, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Belirtilen yıl için son öğrenci sıra numarasını getirir
+    /// </summary>
+    Task<int> GetLastStudentSequenceForYearAsync(int year, CancellationToken cancellationToken = default);
 }

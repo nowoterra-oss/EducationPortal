@@ -83,4 +83,27 @@ public class StudentRepository : GenericRepository<Student>, IStudentRepository
     {
         return await _dbSet.AnyAsync(s => s.StudentNo == studentNo, cancellationToken);
     }
+
+    public async Task<int> GetLastStudentSequenceForYearAsync(int year, CancellationToken cancellationToken = default)
+    {
+        var yearPrefix = (year % 100).ToString("D2"); // 2025 -> "25"
+
+        var lastStudent = await _dbSet
+            .Where(s => s.StudentNo.StartsWith(yearPrefix) && !s.IsDeleted)
+            .OrderByDescending(s => s.StudentNo)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (lastStudent == null)
+            return 0;
+
+        // StudentNo formatı: "25001" -> sıra numarası 1
+        if (lastStudent.StudentNo.Length >= 3)
+        {
+            var sequencePart = lastStudent.StudentNo.Substring(2);
+            if (int.TryParse(sequencePart, out int sequence))
+                return sequence;
+        }
+
+        return 0;
+    }
 }
