@@ -21,15 +21,19 @@ public class FileStorageService : IFileStorageService
     private static readonly string[] AllowedImageExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
     private static readonly string[] AllowedDocumentExtensions = { ".pdf", ".doc", ".docx", ".xls", ".xlsx" };
 
-    // Maksimum dosya boyutları (byte)
-    private const long MaxImageSize = 5 * 1024 * 1024; // 5 MB
+    // Maksimum dosya boyutları (byte) - Resimler otomatik boyutlandirilacagi icin daha buyuk kabul edilir
+    private const long MaxImageSize = 10 * 1024 * 1024; // 10 MB (resize edilecek)
     private const long MaxDocumentSize = 25 * 1024 * 1024; // 25 MB
-    private const long MaxProfilePhotoSize = 2 * 1024 * 1024; // 2 MB
+    private const long MaxProfilePhotoSize = 10 * 1024 * 1024; // 10 MB (resize edilecek)
 
-    // Profil fotoğrafı boyutları
-    private const int ProfilePhotoMaxWidth = 400;
-    private const int ProfilePhotoMaxHeight = 400;
+    // Profil fotoğrafı boyutları (web icin optimize)
+    private const int ProfilePhotoWidth = 400;
+    private const int ProfilePhotoHeight = 400;
     private const int ThumbnailSize = 100;
+
+    // Genel resim boyutları (web icin optimize)
+    private const int WebImageMaxWidth = 1920;
+    private const int WebImageMaxHeight = 1080;
 
     public FileStorageService(
         IWebHostEnvironment environment,
@@ -77,23 +81,49 @@ public class FileStorageService : IFileStorageService
 
             Directory.CreateDirectory(categoryFolder);
 
-            // Dosyayı kaydet
-            var filePath = Path.Combine(categoryFolder, uniqueFileName);
-            await using var stream = new FileStream(filePath, FileMode.Create);
-            await file.CopyToAsync(stream);
+            long finalFileSize;
+            string finalFileName;
+
+            // Resim ise otomatik boyutlandir
+            if (isImage)
+            {
+                finalFileName = $"{Guid.NewGuid():N}.jpg"; // Tum resimler JPEG olarak kaydedilir
+                var filePath = Path.Combine(categoryFolder, finalFileName);
+
+                using var inputStream = file.OpenReadStream();
+                using var image = await Image.LoadAsync(inputStream);
+
+                // Web icin optimize boyutlara kucult
+                await ResizeAndSaveImageAsync(image, filePath, WebImageMaxWidth, WebImageMaxHeight);
+
+                var fileInfo = new FileInfo(filePath);
+                finalFileSize = fileInfo.Length;
+
+                _logger.LogInformation("Image auto-resized: {Original}x{OriginalH} -> max {MaxW}x{MaxH}",
+                    image.Width, image.Height, WebImageMaxWidth, WebImageMaxHeight);
+            }
+            else
+            {
+                // Dokuman ise direkt kaydet
+                finalFileName = uniqueFileName;
+                var filePath = Path.Combine(categoryFolder, finalFileName);
+                await using var stream = new FileStream(filePath, FileMode.Create);
+                await file.CopyToAsync(stream);
+                finalFileSize = file.Length;
+            }
 
             // URL olustur
             var relativePath = string.IsNullOrEmpty(subFolder)
-                ? $"/uploads/{category}/{uniqueFileName}"
-                : $"/uploads/{category}/{subFolder}/{uniqueFileName}";
+                ? $"/uploads/{category}/{finalFileName}"
+                : $"/uploads/{category}/{subFolder}/{finalFileName}";
 
             var result = new FileUploadResultDto
             {
-                FileName = uniqueFileName,
+                FileName = finalFileName,
                 OriginalFileName = file.FileName,
                 FileUrl = relativePath,
-                ContentType = file.ContentType,
-                FileSize = file.Length,
+                ContentType = isImage ? "image/jpeg" : file.ContentType,
+                FileSize = finalFileSize,
                 Category = category,
                 UploadedAt = DateTime.UtcNow
             };
@@ -150,9 +180,9 @@ public class FileStorageService : IFileStorageService
             using var inputStream = file.OpenReadStream();
             using var image = await Image.LoadAsync(inputStream);
 
-            // Ana resmi boyutlandir (max 400x400, en-boy oranini koru)
+            // Ana resmi boyutlandir (400x400, en-boy oranini koru)
             var mainFilePath = Path.Combine(uploadsFolder, mainFileName);
-            await ResizeAndSaveImageAsync(image, mainFilePath, ProfilePhotoMaxWidth, ProfilePhotoMaxHeight);
+            await ResizeAndSaveImageAsync(image, mainFilePath, ProfilePhotoWidth, ProfilePhotoHeight);
 
             // Thumbnail olustur (100x100)
             var thumbnailFilePath = Path.Combine(uploadsFolder, thumbnailFileName);
@@ -235,6 +265,7 @@ public class FileStorageService : IFileStorageService
 
     /// <summary>
     /// Resmi boyutlandirir ve kaydeder (en-boy oranini korur)
+    /// Buyuk resimler kucultulur, kucuk resimler ayni kalir ama JPEG formatina donusturulur
     /// </summary>
     private static async Task ResizeAndSaveImageAsync(Image image, string outputPath, int maxWidth, int maxHeight)
     {
@@ -247,7 +278,7 @@ public class FileStorageService : IFileStorageService
         var ratioY = (double)maxHeight / originalHeight;
         var ratio = Math.Min(ratioX, ratioY);
 
-        // Eger resim zaten kucukse buyutme
+        // Eger resim zaten kucukse buyutme (ama yine de JPEG'e donustur)
         if (ratio >= 1)
         {
             ratio = 1;
@@ -264,7 +295,7 @@ public class FileStorageService : IFileStorageService
             Sampler = KnownResamplers.Lanczos3
         }));
 
-        // JPEG olarak kaydet (kalite: 85)
+        // JPEG olarak kaydet (kalite: 85 - web icin optimize)
         var encoder = new JpegEncoder
         {
             Quality = 85
