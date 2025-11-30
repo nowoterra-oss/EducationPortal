@@ -257,12 +257,22 @@ public class StudentService : IStudentService
             // Soft delete - mark the student as deleted
             student.IsDeleted = true;
 
-            // Also deactivate the associated user
+            // İlişkili kullanıcıyı da sil (email'in tekrar kullanılabilmesi için)
             var user = await _userManager.FindByIdAsync(student.UserId);
             if (user != null)
             {
-                user.IsActive = false;
-                await _userManager.UpdateAsync(user);
+                // Kullanıcıyı tamamen sil
+                var deleteResult = await _userManager.DeleteAsync(user);
+                if (!deleteResult.Succeeded)
+                {
+                    // Silme başarısız olursa, email'i değiştirerek unique yap
+                    user.Email = $"deleted_{DateTime.UtcNow.Ticks}_{user.Email}";
+                    user.NormalizedEmail = user.Email.ToUpper();
+                    user.UserName = user.Email;
+                    user.NormalizedUserName = user.Email.ToUpper();
+                    user.IsActive = false;
+                    await _userManager.UpdateAsync(user);
+                }
             }
 
             await _studentRepository.UpdateAsync(student);
