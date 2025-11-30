@@ -1,4 +1,5 @@
 using EduPortal.Application.DTOs.Student;
+using EduPortal.Domain.Enums;
 using FluentValidation;
 
 namespace EduPortal.Application.Validators.Student;
@@ -27,6 +28,36 @@ public class StudentCreateDtoValidator : AbstractValidator<StudentCreateDto>
             .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
 
         // StudentNo backend tarafından otomatik oluşturulacak, validasyon gereksiz
+
+        // Kimlik türü validasyonu
+        RuleFor(x => x.IdentityType)
+            .IsInEnum().WithMessage("Geçersiz kimlik türü");
+
+        // Kimlik numarası validasyonu
+        RuleFor(x => x.IdentityNumber)
+            .NotEmpty().WithMessage("Kimlik numarası zorunludur")
+            .MaximumLength(50).WithMessage("Kimlik numarası en fazla 50 karakter olabilir");
+
+        // TC Kimlik için özel validasyon: 11 hane, sadece rakam, ilk hane 0 olamaz
+        RuleFor(x => x.IdentityNumber)
+            .Matches(@"^[1-9][0-9]{10}$").WithMessage("TC Kimlik numarası 11 haneli olmalı ve ilk hane 0 olamaz")
+            .Must(BeValidTCKimlik).WithMessage("Geçersiz TC Kimlik numarası")
+            .When(x => x.IdentityType == IdentityType.TCKimlik);
+
+        // Pasaport için validasyon: alfanümerik, 6-20 karakter
+        RuleFor(x => x.IdentityNumber)
+            .Matches(@"^[A-Z0-9]{6,20}$").WithMessage("Pasaport numarası 6-20 karakter olmalı ve sadece büyük harf ve rakam içermelidir")
+            .When(x => x.IdentityType == IdentityType.Pasaport);
+
+        // Yabancı kimlik için validasyon: 5-20 karakter alfanümerik
+        RuleFor(x => x.IdentityNumber)
+            .Matches(@"^[A-Z0-9]{5,20}$").WithMessage("Yabancı kimlik numarası 5-20 karakter olmalıdır")
+            .When(x => x.IdentityType == IdentityType.YabanciKimlik);
+
+        // Uyruk validasyonu
+        RuleFor(x => x.Nationality)
+            .MaximumLength(100).WithMessage("Uyruk en fazla 100 karakter olabilir")
+            .When(x => !string.IsNullOrEmpty(x.Nationality));
 
         RuleFor(x => x.SchoolName)
             .NotEmpty().WithMessage("Okul adı zorunludur")
@@ -76,5 +107,39 @@ public class StudentCreateDtoValidator : AbstractValidator<StudentCreateDto>
         RuleFor(x => x.EnrollmentDate)
             .NotEmpty().WithMessage("Kayıt tarihi zorunludur")
             .LessThanOrEqualTo(DateTime.UtcNow.AddDays(30)).WithMessage("Kayıt tarihi bugünden en fazla 30 gün sonrası olabilir");
+    }
+
+    /// <summary>
+    /// TC Kimlik numarası algoritma kontrolü
+    /// </summary>
+    private static bool BeValidTCKimlik(string tcKimlik)
+    {
+        if (string.IsNullOrEmpty(tcKimlik) || tcKimlik.Length != 11)
+            return false;
+
+        if (!tcKimlik.All(char.IsDigit))
+            return false;
+
+        // İlk hane 0 olamaz
+        if (tcKimlik[0] == '0')
+            return false;
+
+        int[] digits = tcKimlik.Select(c => c - '0').ToArray();
+
+        // 10. hane kontrolü: (1,3,5,7,9. hanelerin toplamı * 7 - 2,4,6,8. hanelerin toplamı) mod 10
+        int oddSum = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
+        int evenSum = digits[1] + digits[3] + digits[5] + digits[7];
+        int digit10 = (oddSum * 7 - evenSum) % 10;
+        if (digit10 < 0) digit10 += 10;
+
+        if (digits[9] != digit10)
+            return false;
+
+        // 11. hane kontrolü: ilk 10 hanenin toplamı mod 10
+        int sumFirst10 = digits.Take(10).Sum();
+        if (digits[10] != sumFirst10 % 10)
+            return false;
+
+        return true;
     }
 }

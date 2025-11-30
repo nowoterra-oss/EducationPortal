@@ -106,4 +106,9 @@ public class StudentRepository : GenericRepository<Student>, IStudentRepository
 
         return 0;
     }
+
+    public async Task<bool> IdentityNumberExistsAsync(string identityNumber, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet.AnyAsync(s => s.IdentityNumber == identityNumber && !s.IsDeleted, cancellationToken);
+    }
 }

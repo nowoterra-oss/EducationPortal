@@ -115,6 +115,13 @@ public class StudentService : IStudentService
     {
         try
         {
+            // Kimlik numarası benzersizlik kontrolü
+            var identityExists = await _studentRepository.IdentityNumberExistsAsync(dto.IdentityNumber);
+            if (identityExists)
+            {
+                return ApiResponse<StudentDto>.ErrorResponse("Bu kimlik numarası ile kayıtlı bir öğrenci zaten mevcut");
+            }
+
             // Öğrenci numarasını otomatik oluştur
             var studentNo = await GenerateStudentNoAsync();
 

@@ -22,6 +22,25 @@ public class StudentCreateDto
 
     // StudentNo backend tarafından otomatik oluşturulacak
 
+    /// <summary>
+    /// Kimlik belgesi türü (0: TC Kimlik, 1: Pasaport, 2: Yabancı Kimlik, 3: Diğer)
+    /// </summary>
+    [Required(ErrorMessage = "Kimlik türü zorunludur")]
+    public IdentityType IdentityType { get; set; } = IdentityType.TCKimlik;
+
+    /// <summary>
+    /// Kimlik numarası (TC Kimlik No, Pasaport No, vb.)
+    /// </summary>
+    [Required(ErrorMessage = "Kimlik numarası zorunludur")]
+    [StringLength(50)]
+    public string IdentityNumber { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Uyruk/Vatandaşlık (varsayılan: TR)
+    /// </summary>
+    [StringLength(100)]
+    public string? Nationality { get; set; } = "TR";
+
     [Required(ErrorMessage = "Okul adı zorunludur")]
     [StringLength(200)]
     public string SchoolName { get; set; } = string.Empty;

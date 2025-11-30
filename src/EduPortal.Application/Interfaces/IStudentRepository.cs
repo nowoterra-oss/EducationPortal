@@ -15,4 +15,9 @@ public interface IStudentRepository : IGenericRepository<Student>
     /// Belirtilen yıl için son öğrenci sıra numarasını getirir
     /// </summary>
     Task<int> GetLastStudentSequenceForYearAsync(int year, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Belirtilen kimlik numarasının sistemde kayıtlı olup olmadığını kontrol eder
+    /// </summary>
+    Task<bool> IdentityNumberExistsAsync(string identityNumber, CancellationToken cancellationToken = default);
 }

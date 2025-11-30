@@ -14,6 +14,25 @@ public class Student : BaseAuditableEntity
     [MaxLength(50)]
     public string StudentNo { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Kimlik belgesi türü (TC Kimlik, Pasaport, Yabancı Kimlik, vb.)
+    /// </summary>
+    [Required]
+    public IdentityType IdentityType { get; set; } = IdentityType.TCKimlik;
+
+    /// <summary>
+    /// Kimlik numarası (TC Kimlik No, Pasaport No, vb.)
+    /// </summary>
+    [Required]
+    [MaxLength(50)]
+    public string IdentityNumber { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Uyruk/Vatandaşlık (ISO 3166-1 alpha-2 ülke kodu veya ülke adı)
+    /// </summary>
+    [MaxLength(100)]
+    public string? Nationality { get; set; } = "TR";
+
     [Required]
     [MaxLength(200)]
     public string SchoolName { get; set; } = string.Empty;

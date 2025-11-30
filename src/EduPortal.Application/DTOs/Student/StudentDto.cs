@@ -7,6 +7,9 @@ public class StudentDto
     public int Id { get; set; }
     public string UserId { get; set; } = string.Empty;
     public string StudentNo { get; set; } = string.Empty;
+    public IdentityType IdentityType { get; set; }
+    public string IdentityNumber { get; set; } = string.Empty;
+    public string? Nationality { get; set; }
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
