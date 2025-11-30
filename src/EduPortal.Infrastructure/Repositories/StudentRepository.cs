@@ -88,8 +88,10 @@ public class StudentRepository : GenericRepository<Student>, IStudentRepository
     {
         var yearPrefix = (year % 100).ToString("D2"); // 2025 -> "25"
 
+        // Silinmiş öğrencileri de dahil et çünkü StudentNo unique index'e sahip
         var lastStudent = await _dbSet
-            .Where(s => s.StudentNo.StartsWith(yearPrefix) && !s.IsDeleted)
+            .IgnoreQueryFilters() // Soft delete filtresini atla
+            .Where(s => s.StudentNo.StartsWith(yearPrefix))
             .OrderByDescending(s => s.StudentNo)
             .FirstOrDefaultAsync(cancellationToken);
 
