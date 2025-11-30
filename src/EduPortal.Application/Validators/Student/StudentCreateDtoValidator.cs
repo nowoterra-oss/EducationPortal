@@ -23,8 +23,10 @@ public class StudentCreateDtoValidator : AbstractValidator<StudentCreateDto>
             .EmailAddress().WithMessage("Geçerli bir email adresi giriniz")
             .MaximumLength(256).WithMessage("Email en fazla 256 karakter olabilir");
 
+        // Global telefon numarası validasyonu: +[ülke kodu][numara] formatı
+        // Örnek: +905321234567, +15551234567, +447911123456
         RuleFor(x => x.PhoneNumber)
-            .Matches(@"^(\+90|0)?[0-9]{10}$").WithMessage("Geçerli bir telefon numarası giriniz")
+            .Matches(@"^\+[1-9][0-9]{6,14}$").WithMessage("Geçerli bir telefon numarası giriniz (örn: +905321234567)")
             .When(x => !string.IsNullOrEmpty(x.PhoneNumber));
 
         // StudentNo backend tarafından otomatik oluşturulacak, validasyon gereksiz
