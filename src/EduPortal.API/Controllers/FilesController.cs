@@ -1,6 +1,9 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.File;
+using EduPortal.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EduPortal.API.Controllers;
 
@@ -13,107 +16,111 @@ namespace EduPortal.API.Controllers;
 [Authorize]
 public class FilesController : ControllerBase
 {
-    // TODO: Implement IFileService
+    private readonly IFileStorageService _fileStorageService;
     private readonly ILogger<FilesController> _logger;
 
-    public FilesController(ILogger<FilesController> logger)
+    public FilesController(
+        IFileStorageService fileStorageService,
+        ILogger<FilesController> logger)
     {
+        _fileStorageService = fileStorageService;
         _logger = logger;
     }
 
     /// <summary>
-    /// Upload file
+    /// Upload a file
     /// </summary>
     /// <param name="file">File to upload</param>
-    /// <param name="category">File category (optional)</param>
+    /// <param name="category">File category (documents, images, etc.)</param>
     /// <returns>Uploaded file information</returns>
-    /// <response code="201">File uploaded successfully</response>
-    /// <response code="400">Invalid file or file too large</response>
-    /// <response code="401">Unauthorized</response>
     [HttpPost("upload")]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<ActionResult<ApiResponse<object>>> Upload(
+    [ProducesResponseType(typeof(ApiResponse<FileUploadResultDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<FileUploadResultDto>), StatusCodes.Status400BadRequest)]
+    [RequestSizeLimit(25 * 1024 * 1024)] // 25 MB
+    public async Task<ActionResult<ApiResponse<FileUploadResultDto>>> Upload(
         IFormFile file,
-        [FromQuery] string? category = null)
+        [FromQuery] string category = "general")
     {
-        try
-        {
-            // TODO: Implement file upload service
-            if (file == null || file.Length == 0)
-            {
-                return BadRequest(ApiResponse<object>.ErrorResponse("Geçerli bir dosya seçiniz"));
-            }
+        var result = await _fileStorageService.UploadFileAsync(file, category);
 
-            // TODO: Validate file type and size
-            // TODO: Save file to storage
-            // TODO: Create file record in database
+        if (result.Success)
+            return CreatedAtAction(nameof(Upload), result);
 
-            return Ok(ApiResponse<object>.ErrorResponse("Servis henüz implement edilmedi"));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while uploading file");
-            return StatusCode(500, ApiResponse<object>.ErrorResponse("Dosya yüklenirken bir hata oluştu"));
-        }
+        return BadRequest(result);
     }
 
     /// <summary>
-    /// Download file
+    /// Upload profile photo
     /// </summary>
-    /// <param name="fileId">File ID</param>
-    /// <returns>File content</returns>
-    /// <response code="200">File downloaded successfully</response>
-    /// <response code="401">Unauthorized</response>
-    /// <response code="404">File not found</response>
-    [HttpGet("download/{fileId}")]
-    [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Download(int fileId)
+    /// <param name="file">Photo file (JPG, PNG, etc.)</param>
+    /// <returns>Photo URL</returns>
+    [HttpPost("upload/profile-photo")]
+    [ProducesResponseType(typeof(ApiResponse<ProfilePhotoUploadResultDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ProfilePhotoUploadResultDto>), StatusCodes.Status400BadRequest)]
+    [RequestSizeLimit(2 * 1024 * 1024)] // 2 MB
+    public async Task<ActionResult<ApiResponse<ProfilePhotoUploadResultDto>>> UploadProfilePhoto(
+        IFormFile file)
     {
-        try
-        {
-            // TODO: Implement file download service
-            // TODO: Get file from storage
-            // TODO: Return file content with proper content type
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return Unauthorized(ApiResponse<ProfilePhotoUploadResultDto>.ErrorResponse("Kullanici kimligi bulunamadi"));
 
-            return NotFound(ApiResponse<object>.ErrorResponse("Dosya bulunamadı"));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while downloading file: {FileId}", fileId);
-            return StatusCode(500, ApiResponse<object>.ErrorResponse("Dosya indirilirken bir hata oluştu"));
-        }
+        var result = await _fileStorageService.UploadProfilePhotoAsync(file, userId);
+
+        if (result.Success)
+            return CreatedAtAction(nameof(UploadProfilePhoto), result);
+
+        return BadRequest(result);
     }
 
     /// <summary>
-    /// Delete file
+    /// Upload student profile photo (for registration)
     /// </summary>
-    /// <param name="fileId">File ID</param>
-    /// <returns>Deletion confirmation</returns>
-    /// <response code="200">File deleted successfully</response>
-    /// <response code="401">Unauthorized</response>
-    /// <response code="404">File not found</response>
-    [HttpDelete("{fileId}")]
+    /// <param name="file">Photo file</param>
+    /// <param name="tempId">Temporary ID for new student</param>
+    [HttpPost("upload/student-photo")]
+    [Authorize(Roles = "Admin,Kayitci")]
+    [ProducesResponseType(typeof(ApiResponse<ProfilePhotoUploadResultDto>), StatusCodes.Status201Created)]
+    [RequestSizeLimit(2 * 1024 * 1024)] // 2 MB
+    public async Task<ActionResult<ApiResponse<ProfilePhotoUploadResultDto>>> UploadStudentPhoto(
+        IFormFile file,
+        [FromQuery] string? tempId = null)
+    {
+        var identifier = tempId ?? Guid.NewGuid().ToString("N");
+        var result = await _fileStorageService.UploadProfilePhotoAsync(file, $"student_{identifier}");
+
+        if (result.Success)
+            return CreatedAtAction(nameof(UploadStudentPhoto), result);
+
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Delete a file
+    /// </summary>
+    /// <param name="fileUrl">File URL to delete</param>
+    [HttpDelete]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<bool>>> Delete(int fileId)
+    public async Task<ActionResult<ApiResponse<bool>>> Delete([FromQuery] string fileUrl)
     {
-        try
-        {
-            // TODO: Implement file deletion service
-            // TODO: Delete file from storage
-            // TODO: Delete file record from database
+        var result = await _fileStorageService.DeleteFileAsync(fileUrl);
 
-            return Ok(ApiResponse<bool>.ErrorResponse("Servis henüz implement edilmedi"));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error occurred while deleting file: {FileId}", fileId);
-            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Dosya silinirken bir hata oluştu"));
-        }
+        if (result.Success)
+            return Ok(result);
+
+        return NotFound(result);
+    }
+
+    /// <summary>
+    /// Check if file exists
+    /// </summary>
+    /// <param name="fileUrl">File URL to check</param>
+    [HttpGet("exists")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<bool>>> FileExists([FromQuery] string fileUrl)
+    {
+        var exists = await _fileStorageService.FileExistsAsync(fileUrl);
+        return Ok(ApiResponse<bool>.SuccessResponse(exists));
     }
 }

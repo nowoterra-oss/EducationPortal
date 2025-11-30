@@ -247,17 +247,20 @@ if (app.Environment.IsDevelopment())
 // 6. CORS (before rate limiting and auth)
 app.UseCors("AllowAngular");
 
-// 7. Rate Limiting
+// 7. Static Files (uploads klasorune erisim icin)
+app.UseStaticFiles();
+
+// 8. Rate Limiting
 app.UseIpRateLimiting();
 
-// 8. Authentication & Authorization
+// 9. Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 
-// 9. Audit Middleware (after auth, to capture user info)
+// 10. Audit Middleware (after auth, to capture user info)
 app.UseMiddleware<AuditMiddleware>();
 
-// 10. Health Check Endpoint
+// 11. Health Check Endpoint
 app.MapGet("/health", () => Results.Ok(new
 {
     status = "healthy",
@@ -266,7 +269,7 @@ app.MapGet("/health", () => Results.Ok(new
     version = "1.0.0"
 })).AllowAnonymous();
 
-// 11. Endpoints
+// 12. Endpoints
 app.MapControllers();
 
 app.Run();

@@ -141,6 +141,7 @@ public class StudentService : IStudentService
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 PhoneNumber = dto.PhoneNumber,
+                ProfilePhotoUrl = dto.ProfilePhotoUrl,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };

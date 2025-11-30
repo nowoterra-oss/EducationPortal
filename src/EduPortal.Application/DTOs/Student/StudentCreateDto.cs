@@ -79,4 +79,10 @@ public class StudentCreateDto
     public string? ReferenceSource { get; set; }
 
     public DateTime EnrollmentDate { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Ogrenci profil fotografı URL'i (opsiyonel, kayit oncesi yuklenen)
+    /// </summary>
+    [StringLength(500)]
+    public string? ProfilePhotoUrl { get; set; }
 }
