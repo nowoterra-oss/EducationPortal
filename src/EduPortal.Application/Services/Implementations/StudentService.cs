@@ -172,7 +172,12 @@ public class StudentService : IStudentService
         }
         catch (Exception ex)
         {
-            return ApiResponse<StudentDto>.ErrorResponse($"Hata: {ex.Message}");
+            // Inner exception'ı da logla
+            var innerMessage = ex.InnerException?.Message ?? "";
+            var fullMessage = string.IsNullOrEmpty(innerMessage)
+                ? ex.Message
+                : $"{ex.Message} | Inner: {innerMessage}";
+            return ApiResponse<StudentDto>.ErrorResponse($"Hata: {fullMessage}");
         }
     }
 
