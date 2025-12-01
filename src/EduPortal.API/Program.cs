@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -249,6 +250,26 @@ app.UseCors("AllowAngular");
 
 // 7. Static Files (uploads klasorune erisim icin)
 app.UseStaticFiles();
+
+// Uploads klasörünü static file olarak serve et
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads",
+    OnPrepareResponse = ctx =>
+    {
+        // CORS header ekle
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        // Cache için header ekle (1 gün)
+        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=86400");
+    }
+});
 
 // 8. Rate Limiting
 app.UseIpRateLimiting();
