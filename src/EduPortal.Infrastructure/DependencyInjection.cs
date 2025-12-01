@@ -75,6 +75,9 @@ public static class DependencyInjection
         // File Storage Service
         services.AddScoped<IFileStorageService, FileStorageService>();
 
+        // Student Activity Services
+        services.AddScoped<IStudentActivityService, StudentActivityService>();
+
         return services;
     }
 }

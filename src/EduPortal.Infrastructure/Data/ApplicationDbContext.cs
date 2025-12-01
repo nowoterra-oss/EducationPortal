@@ -87,6 +87,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<TeacherAvailability> TeacherAvailabilities => Set<TeacherAvailability>();
     public DbSet<LessonSchedule> LessonSchedules => Set<LessonSchedule>();
 
+    // Student Activities
+    public DbSet<StudentSummerActivity> StudentSummerActivities => Set<StudentSummerActivity>();
+    public DbSet<StudentInternship> StudentInternships => Set<StudentInternship>();
+    public DbSet<StudentSocialProject> StudentSocialProjects => Set<StudentSocialProject>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -797,6 +802,37 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(ls => new { ls.StudentId, ls.TeacherId, ls.DayOfWeek });
+        });
+
+        // ===============================================
+        // STUDENT ACTIVITIES MODULE RELATIONSHIPS
+        // ===============================================
+
+        // StudentSummerActivity relationships
+        builder.Entity<StudentSummerActivity>(entity =>
+        {
+            entity.HasOne(ssa => ssa.Student)
+                .WithMany(s => s.SummerActivities)
+                .HasForeignKey(ssa => ssa.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // StudentInternship relationships
+        builder.Entity<StudentInternship>(entity =>
+        {
+            entity.HasOne(si => si.Student)
+                .WithMany(s => s.Internships)
+                .HasForeignKey(si => si.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // StudentSocialProject relationships
+        builder.Entity<StudentSocialProject>(entity =>
+        {
+            entity.HasOne(ssp => ssp.Student)
+                .WithMany(s => s.SocialProjects)
+                .HasForeignKey(ssp => ssp.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Global query filter for soft delete

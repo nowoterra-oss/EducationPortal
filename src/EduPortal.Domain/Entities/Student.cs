@@ -109,4 +109,9 @@ public class Student : BaseAuditableEntity
     public virtual ICollection<SportsAssessment> SportsAssessments { get; set; } = new List<SportsAssessment>();
     public virtual ICollection<StudyAbroadProgram> StudyAbroadPrograms { get; set; } = new List<StudyAbroadProgram>();
     public virtual ICollection<StudentPackagePurchase> PackagePurchases { get; set; } = new List<StudentPackagePurchase>();
+
+    // Student Activities
+    public virtual ICollection<StudentSummerActivity> SummerActivities { get; set; } = new List<StudentSummerActivity>();
+    public virtual ICollection<StudentInternship> Internships { get; set; } = new List<StudentInternship>();
+    public virtual ICollection<StudentSocialProject> SocialProjects { get; set; } = new List<StudentSocialProject>();
 }
