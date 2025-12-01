@@ -228,13 +228,20 @@ public class StudentService : IStudentService
             if (dto.TargetCountry != null)
                 student.TargetCountry = dto.TargetCountry;
 
-            // Update ApplicationUser if phone number is provided
-            if (!string.IsNullOrEmpty(dto.PhoneNumber))
+            // Update ProfilePhotoUrl
+            if (dto.ProfilePhotoUrl != null)
+                student.ProfilePhotoUrl = dto.ProfilePhotoUrl;
+
+            // Update ApplicationUser if phone number or profile photo is provided
+            if (!string.IsNullOrEmpty(dto.PhoneNumber) || dto.ProfilePhotoUrl != null)
             {
                 var user = await _userManager.FindByIdAsync(student.UserId);
                 if (user != null)
                 {
-                    user.PhoneNumber = dto.PhoneNumber;
+                    if (!string.IsNullOrEmpty(dto.PhoneNumber))
+                        user.PhoneNumber = dto.PhoneNumber;
+                    if (dto.ProfilePhotoUrl != null)
+                        user.ProfilePhotoUrl = dto.ProfilePhotoUrl;
                     await _userManager.UpdateAsync(user);
                 }
             }

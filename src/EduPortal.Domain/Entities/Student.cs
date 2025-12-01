@@ -71,6 +71,12 @@ public class Student : BaseAuditableEntity
     [MaxLength(200)]
     public string? ReferenceSource { get; set; }
 
+    /// <summary>
+    /// Öğrenci profil fotoğrafı URL'i
+    /// </summary>
+    [MaxLength(500)]
+    public string? ProfilePhotoUrl { get; set; }
+
     [Required]
     public DateTime EnrollmentDate { get; set; } = DateTime.UtcNow;
 

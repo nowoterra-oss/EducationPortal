@@ -43,4 +43,10 @@ public class StudentUpdateDto
 
     [Phone]
     public string? PhoneNumber { get; set; }
+
+    /// <summary>
+    /// Öğrenci profil fotoğrafı URL'i
+    /// </summary>
+    [StringLength(500)]
+    public string? ProfilePhotoUrl { get; set; }
 }
