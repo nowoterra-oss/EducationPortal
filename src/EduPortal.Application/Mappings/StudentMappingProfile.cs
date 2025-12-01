@@ -13,7 +13,8 @@ public class StudentMappingProfile : Profile
             .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.User.LastName))
             .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User.Email))
             .ForMember(dest => dest.PhoneNumber, opt => opt.MapFrom(src => src.User.PhoneNumber))
-            .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.User.IsActive));
+            .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.User.IsActive))
+            .ForMember(dest => dest.ProfilePhotoUrl, opt => opt.MapFrom(src => src.ProfilePhotoUrl));
 
         CreateMap<StudentCreateDto, Student>()
             .ForMember(dest => dest.User, opt => opt.Ignore()) // User will be created separately
