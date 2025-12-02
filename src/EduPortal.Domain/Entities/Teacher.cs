@@ -1,4 +1,5 @@
 using EduPortal.Domain.Common;
+using EduPortal.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -20,6 +21,15 @@ public class Teacher : BaseEntity
 
     public bool IsAlsoCoach { get; set; } = false;
     public int? CoachId { get; set; }
+
+    // Identity fields
+    public IdentityType? IdentityType { get; set; }
+
+    [MaxLength(50)]
+    public string? IdentityNumber { get; set; }
+
+    [MaxLength(50)]
+    public string? Nationality { get; set; }
 
     // Extended fields
     [MaxLength(100)]

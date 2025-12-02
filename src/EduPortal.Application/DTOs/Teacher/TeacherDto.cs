@@ -1,3 +1,5 @@
+using EduPortal.Domain.Enums;
+
 namespace EduPortal.Application.DTOs.Teacher;
 
 public class TeacherDto
@@ -15,6 +17,11 @@ public class TeacherDto
     public string? BranchName { get; set; }
     public bool IsAlsoCoach { get; set; }
     public int? CoachId { get; set; }
+
+    // Identity fields
+    public IdentityType? IdentityType { get; set; }
+    public string? IdentityNumber { get; set; }
+    public string? Nationality { get; set; }
 
     // Extended fields
     public string? Department { get; set; }

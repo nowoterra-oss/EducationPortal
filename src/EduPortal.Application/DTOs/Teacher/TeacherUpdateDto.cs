@@ -1,3 +1,4 @@
+using EduPortal.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace EduPortal.Application.DTOs.Teacher;
@@ -21,6 +22,15 @@ public class TeacherUpdateDto
 
     [Phone]
     public string? PhoneNumber { get; set; }
+
+    // Identity fields
+    public IdentityType? IdentityType { get; set; }
+
+    [StringLength(50)]
+    public string? IdentityNumber { get; set; }
+
+    [StringLength(50)]
+    public string? Nationality { get; set; }
 
     // Extended fields
     [StringLength(100)]

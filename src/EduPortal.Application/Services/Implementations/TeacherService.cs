@@ -145,6 +145,16 @@ public class TeacherService : ITeacherService
             if (dto.IsAlsoCoach.HasValue)
                 teacher.IsAlsoCoach = dto.IsAlsoCoach.Value;
 
+            // Update identity fields
+            if (dto.IdentityType.HasValue)
+                teacher.IdentityType = dto.IdentityType.Value;
+
+            if (dto.IdentityNumber != null)
+                teacher.IdentityNumber = dto.IdentityNumber;
+
+            if (dto.Nationality != null)
+                teacher.Nationality = dto.Nationality;
+
             // Update extended fields
             if (dto.Department != null)
                 teacher.Department = dto.Department;
