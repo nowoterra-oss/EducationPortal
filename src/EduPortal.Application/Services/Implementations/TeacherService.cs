@@ -29,7 +29,8 @@ public class TeacherService : ITeacherService
         try
         {
             var teachers = await _teacherRepository.GetAllAsync();
-            var teachersList = teachers.ToList();
+            // Filter only active teachers (soft delete support)
+            var teachersList = teachers.Where(t => t.IsActive).ToList();
 
             var totalRecords = teachersList.Count;
             var pagedTeachers = teachersList
@@ -226,7 +227,9 @@ public class TeacherService : ITeacherService
         try
         {
             var teachers = await _teacherRepository.SearchTeachersAsync(searchTerm);
-            var teacherDtos = _mapper.Map<List<TeacherDto>>(teachers);
+            // Filter only active teachers
+            var activeTeachers = teachers.Where(t => t.IsActive).ToList();
+            var teacherDtos = _mapper.Map<List<TeacherDto>>(activeTeachers);
 
             return ApiResponse<List<TeacherDto>>.SuccessResponse(teacherDtos);
         }
