@@ -270,22 +270,19 @@ public class StudentService : IStudentService
             // Soft delete - mark the student as deleted
             student.IsDeleted = true;
 
-            // İlişkili kullanıcıyı da sil (email'in tekrar kullanılabilmesi için)
+            // İlişkili kullanıcıyı deaktive et (email'in tekrar kullanılabilmesi için)
             var user = await _userManager.FindByIdAsync(student.UserId);
             if (user != null)
             {
-                // Kullanıcıyı tamamen sil
-                var deleteResult = await _userManager.DeleteAsync(user);
-                if (!deleteResult.Succeeded)
-                {
-                    // Silme başarısız olursa, email'i değiştirerek unique yap
-                    user.Email = $"deleted_{DateTime.UtcNow.Ticks}_{user.Email}";
-                    user.NormalizedEmail = user.Email.ToUpper();
-                    user.UserName = user.Email;
-                    user.NormalizedUserName = user.Email.ToUpper();
-                    user.IsActive = false;
-                    await _userManager.UpdateAsync(user);
-                }
+                // Kullanıcıyı silmek yerine deaktive et ve email'i unique yap
+                // Bu sayede foreign key constraint hatası olmaz
+                user.Email = $"deleted_{DateTime.UtcNow.Ticks}_{user.Email}";
+                user.NormalizedEmail = user.Email.ToUpper();
+                user.UserName = user.Email;
+                user.NormalizedUserName = user.Email.ToUpper();
+                user.IsActive = false;
+                user.LockoutEnd = DateTimeOffset.MaxValue; // Hesabı kilitle
+                await _userManager.UpdateAsync(user);
             }
 
             await _studentRepository.UpdateAsync(student);
