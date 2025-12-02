@@ -101,7 +101,7 @@ public class TeacherService : ITeacherService
             }
 
             // Assign Teacher role
-            await _userManager.AddToRoleAsync(user, "Öğretmen");
+            await _userManager.AddToRoleAsync(user, "Ogretmen");
 
             // Create Teacher entity
             var teacher = _mapper.Map<Teacher>(dto);
