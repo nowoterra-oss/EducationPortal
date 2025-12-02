@@ -72,6 +72,11 @@ public class Student : BaseAuditableEntity
     public string? ReferenceSource { get; set; }
 
     /// <summary>
+    /// Mülakat sonucu
+    /// </summary>
+    public InterviewResult? InterviewResult { get; set; }
+
+    /// <summary>
     /// Öğrenci profil fotoğrafı URL'i
     /// </summary>
     [MaxLength(500)]

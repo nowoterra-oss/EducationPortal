@@ -68,6 +68,11 @@ public class StudentUpdateDto
     [StringLength(200)]
     public string? ReferenceSource { get; set; }
 
+    /// <summary>
+    /// Mülakat sonucu
+    /// </summary>
+    public InterviewResult? InterviewResult { get; set; }
+
     public DateTime? EnrollmentDate { get; set; }
 
     /// <summary>

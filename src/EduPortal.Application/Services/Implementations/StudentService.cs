@@ -239,6 +239,8 @@ public class StudentService : IStudentService
                 student.TargetCountry = dto.TargetCountry;
             if (dto.ReferenceSource != null)
                 student.ReferenceSource = dto.ReferenceSource;
+            if (dto.InterviewResult.HasValue)
+                student.InterviewResult = dto.InterviewResult.Value;
             if (dto.EnrollmentDate.HasValue)
                 student.EnrollmentDate = dto.EnrollmentDate.Value;
             if (dto.ProfilePhotoUrl != null)
