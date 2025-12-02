@@ -202,6 +202,16 @@ public class StudentService : IStudentService
                 }
             }
 
+            // Check if identity number is being changed and if it already exists
+            if (!string.IsNullOrEmpty(dto.IdentityNumber) && dto.IdentityNumber != student.IdentityNumber)
+            {
+                var identityExists = await _studentRepository.IdentityNumberExistsAsync(dto.IdentityNumber);
+                if (identityExists)
+                {
+                    return ApiResponse<StudentDto>.ErrorResponse("Bu kimlik numarası zaten kullanılıyor");
+                }
+            }
+
             // Update student properties
             if (!string.IsNullOrEmpty(dto.StudentNo))
                 student.StudentNo = dto.StudentNo;
@@ -227,21 +237,64 @@ public class StudentService : IStudentService
                 student.TargetMajor = dto.TargetMajor;
             if (dto.TargetCountry != null)
                 student.TargetCountry = dto.TargetCountry;
-
-            // Update ProfilePhotoUrl
+            if (dto.ReferenceSource != null)
+                student.ReferenceSource = dto.ReferenceSource;
+            if (dto.EnrollmentDate.HasValue)
+                student.EnrollmentDate = dto.EnrollmentDate.Value;
             if (dto.ProfilePhotoUrl != null)
                 student.ProfilePhotoUrl = dto.ProfilePhotoUrl;
 
-            // Update ApplicationUser if phone number or profile photo is provided
-            if (!string.IsNullOrEmpty(dto.PhoneNumber) || dto.ProfilePhotoUrl != null)
+            // Update identity fields
+            if (dto.IdentityType.HasValue)
+                student.IdentityType = dto.IdentityType.Value;
+            if (!string.IsNullOrEmpty(dto.IdentityNumber))
+                student.IdentityNumber = dto.IdentityNumber;
+            if (dto.Nationality != null)
+                student.Nationality = dto.Nationality;
+
+            // Update ApplicationUser fields
+            var user = await _userManager.FindByIdAsync(student.UserId);
+            if (user != null)
             {
-                var user = await _userManager.FindByIdAsync(student.UserId);
-                if (user != null)
+                var userUpdated = false;
+
+                if (!string.IsNullOrEmpty(dto.FirstName))
                 {
-                    if (!string.IsNullOrEmpty(dto.PhoneNumber))
-                        user.PhoneNumber = dto.PhoneNumber;
-                    if (dto.ProfilePhotoUrl != null)
-                        user.ProfilePhotoUrl = dto.ProfilePhotoUrl;
+                    user.FirstName = dto.FirstName;
+                    userUpdated = true;
+                }
+                if (!string.IsNullOrEmpty(dto.LastName))
+                {
+                    user.LastName = dto.LastName;
+                    userUpdated = true;
+                }
+                if (!string.IsNullOrEmpty(dto.Email) && dto.Email != user.Email)
+                {
+                    // Check if email is already in use
+                    var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+                    if (existingUser != null && existingUser.Id != user.Id)
+                    {
+                        return ApiResponse<StudentDto>.ErrorResponse("Bu email adresi zaten kullanılıyor");
+                    }
+                    user.Email = dto.Email;
+                    user.NormalizedEmail = dto.Email.ToUpper();
+                    user.UserName = dto.Email;
+                    user.NormalizedUserName = dto.Email.ToUpper();
+                    userUpdated = true;
+                }
+                if (!string.IsNullOrEmpty(dto.PhoneNumber))
+                {
+                    user.PhoneNumber = dto.PhoneNumber;
+                    userUpdated = true;
+                }
+                if (dto.ProfilePhotoUrl != null)
+                {
+                    user.ProfilePhotoUrl = dto.ProfilePhotoUrl;
+                    userUpdated = true;
+                }
+
+                if (userUpdated)
+                {
                     await _userManager.UpdateAsync(user);
                 }
             }

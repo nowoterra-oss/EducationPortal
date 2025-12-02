@@ -11,10 +11,34 @@ public class StudentUpdateDto
     [StringLength(20)]
     public string? StudentNo { get; set; }
 
+    // Kullanıcı bilgileri (ApplicationUser'da güncellenir)
+    [StringLength(100)]
+    public string? FirstName { get; set; }
+
+    [StringLength(100)]
+    public string? LastName { get; set; }
+
+    [EmailAddress]
+    [StringLength(200)]
+    public string? Email { get; set; }
+
+    [Phone]
+    public string? PhoneNumber { get; set; }
+
+    // Kimlik bilgileri
+    public IdentityType? IdentityType { get; set; }
+
+    [StringLength(50)]
+    public string? IdentityNumber { get; set; }
+
+    [StringLength(100)]
+    public string? Nationality { get; set; }
+
+    // Okul ve akademik bilgiler
     [StringLength(200)]
     public string? SchoolName { get; set; }
 
-    [Range(1, 12)]
+    [Range(1, 14)]
     public int? CurrentGrade { get; set; }
 
     public Gender? Gender { get; set; }
@@ -41,8 +65,10 @@ public class StudentUpdateDto
     [StringLength(100)]
     public string? TargetCountry { get; set; }
 
-    [Phone]
-    public string? PhoneNumber { get; set; }
+    [StringLength(200)]
+    public string? ReferenceSource { get; set; }
+
+    public DateTime? EnrollmentDate { get; set; }
 
     /// <summary>
     /// Öğrenci profil fotoğrafı URL'i
