@@ -133,6 +133,10 @@ public class StudentService : IStudentService
                 studentNo = await GenerateStudentNoAsync();
             }
 
+            // Görüşme sonucuna göre aktiflik durumu belirlenir
+            // KesınKayit = Aktif, Beklemede/Olumsuz = Pasif
+            var isActive = dto.InterviewResult == Domain.Enums.InterviewResult.KesınKayit;
+
             // Create ApplicationUser first
             var user = new ApplicationUser
             {
@@ -142,7 +146,7 @@ public class StudentService : IStudentService
                 LastName = dto.LastName,
                 PhoneNumber = dto.PhoneNumber,
                 ProfilePhotoUrl = dto.ProfilePhotoUrl,
-                IsActive = true,
+                IsActive = isActive,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -293,6 +297,18 @@ public class StudentService : IStudentService
                 {
                     user.ProfilePhotoUrl = dto.ProfilePhotoUrl;
                     userUpdated = true;
+                }
+
+                // Görüşme sonucuna göre aktiflik durumu güncelle
+                // KesınKayit = Aktif, Beklemede/Olumsuz = Pasif
+                if (dto.InterviewResult.HasValue)
+                {
+                    var newIsActive = dto.InterviewResult.Value == Domain.Enums.InterviewResult.KesınKayit;
+                    if (user.IsActive != newIsActive)
+                    {
+                        user.IsActive = newIsActive;
+                        userUpdated = true;
+                    }
                 }
 
                 if (userUpdated)
