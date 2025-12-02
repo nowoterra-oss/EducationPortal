@@ -145,6 +145,28 @@ public class TeacherService : ITeacherService
             if (dto.IsAlsoCoach.HasValue)
                 teacher.IsAlsoCoach = dto.IsAlsoCoach.Value;
 
+            // Update extended fields
+            if (dto.Department != null)
+                teacher.Department = dto.Department;
+
+            if (dto.Biography != null)
+                teacher.Biography = dto.Biography;
+
+            if (dto.Education != null)
+                teacher.Education = dto.Education;
+
+            if (dto.Certifications != null)
+                teacher.Certifications = dto.Certifications;
+
+            if (dto.OfficeLocation != null)
+                teacher.OfficeLocation = dto.OfficeLocation;
+
+            if (dto.OfficeHours != null)
+                teacher.OfficeHours = dto.OfficeHours;
+
+            if (dto.HireDate.HasValue)
+                teacher.HireDate = dto.HireDate.Value;
+
             // Update user phone number if provided
             if (!string.IsNullOrEmpty(dto.PhoneNumber))
             {

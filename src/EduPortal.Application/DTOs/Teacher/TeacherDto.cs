@@ -15,4 +15,13 @@ public class TeacherDto
     public string? BranchName { get; set; }
     public bool IsAlsoCoach { get; set; }
     public int? CoachId { get; set; }
+
+    // Extended fields
+    public string? Department { get; set; }
+    public string? Biography { get; set; }
+    public string? Education { get; set; }
+    public string? Certifications { get; set; }
+    public string? OfficeLocation { get; set; }
+    public string? OfficeHours { get; set; }
+    public DateTime? HireDate { get; set; }
 }

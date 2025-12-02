@@ -21,4 +21,25 @@ public class TeacherUpdateDto
 
     [Phone]
     public string? PhoneNumber { get; set; }
+
+    // Extended fields
+    [StringLength(100)]
+    public string? Department { get; set; }
+
+    [StringLength(2000)]
+    public string? Biography { get; set; }
+
+    [StringLength(500)]
+    public string? Education { get; set; }
+
+    [StringLength(500)]
+    public string? Certifications { get; set; }
+
+    [StringLength(100)]
+    public string? OfficeLocation { get; set; }
+
+    [StringLength(100)]
+    public string? OfficeHours { get; set; }
+
+    public DateTime? HireDate { get; set; }
 }

@@ -21,6 +21,27 @@ public class Teacher : BaseEntity
     public bool IsAlsoCoach { get; set; } = false;
     public int? CoachId { get; set; }
 
+    // Extended fields
+    [MaxLength(100)]
+    public string? Department { get; set; }
+
+    [MaxLength(2000)]
+    public string? Biography { get; set; }
+
+    [MaxLength(500)]
+    public string? Education { get; set; }
+
+    [MaxLength(500)]
+    public string? Certifications { get; set; }
+
+    [MaxLength(100)]
+    public string? OfficeLocation { get; set; }
+
+    [MaxLength(100)]
+    public string? OfficeHours { get; set; }
+
+    public DateTime? HireDate { get; set; }
+
     // Navigation Properties
     [ForeignKey(nameof(BranchId))]
     public virtual Branch? Branch { get; set; }
