@@ -24,12 +24,15 @@ public class StudentService : IStudentService
         _mapper = mapper;
     }
 
-    public async Task<ApiResponse<PagedResponse<StudentDto>>> GetAllAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<ApiResponse<PagedResponse<StudentDto>>> GetAllAsync(int pageNumber = 1, int pageSize = 10, bool includeInactive = false)
     {
         try
         {
             var students = await _studentRepository.GetAllAsync();
-            var studentsList = students.ToList();
+            // Filter based on includeInactive parameter (IsActive is on User entity)
+            var studentsList = includeInactive
+                ? students.ToList()
+                : students.Where(s => s.User != null && s.User.IsActive).ToList();
 
             var totalRecords = studentsList.Count;
             var pagedStudents = studentsList
@@ -366,12 +369,16 @@ public class StudentService : IStudentService
         }
     }
 
-    public async Task<ApiResponse<List<StudentDto>>> SearchAsync(string searchTerm)
+    public async Task<ApiResponse<List<StudentDto>>> SearchAsync(string searchTerm, bool includeInactive = false)
     {
         try
         {
             var students = await _studentRepository.SearchStudentsAsync(searchTerm);
-            var studentDtos = _mapper.Map<List<StudentDto>>(students);
+            // Filter based on includeInactive parameter (IsActive is on User entity)
+            var filteredStudents = includeInactive
+                ? students.ToList()
+                : students.Where(s => s.User != null && s.User.IsActive).ToList();
+            var studentDtos = _mapper.Map<List<StudentDto>>(filteredStudents);
 
             return ApiResponse<List<StudentDto>>.SuccessResponse(studentDtos);
         }

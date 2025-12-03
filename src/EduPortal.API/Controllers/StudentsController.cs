@@ -29,6 +29,7 @@ public class StudentsController : ControllerBase
     /// </summary>
     /// <param name="pageNumber">Page number (default: 1)</param>
     /// <param name="pageSize">Page size (default: 10)</param>
+    /// <param name="includeInactive">Include inactive students (default: false)</param>
     /// <returns>Paginated list of students</returns>
     /// <response code="200">Students retrieved successfully</response>
     /// <response code="401">Unauthorized</response>
@@ -40,11 +41,12 @@ public class StudentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<PagedResponse<StudentDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] bool includeInactive = false)
     {
         try
         {
-            var result = await _studentService.GetAllAsync(pageNumber, pageSize);
+            var result = await _studentService.GetAllAsync(pageNumber, pageSize, includeInactive);
             return result.Success ? Ok(result) : BadRequest(result);
         }
         catch (Exception ex)
@@ -92,6 +94,7 @@ public class StudentsController : ControllerBase
     /// <param name="term">Search term</param>
     /// <param name="pageNumber">Page number (default: 1)</param>
     /// <param name="pageSize">Page size (default: 10)</param>
+    /// <param name="includeInactive">Include inactive students (default: false)</param>
     /// <returns>Matching students</returns>
     /// <response code="200">Search completed successfully</response>
     /// <response code="401">Unauthorized</response>
@@ -102,11 +105,12 @@ public class StudentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<PagedResponse<StudentDto>>>> Search(
         [FromQuery] string term,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] bool includeInactive = false)
     {
         try
         {
-            var result = await _studentService.SearchAsync(term);
+            var result = await _studentService.SearchAsync(term, includeInactive);
             var pagedResponse = new PagedResponse<StudentDto>(
                 result.Data ?? new List<StudentDto>(),
                 result.Data?.Count ?? 0,
