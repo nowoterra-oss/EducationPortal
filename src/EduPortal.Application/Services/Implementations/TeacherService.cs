@@ -24,13 +24,15 @@ public class TeacherService : ITeacherService
         _mapper = mapper;
     }
 
-    public async Task<ApiResponse<PagedResponse<TeacherDto>>> GetAllAsync(int pageNumber = 1, int pageSize = 10)
+    public async Task<ApiResponse<PagedResponse<TeacherDto>>> GetAllAsync(int pageNumber = 1, int pageSize = 10, bool includeInactive = false)
     {
         try
         {
             var teachers = await _teacherRepository.GetAllAsync();
-            // Filter only active teachers (soft delete support)
-            var teachersList = teachers.Where(t => t.IsActive).ToList();
+            // Filter based on includeInactive parameter
+            var teachersList = includeInactive
+                ? teachers.ToList()
+                : teachers.Where(t => t.IsActive).ToList();
 
             var totalRecords = teachersList.Count;
             var pagedTeachers = teachersList
@@ -225,14 +227,16 @@ public class TeacherService : ITeacherService
         }
     }
 
-    public async Task<ApiResponse<List<TeacherDto>>> SearchAsync(string searchTerm)
+    public async Task<ApiResponse<List<TeacherDto>>> SearchAsync(string searchTerm, bool includeInactive = false)
     {
         try
         {
             var teachers = await _teacherRepository.SearchTeachersAsync(searchTerm);
-            // Filter only active teachers
-            var activeTeachers = teachers.Where(t => t.IsActive).ToList();
-            var teacherDtos = _mapper.Map<List<TeacherDto>>(activeTeachers);
+            // Filter based on includeInactive parameter
+            var filteredTeachers = includeInactive
+                ? teachers.ToList()
+                : teachers.Where(t => t.IsActive).ToList();
+            var teacherDtos = _mapper.Map<List<TeacherDto>>(filteredTeachers);
 
             return ApiResponse<List<TeacherDto>>.SuccessResponse(teacherDtos);
         }
