@@ -59,4 +59,7 @@ public class TeacherCreateDto
     public string? OfficeHours { get; set; }
 
     public DateTime? HireDate { get; set; }
+
+    [StringLength(500)]
+    public string? ProfilePhotoUrl { get; set; }
 }

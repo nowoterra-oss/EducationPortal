@@ -31,4 +31,5 @@ public class TeacherDto
     public string? OfficeLocation { get; set; }
     public string? OfficeHours { get; set; }
     public DateTime? HireDate { get; set; }
+    public string? ProfilePhotoUrl { get; set; }
 }

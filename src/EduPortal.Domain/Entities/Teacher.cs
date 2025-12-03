@@ -52,6 +52,9 @@ public class Teacher : BaseEntity
 
     public DateTime? HireDate { get; set; }
 
+    [MaxLength(500)]
+    public string? ProfilePhotoUrl { get; set; }
+
     // Navigation Properties
     [ForeignKey(nameof(BranchId))]
     public virtual Branch? Branch { get; set; }

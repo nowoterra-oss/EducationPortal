@@ -178,6 +178,9 @@ public class TeacherService : ITeacherService
             if (dto.HireDate.HasValue)
                 teacher.HireDate = dto.HireDate.Value;
 
+            if (dto.ProfilePhotoUrl != null)
+                teacher.ProfilePhotoUrl = dto.ProfilePhotoUrl;
+
             // Update user phone number if provided
             if (!string.IsNullOrEmpty(dto.PhoneNumber))
             {
