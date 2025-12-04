@@ -875,6 +875,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Counselor>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Course>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Homework>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<AcademicDevelopmentPlan>().HasQueryFilter(e => !e.IsDeleted);
 
         // Configure decimal precision
         foreach (var property in builder.Model.GetEntityTypes()
