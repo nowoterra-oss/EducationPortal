@@ -123,22 +123,29 @@ public class AGPService : IAGPService
         // Periods güncelle (varsa)
         if (dto.Periods != null)
         {
-            // 1. Mevcut periods ve ilişkili verileri veritabanından sil
-            var existingPeriods = await _context.AgpPeriods
+            // 1. Mevcut periods'ların ID'lerini al
+            var existingPeriodIds = await _context.AgpPeriods
                 .Where(p => p.AgpId == id)
-                .Include(p => p.Milestones)
-                .Include(p => p.Activities)
+                .Select(p => p.Id)
                 .ToListAsync();
 
-            foreach (var existingPeriod in existingPeriods)
+            // 2. İlişkili verileri sil (raw SQL benzeri yaklaşım)
+            if (existingPeriodIds.Any())
             {
-                _context.AgpTimelineMilestones.RemoveRange(existingPeriod.Milestones);
-                _context.AgpActivities.RemoveRange(existingPeriod.Activities);
-            }
-            _context.AgpPeriods.RemoveRange(existingPeriods);
-            await _context.SaveChangesAsync();
+                await _context.AgpActivities
+                    .Where(a => existingPeriodIds.Contains(a.AgpPeriodId))
+                    .ExecuteDeleteAsync();
 
-            // 2. Yeni periods'ları doğrudan DbSet'e ekle
+                await _context.AgpTimelineMilestones
+                    .Where(m => existingPeriodIds.Contains(m.AgpPeriodId))
+                    .ExecuteDeleteAsync();
+
+                await _context.AgpPeriods
+                    .Where(p => p.AgpId == id)
+                    .ExecuteDeleteAsync();
+            }
+
+            // 3. Yeni periods'ları ekle
             foreach (var periodDto in dto.Periods)
             {
                 var period = new AgpPeriod
