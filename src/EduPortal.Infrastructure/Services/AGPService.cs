@@ -74,21 +74,21 @@ public class AGPService : IAGPService
         {
             agp.Periods = dto.Periods.Select(p => new AgpPeriod
             {
-                Title = p.Title,
-                StartDate = DateTime.Parse(p.StartDate),
-                EndDate = DateTime.Parse(p.EndDate),
+                Title = p.Title ?? string.Empty,
+                StartDate = DateTime.TryParse(p.StartDate, out var startDate) ? startDate : DateTime.UtcNow,
+                EndDate = DateTime.TryParse(p.EndDate, out var endDate) ? endDate : DateTime.UtcNow,
                 Color = p.Color,
                 Order = p.Order,
                 Milestones = p.Milestones?.Select(m => new AgpTimelineMilestone
                 {
-                    Title = m.Title,
-                    Date = DateTime.Parse(m.Date),
+                    Title = m.Title ?? string.Empty,
+                    Date = DateTime.TryParse(m.Date, out var milestoneDate) ? milestoneDate : DateTime.UtcNow,
                     Color = m.Color,
-                    Type = m.Type
+                    Type = string.IsNullOrWhiteSpace(m.Type) ? "exam" : m.Type
                 }).ToList() ?? new List<AgpTimelineMilestone>(),
                 Activities = p.Activities?.Select(a => new AgpActivity
                 {
-                    Title = a.Title,
+                    Title = a.Title ?? string.Empty,
                     HoursPerWeek = a.HoursPerWeek,
                     Notes = a.Notes
                 }).ToList() ?? new List<AgpActivity>()
@@ -149,21 +149,21 @@ public class AGPService : IAGPService
                 var period = new AgpPeriod
                 {
                     AgpId = id,
-                    Title = periodDto.Title,
-                    StartDate = DateTime.Parse(periodDto.StartDate),
-                    EndDate = DateTime.Parse(periodDto.EndDate),
+                    Title = periodDto.Title ?? string.Empty,
+                    StartDate = DateTime.TryParse(periodDto.StartDate, out var startDate) ? startDate : DateTime.UtcNow,
+                    EndDate = DateTime.TryParse(periodDto.EndDate, out var endDate) ? endDate : DateTime.UtcNow,
                     Color = periodDto.Color,
                     Order = periodDto.Order,
                     Milestones = periodDto.Milestones?.Select(m => new AgpTimelineMilestone
                     {
-                        Title = m.Title,
-                        Date = DateTime.Parse(m.Date),
+                        Title = m.Title ?? string.Empty,
+                        Date = DateTime.TryParse(m.Date, out var milestoneDate) ? milestoneDate : DateTime.UtcNow,
                         Color = m.Color,
-                        Type = m.Type
+                        Type = string.IsNullOrWhiteSpace(m.Type) ? "exam" : m.Type
                     }).ToList() ?? new List<AgpTimelineMilestone>(),
                     Activities = periodDto.Activities?.Select(a => new AgpActivity
                     {
-                        Title = a.Title,
+                        Title = a.Title ?? string.Empty,
                         HoursPerWeek = a.HoursPerWeek,
                         Notes = a.Notes
                     }).ToList() ?? new List<AgpActivity>()
