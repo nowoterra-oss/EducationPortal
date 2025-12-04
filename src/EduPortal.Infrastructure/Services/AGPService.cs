@@ -123,22 +123,27 @@ public class AGPService : IAGPService
         // Periods güncelle (varsa)
         if (dto.Periods != null)
         {
-            // 1. Eski periods'ları sil (cascade ile milestones ve activities de silinecek)
-            if (agp.Periods != null && agp.Periods.Any())
+            // 1. Mevcut periods ve ilişkili verileri veritabanından sil
+            var existingPeriods = await _context.AgpPeriods
+                .Where(p => p.AgpId == id)
+                .Include(p => p.Milestones)
+                .Include(p => p.Activities)
+                .ToListAsync();
+
+            foreach (var existingPeriod in existingPeriods)
             {
-                _context.AgpPeriods.RemoveRange(agp.Periods);
-                await _context.SaveChangesAsync(); // Önce silme işlemini kaydet
+                _context.AgpTimelineMilestones.RemoveRange(existingPeriod.Milestones);
+                _context.AgpActivities.RemoveRange(existingPeriod.Activities);
             }
+            _context.AgpPeriods.RemoveRange(existingPeriods);
+            await _context.SaveChangesAsync();
 
-            // 2. Navigation property'yi temizle
-            agp.Periods = new List<AgpPeriod>();
-
-            // 3. Yeni periods'ları ekle
+            // 2. Yeni periods'ları doğrudan DbSet'e ekle
             foreach (var periodDto in dto.Periods)
             {
                 var period = new AgpPeriod
                 {
-                    AgpId = agp.Id,
+                    AgpId = id,
                     Title = periodDto.Title,
                     StartDate = DateTime.Parse(periodDto.StartDate),
                     EndDate = DateTime.Parse(periodDto.EndDate),
@@ -158,7 +163,7 @@ public class AGPService : IAGPService
                         Notes = a.Notes
                     }).ToList() ?? new List<AgpActivity>()
                 };
-                agp.Periods.Add(period);
+                _context.AgpPeriods.Add(period);
             }
         }
 
