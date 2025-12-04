@@ -123,31 +123,43 @@ public class AGPService : IAGPService
         // Periods güncelle (varsa)
         if (dto.Periods != null)
         {
-            // Eski periods'ları sil (cascade ile milestones ve activities de silinecek)
-            _context.AgpPeriods.RemoveRange(agp.Periods);
-
-            // Yeni periods'ları ekle
-            agp.Periods = dto.Periods.Select(p => new AgpPeriod
+            // 1. Eski periods'ları sil (cascade ile milestones ve activities de silinecek)
+            if (agp.Periods != null && agp.Periods.Any())
             {
-                Title = p.Title,
-                StartDate = DateTime.Parse(p.StartDate),
-                EndDate = DateTime.Parse(p.EndDate),
-                Color = p.Color,
-                Order = p.Order,
-                Milestones = p.Milestones?.Select(m => new AgpTimelineMilestone
+                _context.AgpPeriods.RemoveRange(agp.Periods);
+                await _context.SaveChangesAsync(); // Önce silme işlemini kaydet
+            }
+
+            // 2. Navigation property'yi temizle
+            agp.Periods = new List<AgpPeriod>();
+
+            // 3. Yeni periods'ları ekle
+            foreach (var periodDto in dto.Periods)
+            {
+                var period = new AgpPeriod
                 {
-                    Title = m.Title,
-                    Date = DateTime.Parse(m.Date),
-                    Color = m.Color,
-                    Type = m.Type
-                }).ToList() ?? new List<AgpTimelineMilestone>(),
-                Activities = p.Activities?.Select(a => new AgpActivity
-                {
-                    Title = a.Title,
-                    HoursPerWeek = a.HoursPerWeek,
-                    Notes = a.Notes
-                }).ToList() ?? new List<AgpActivity>()
-            }).ToList();
+                    AgpId = agp.Id,
+                    Title = periodDto.Title,
+                    StartDate = DateTime.Parse(periodDto.StartDate),
+                    EndDate = DateTime.Parse(periodDto.EndDate),
+                    Color = periodDto.Color,
+                    Order = periodDto.Order,
+                    Milestones = periodDto.Milestones?.Select(m => new AgpTimelineMilestone
+                    {
+                        Title = m.Title,
+                        Date = DateTime.Parse(m.Date),
+                        Color = m.Color,
+                        Type = m.Type
+                    }).ToList() ?? new List<AgpTimelineMilestone>(),
+                    Activities = periodDto.Activities?.Select(a => new AgpActivity
+                    {
+                        Title = a.Title,
+                        HoursPerWeek = a.HoursPerWeek,
+                        Notes = a.Notes
+                    }).ToList() ?? new List<AgpActivity>()
+                };
+                agp.Periods.Add(period);
+            }
         }
 
         await _context.SaveChangesAsync();
