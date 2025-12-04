@@ -143,6 +143,11 @@ public class AGPService : IAGPService
                 await _context.AgpPeriods
                     .Where(p => p.AgpId == id)
                     .ExecuteDeleteAsync();
+
+                // 2.1. Tracked entity'leri temizle - bu kritik!
+                // ExecuteDeleteAsync veritabanından siler ama change tracker'dan silmez
+                // Bu yüzden SaveChangesAsync çağrıldığında eski period'lar tekrar ekleniyor
+                agp.Periods.Clear();
             }
 
             // 3. Yeni periods'ları ekle
