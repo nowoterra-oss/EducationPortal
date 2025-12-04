@@ -80,4 +80,9 @@ public class StudentUpdateDto
     /// </summary>
     [StringLength(500)]
     public string? ProfilePhotoUrl { get; set; }
+
+    /// <summary>
+    /// Öğrenci aktif/pasif durumu
+    /// </summary>
+    public bool? IsActive { get; set; }
 }

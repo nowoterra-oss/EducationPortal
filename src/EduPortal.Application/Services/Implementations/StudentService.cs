@@ -314,6 +314,13 @@ public class StudentService : IStudentService
                     }
                 }
 
+                // Doğrudan IsActive güncellemesi (InterviewResult'tan bağımsız manuel kontrol)
+                if (dto.IsActive.HasValue)
+                {
+                    user.IsActive = dto.IsActive.Value;
+                    userUpdated = true;
+                }
+
                 if (userUpdated)
                 {
                     await _userManager.UpdateAsync(user);
