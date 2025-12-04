@@ -36,7 +36,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     // AGP Timeline
     public DbSet<AgpPeriod> AgpPeriods => Set<AgpPeriod>();
-    public DbSet<AgpMilestone> AgpMilestones => Set<AgpMilestone>();
+    public DbSet<AgpTimelineMilestone> AgpTimelineMilestones => Set<AgpTimelineMilestone>();
     public DbSet<AgpActivity> AgpActivities => Set<AgpActivity>();
     public DbSet<StudentCounselorAssignment> StudentCounselorAssignments => Set<StudentCounselorAssignment>();
     public DbSet<CounselingMeeting> CounselingMeetings => Set<CounselingMeeting>();
@@ -209,7 +209,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
-        builder.Entity<AgpMilestone>(entity =>
+        builder.Entity<AgpTimelineMilestone>(entity =>
         {
             entity.HasOne(m => m.Period)
                 .WithMany(p => p.Milestones)

@@ -79,13 +79,13 @@ public class AGPService : IAGPService
                 EndDate = DateTime.Parse(p.EndDate),
                 Color = p.Color,
                 Order = p.Order,
-                Milestones = p.Milestones?.Select(m => new Domain.Entities.AgpMilestone
+                Milestones = p.Milestones?.Select(m => new AgpTimelineMilestone
                 {
                     Title = m.Title,
                     Date = DateTime.Parse(m.Date),
                     Color = m.Color,
                     Type = m.Type
-                }).ToList() ?? new List<Domain.Entities.AgpMilestone>(),
+                }).ToList() ?? new List<AgpTimelineMilestone>(),
                 Activities = p.Activities?.Select(a => new AgpActivity
                 {
                     Title = a.Title,
@@ -134,13 +134,13 @@ public class AGPService : IAGPService
                 EndDate = DateTime.Parse(p.EndDate),
                 Color = p.Color,
                 Order = p.Order,
-                Milestones = p.Milestones?.Select(m => new Domain.Entities.AgpMilestone
+                Milestones = p.Milestones?.Select(m => new AgpTimelineMilestone
                 {
                     Title = m.Title,
                     Date = DateTime.Parse(m.Date),
                     Color = m.Color,
                     Type = m.Type
-                }).ToList() ?? new List<Domain.Entities.AgpMilestone>(),
+                }).ToList() ?? new List<AgpTimelineMilestone>(),
                 Activities = p.Activities?.Select(a => new AgpActivity
                 {
                     Title = a.Title,

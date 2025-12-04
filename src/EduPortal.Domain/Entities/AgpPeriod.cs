@@ -31,7 +31,7 @@ public class AgpPeriod : BaseEntity
     [ForeignKey(nameof(AgpId))]
     public virtual AcademicDevelopmentPlan Agp { get; set; } = null!;
 
-    public virtual ICollection<AgpMilestone> Milestones { get; set; } = new List<AgpMilestone>();
+    public virtual ICollection<AgpTimelineMilestone> Milestones { get; set; } = new List<AgpTimelineMilestone>();
 
     public virtual ICollection<AgpActivity> Activities { get; set; } = new List<AgpActivity>();
 }

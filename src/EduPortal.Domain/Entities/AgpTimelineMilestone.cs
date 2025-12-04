@@ -7,7 +7,7 @@ namespace EduPortal.Domain.Entities;
 /// <summary>
 /// AGP Timeline sınav/hedef entity'si (örn: "SAT Ağustos", "IELTS 29 Ağu.")
 /// </summary>
-public class AgpMilestone : BaseEntity
+public class AgpTimelineMilestone : BaseEntity
 {
     [Required]
     public int AgpPeriodId { get; set; }
