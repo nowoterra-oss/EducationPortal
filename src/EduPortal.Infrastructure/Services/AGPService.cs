@@ -103,11 +103,9 @@ public class AGPService : IAGPService
 
     public async Task<AGPDto> UpdateAsync(int id, UpdateAGPDto dto)
     {
+        // NOT: Periods'ı Include etmiyoruz çünkü zaten silip yeniden oluşturacağız
+        // Bu sayede tracked entity sorunu yaşamıyoruz
         var agp = await _context.AcademicDevelopmentPlans
-            .Include(a => a.Periods)
-                .ThenInclude(p => p.Milestones)
-            .Include(a => a.Periods)
-                .ThenInclude(p => p.Activities)
             .FirstOrDefaultAsync(a => a.Id == id);
 
         if (agp == null)
@@ -129,7 +127,7 @@ public class AGPService : IAGPService
                 .Select(p => p.Id)
                 .ToListAsync();
 
-            // 2. İlişkili verileri sil (raw SQL benzeri yaklaşım)
+            // 2. İlişkili verileri sil (ExecuteDeleteAsync - bypass change tracker)
             if (existingPeriodIds.Any())
             {
                 await _context.AgpActivities
@@ -143,11 +141,6 @@ public class AGPService : IAGPService
                 await _context.AgpPeriods
                     .Where(p => p.AgpId == id)
                     .ExecuteDeleteAsync();
-
-                // 2.1. Tracked entity'leri temizle - bu kritik!
-                // ExecuteDeleteAsync veritabanından siler ama change tracker'dan silmez
-                // Bu yüzden SaveChangesAsync çağrıldığında eski period'lar tekrar ekleniyor
-                agp.Periods.Clear();
             }
 
             // 3. Yeni periods'ları ekle
