@@ -18,6 +18,11 @@ public class AGPDto
     public int OverallProgress { get; set; }
     public List<AGPGoalDto> Milestones { get; set; } = new();
 
+    /// <summary>
+    /// Timeline dönemleri
+    /// </summary>
+    public List<AgpPeriodDto> Periods { get; set; } = new();
+
     private static string GetStatusName(AGPStatus status) => status switch
     {
         AGPStatus.Taslak => "Taslak",

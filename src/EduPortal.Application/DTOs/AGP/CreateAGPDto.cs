@@ -22,4 +22,9 @@ public class CreateAGPDto
     public string? PlanDocumentUrl { get; set; }
 
     public AGPStatus Status { get; set; } = AGPStatus.Taslak;
+
+    /// <summary>
+    /// Timeline dönemleri
+    /// </summary>
+    public List<AgpPeriodDto>? Periods { get; set; }
 }

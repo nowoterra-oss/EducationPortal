@@ -30,4 +30,7 @@ public class AcademicDevelopmentPlan : BaseAuditableEntity
     public virtual Student Student { get; set; } = null!;
 
     public virtual ICollection<AGPMilestone> Milestones { get; set; } = new List<AGPMilestone>();
+
+    // Timeline periods
+    public virtual ICollection<AgpPeriod> Periods { get; set; } = new List<AgpPeriod>();
 }

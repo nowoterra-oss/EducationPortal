@@ -22,6 +22,10 @@ public class AGPService : IAGPService
             .Include(a => a.Student)
                 .ThenInclude(s => s.User)
             .Include(a => a.Milestones)
+            .Include(a => a.Periods)
+                .ThenInclude(p => p.Milestones)
+            .Include(a => a.Periods)
+                .ThenInclude(p => p.Activities)
             .AsNoTracking();
 
         var totalCount = await query.CountAsync();
@@ -42,6 +46,10 @@ public class AGPService : IAGPService
             .Include(a => a.Student)
                 .ThenInclude(s => s.User)
             .Include(a => a.Milestones)
+            .Include(a => a.Periods.OrderBy(p => p.Order))
+                .ThenInclude(p => p.Milestones)
+            .Include(a => a.Periods)
+                .ThenInclude(p => p.Activities)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id);
 
@@ -60,6 +68,32 @@ public class AGPService : IAGPService
             Status = dto.Status
         };
 
+        // Timeline periods ekleme
+        if (dto.Periods != null && dto.Periods.Any())
+        {
+            agp.Periods = dto.Periods.Select(p => new AgpPeriod
+            {
+                Title = p.Title,
+                StartDate = DateTime.Parse(p.StartDate),
+                EndDate = DateTime.Parse(p.EndDate),
+                Color = p.Color,
+                Order = p.Order,
+                Milestones = p.Milestones?.Select(m => new Domain.Entities.AgpMilestone
+                {
+                    Title = m.Title,
+                    Date = DateTime.Parse(m.Date),
+                    Color = m.Color,
+                    Type = m.Type
+                }).ToList() ?? new List<Domain.Entities.AgpMilestone>(),
+                Activities = p.Activities?.Select(a => new AgpActivity
+                {
+                    Title = a.Title,
+                    HoursPerWeek = a.HoursPerWeek,
+                    Notes = a.Notes
+                }).ToList() ?? new List<AgpActivity>()
+            }).ToList();
+        }
+
         _context.AcademicDevelopmentPlans.Add(agp);
         await _context.SaveChangesAsync();
 
@@ -68,16 +102,52 @@ public class AGPService : IAGPService
 
     public async Task<AGPDto> UpdateAsync(int id, UpdateAGPDto dto)
     {
-        var agp = await _context.AcademicDevelopmentPlans.FindAsync(id);
+        var agp = await _context.AcademicDevelopmentPlans
+            .Include(a => a.Periods)
+                .ThenInclude(p => p.Milestones)
+            .Include(a => a.Periods)
+                .ThenInclude(p => p.Activities)
+            .FirstOrDefaultAsync(a => a.Id == id);
 
         if (agp == null)
             throw new KeyNotFoundException("AGP bulunamadı");
 
+        // Mevcut alanları güncelle
         agp.AcademicYear = dto.AcademicYear;
         agp.StartDate = dto.StartDate;
         agp.EndDate = dto.EndDate;
         agp.PlanDocumentUrl = dto.PlanDocumentUrl;
         agp.Status = dto.Status;
+
+        // Periods güncelle (varsa)
+        if (dto.Periods != null)
+        {
+            // Eski periods'ları sil (cascade ile milestones ve activities de silinecek)
+            _context.AgpPeriods.RemoveRange(agp.Periods);
+
+            // Yeni periods'ları ekle
+            agp.Periods = dto.Periods.Select(p => new AgpPeriod
+            {
+                Title = p.Title,
+                StartDate = DateTime.Parse(p.StartDate),
+                EndDate = DateTime.Parse(p.EndDate),
+                Color = p.Color,
+                Order = p.Order,
+                Milestones = p.Milestones?.Select(m => new Domain.Entities.AgpMilestone
+                {
+                    Title = m.Title,
+                    Date = DateTime.Parse(m.Date),
+                    Color = m.Color,
+                    Type = m.Type
+                }).ToList() ?? new List<Domain.Entities.AgpMilestone>(),
+                Activities = p.Activities?.Select(a => new AgpActivity
+                {
+                    Title = a.Title,
+                    HoursPerWeek = a.HoursPerWeek,
+                    Notes = a.Notes
+                }).ToList() ?? new List<AgpActivity>()
+            }).ToList();
+        }
 
         await _context.SaveChangesAsync();
 
@@ -88,13 +158,15 @@ public class AGPService : IAGPService
     {
         var agp = await _context.AcademicDevelopmentPlans
             .Include(a => a.Milestones)
+            .Include(a => a.Periods)
             .FirstOrDefaultAsync(a => a.Id == id);
 
         if (agp == null)
             return false;
 
-        // Remove milestones first
+        // Remove milestones and periods first (cascade will handle nested entities)
         _context.AGPMilestones.RemoveRange(agp.Milestones);
+        _context.AgpPeriods.RemoveRange(agp.Periods);
         _context.AcademicDevelopmentPlans.Remove(agp);
         await _context.SaveChangesAsync();
 
@@ -107,6 +179,10 @@ public class AGPService : IAGPService
             .Include(a => a.Student)
                 .ThenInclude(s => s.User)
             .Include(a => a.Milestones)
+            .Include(a => a.Periods.OrderBy(p => p.Order))
+                .ThenInclude(p => p.Milestones)
+            .Include(a => a.Periods)
+                .ThenInclude(p => p.Activities)
             .Where(a => a.StudentId == studentId)
             .OrderByDescending(a => a.StartDate)
             .AsNoTracking()
@@ -257,7 +333,36 @@ public class AGPService : IAGPService
             MilestoneCount = milestones.Count,
             CompletedMilestoneCount = completedCount,
             OverallProgress = overallProgress,
-            Milestones = milestones.Select(MapToGoalDto).ToList()
+            Milestones = milestones.Select(MapToGoalDto).ToList(),
+            Periods = agp.Periods?.OrderBy(p => p.Order).Select(MapToPeriodDto).ToList() ?? new List<AgpPeriodDto>()
+        };
+    }
+
+    private static AgpPeriodDto MapToPeriodDto(AgpPeriod period)
+    {
+        return new AgpPeriodDto
+        {
+            Id = period.Id,
+            Title = period.Title,
+            StartDate = period.StartDate.ToString("yyyy-MM-dd"),
+            EndDate = period.EndDate.ToString("yyyy-MM-dd"),
+            Color = period.Color,
+            Order = period.Order,
+            Milestones = period.Milestones?.Select(m => new AgpMilestoneDto
+            {
+                Id = m.Id,
+                Title = m.Title,
+                Date = m.Date.ToString("yyyy-MM-dd"),
+                Color = m.Color,
+                Type = m.Type
+            }).ToList() ?? new List<AgpMilestoneDto>(),
+            Activities = period.Activities?.Select(a => new AgpActivityDto
+            {
+                Id = a.Id,
+                Title = a.Title,
+                HoursPerWeek = a.HoursPerWeek,
+                Notes = a.Notes
+            }).ToList() ?? new List<AgpActivityDto>()
         };
     }
 

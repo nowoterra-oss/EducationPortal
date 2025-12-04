@@ -33,6 +33,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ClassPerformance> ClassPerformances => Set<ClassPerformance>();
     public DbSet<AcademicDevelopmentPlan> AcademicDevelopmentPlans => Set<AcademicDevelopmentPlan>();
     public DbSet<AGPMilestone> AGPMilestones => Set<AGPMilestone>();
+
+    // AGP Timeline
+    public DbSet<AgpPeriod> AgpPeriods => Set<AgpPeriod>();
+    public DbSet<AgpMilestone> AgpMilestones => Set<AgpMilestone>();
+    public DbSet<AgpActivity> AgpActivities => Set<AgpActivity>();
     public DbSet<StudentCounselorAssignment> StudentCounselorAssignments => Set<StudentCounselorAssignment>();
     public DbSet<CounselingMeeting> CounselingMeetings => Set<CounselingMeeting>();
     public DbSet<StudentDocument> StudentDocuments => Set<StudentDocument>();
@@ -190,6 +195,34 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(s => s.AcademicDevelopmentPlans)
                 .HasForeignKey(adp => adp.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ===============================================
+        // AGP TIMELINE RELATIONSHIPS
+        // ===============================================
+
+        builder.Entity<AgpPeriod>(entity =>
+        {
+            entity.HasOne(p => p.Agp)
+                .WithMany(a => a.Periods)
+                .HasForeignKey(p => p.AgpId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AgpMilestone>(entity =>
+        {
+            entity.HasOne(m => m.Period)
+                .WithMany(p => p.Milestones)
+                .HasForeignKey(m => m.AgpPeriodId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<AgpActivity>(entity =>
+        {
+            entity.HasOne(a => a.Period)
+                .WithMany(p => p.Activities)
+                .HasForeignKey(a => a.AgpPeriodId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<UniversityApplication>(entity =>

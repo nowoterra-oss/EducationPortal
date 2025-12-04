@@ -20,4 +20,9 @@ public class UpdateAGPDto
 
     [Required(ErrorMessage = "Durum belirtilmelidir")]
     public AGPStatus Status { get; set; }
+
+    /// <summary>
+    /// Timeline dönemleri
+    /// </summary>
+    public List<AgpPeriodDto>? Periods { get; set; }
 }
