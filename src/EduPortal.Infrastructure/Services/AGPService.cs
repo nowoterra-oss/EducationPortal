@@ -30,12 +30,13 @@ public class AGPService : IAGPService
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
+        var entities = await query
             .OrderByDescending(a => a.CreatedAt)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(a => MapToDto(a))
             .ToListAsync();
+
+        var items = entities.Select(MapToDto).ToList();
 
         return (items, totalCount);
     }
