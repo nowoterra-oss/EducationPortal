@@ -1,6 +1,7 @@
 using AutoMapper;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Auth;
+using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using EduPortal.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
@@ -18,17 +19,23 @@ public class AuthService : IAuthService
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration;
+    private readonly IStudentRepository _studentRepository;
+    private readonly ITeacherRepository _teacherRepository;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IMapper mapper,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IStudentRepository studentRepository,
+        ITeacherRepository teacherRepository)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _mapper = mapper;
         _configuration = configuration;
+        _studentRepository = studentRepository;
+        _teacherRepository = teacherRepository;
     }
 
     public async Task<ApiResponse<LoginResponseDto>> LoginAsync(LoginDto loginDto)
@@ -59,6 +66,9 @@ public class AuthService : IAuthService
             var userDto = _mapper.Map<UserDto>(user);
             var roles = await _userManager.GetRolesAsync(user);
             userDto.Roles = roles.ToList();
+
+            // Rol bazlı ID'leri doldur
+            await PopulateRoleBasedIdsAsync(userDto, user.Id, roles);
 
             var token = GenerateJwtToken(userDto);
             var expiresAt = DateTime.UtcNow.AddHours(
@@ -175,12 +185,40 @@ public class AuthService : IAuthService
             var roles = await _userManager.GetRolesAsync(user);
             userDto.Roles = roles.ToList();
 
+            // Rol bazlı ID'leri doldur
+            await PopulateRoleBasedIdsAsync(userDto, userId, roles);
+
             return ApiResponse<UserDto>.SuccessResponse(userDto);
         }
         catch (Exception ex)
         {
             return ApiResponse<UserDto>.ErrorResponse($"Hata: {ex.Message}");
         }
+    }
+
+    private async Task PopulateRoleBasedIdsAsync(UserDto userDto, string userId, IList<string> roles)
+    {
+        // Öğrenci kontrolü
+        if (roles.Contains("Ogrenci") || roles.Contains("Student"))
+        {
+            var student = await _studentRepository.GetByUserIdAsync(userId);
+            if (student != null)
+            {
+                userDto.StudentId = student.Id;
+            }
+        }
+
+        // Öğretmen kontrolü
+        if (roles.Contains("Ogretmen") || roles.Contains("Teacher"))
+        {
+            var teacher = await _teacherRepository.GetByUserIdAsync(userId);
+            if (teacher != null)
+            {
+                userDto.TeacherId = teacher.Id;
+            }
+        }
+
+        // Admin için tüm ID'ler null kalabilir - Admin her şeye erişebilir
     }
 
     public string GenerateJwtToken(UserDto user)
@@ -202,6 +240,24 @@ public class AuthService : IAuthService
         foreach (var role in user.Roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        // Add role-based IDs to claims
+        if (user.StudentId.HasValue)
+        {
+            claims.Add(new Claim("StudentId", user.StudentId.Value.ToString()));
+        }
+        if (user.TeacherId.HasValue)
+        {
+            claims.Add(new Claim("TeacherId", user.TeacherId.Value.ToString()));
+        }
+        if (user.ParentId.HasValue)
+        {
+            claims.Add(new Claim("ParentId", user.ParentId.Value.ToString()));
+        }
+        if (user.CounselorId.HasValue)
+        {
+            claims.Add(new Claim("CounselorId", user.CounselorId.Value.ToString()));
         }
 
         var token = new JwtSecurityToken(

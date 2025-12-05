@@ -12,4 +12,10 @@ public class UserDto
     public List<string> Roles { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
+
+    // Rol bazlı ID'ler - Frontend için gerekli
+    public int? StudentId { get; set; }
+    public int? TeacherId { get; set; }
+    public int? ParentId { get; set; }
+    public int? CounselorId { get; set; }
 }
