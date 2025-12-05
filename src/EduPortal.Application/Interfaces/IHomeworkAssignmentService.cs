@@ -27,6 +27,10 @@ public interface IHomeworkAssignmentService
     // Ödev Değerlendirme
     Task<ApiResponse<HomeworkAssignmentDto>> GradeAssignmentAsync(int teacherId, GradeHomeworkDto dto);
 
+    // Ödev Teslimi
+    Task<ApiResponse<HomeworkAssignmentDto>> SubmitAssignmentAsync(int assignmentId, int studentId, SubmitHomeworkDto dto);
+    Task<ApiResponse<FileUploadResultDto>> UploadSubmissionFileAsync(int assignmentId, int studentId, Stream fileStream, string fileName, string contentType);
+
     // Performans Analizi
     Task<ApiResponse<StudentHomeworkPerformanceDto>> GetStudentPerformanceAsync(int studentId, DateTime? startDate, DateTime? endDate);
     Task<ApiResponse<HomeworkPerformanceChartDto>> GetPerformanceChartDataAsync(int studentId, int months = 6);

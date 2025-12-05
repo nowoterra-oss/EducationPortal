@@ -173,6 +173,35 @@ public class HomeworkAssignmentsController : ControllerBase
     }
 
     /// <summary>
+    /// Ödev teslim et
+    /// </summary>
+    [HttpPost("{id}/submit")]
+    public async Task<ActionResult<ApiResponse<HomeworkAssignmentDto>>> SubmitAssignment(
+        int id, [FromBody] SubmitHomeworkDto dto)
+    {
+        var studentId = GetCurrentStudentId();
+        var result = await _service.SubmitAssignmentAsync(id, studentId, dto);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>
+    /// Ödev için dosya yükle
+    /// </summary>
+    [HttpPost("{id}/upload")]
+    [RequestSizeLimit(10 * 1024 * 1024)] // 10MB
+    public async Task<ActionResult<ApiResponse<FileUploadResultDto>>> UploadFile(
+        int id, IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(ApiResponse<FileUploadResultDto>.ErrorResponse("Dosya seçilmedi"));
+
+        var studentId = GetCurrentStudentId();
+        using var stream = file.OpenReadStream();
+        var result = await _service.UploadSubmissionFileAsync(id, studentId, stream, file.FileName, file.ContentType);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>
     /// Hatırlatma gönder (manuel tetikleme)
     /// </summary>
     [HttpPost("send-reminders")]

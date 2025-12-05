@@ -19,11 +19,33 @@ public class HomeworkAssignmentDto
     public DateTime? ViewedAt { get; set; }
     public string Status { get; set; } = string.Empty;
     public int CompletionPercentage { get; set; }
+
+    // Öğretmenin yüklediği dosya (Homework'tan)
+    public string? AttachmentUrl { get; set; }
+
+    // Öğrenci teslimi
+    public string? SubmissionText { get; set; }
+    public string? SubmissionUrl { get; set; }
+    public DateTime? SubmittedAt { get; set; }
+    public List<SubmissionFileDto> SubmissionFiles { get; set; } = new();
+
+    // Öğretmen değerlendirmesi
     public string? TeacherFeedback { get; set; }
     public int? Score { get; set; }
     public DateTime? GradedAt { get; set; }
+
     public bool IsOverdue => DateTime.UtcNow > DueDate && Status != "TeslimEdildi" && Status != "Degerlendirildi";
     public int DaysRemaining => (DueDate - DateTime.UtcNow).Days;
+}
+
+public class SubmissionFileDto
+{
+    public int Id { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public string FileUrl { get; set; } = string.Empty;
+    public long FileSize { get; set; }
+    public string? ContentType { get; set; }
+    public DateTime UploadedAt { get; set; }
 }
 
 public class CreateHomeworkAssignmentDto
@@ -103,4 +125,23 @@ public class StudentSummaryDto
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? CourseName { get; set; }
+}
+
+public class SubmitHomeworkDto
+{
+    [MaxLength(4000, ErrorMessage = "Açıklama en fazla 4000 karakter olabilir")]
+    public string? SubmissionText { get; set; }
+
+    [MaxLength(500)]
+    public string? SubmissionUrl { get; set; }
+}
+
+public class FileUploadResultDto
+{
+    public bool Success { get; set; }
+    public string? FileUrl { get; set; }
+    public string? FileName { get; set; }
+    public long FileSize { get; set; }
+    public string? ContentType { get; set; }
+    public string? ErrorMessage { get; set; }
 }

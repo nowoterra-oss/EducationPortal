@@ -657,6 +657,133 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
         return course?.Id ?? 1;
     }
 
+    public async Task<ApiResponse<HomeworkAssignmentDto>> SubmitAssignmentAsync(int assignmentId, int studentId, SubmitHomeworkDto dto)
+    {
+        try
+        {
+            var assignment = await _context.HomeworkAssignments
+                .Include(a => a.Homework)
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .Include(a => a.SubmissionFiles)
+                .FirstOrDefaultAsync(a => a.Id == assignmentId && a.StudentId == studentId && !a.IsDeleted);
+
+            if (assignment == null)
+                return ApiResponse<HomeworkAssignmentDto>.ErrorResponse("Ödev bulunamadı veya bu ödev size ait değil");
+
+            if (assignment.Status == HomeworkAssignmentStatus.Degerlendirildi)
+                return ApiResponse<HomeworkAssignmentDto>.ErrorResponse("Bu ödev zaten değerlendirilmiş, tekrar teslim edilemez");
+
+            // Teslim bilgilerini güncelle
+            assignment.SubmissionText = dto.SubmissionText;
+            assignment.SubmissionUrl = dto.SubmissionUrl;
+            assignment.SubmittedAt = DateTime.UtcNow;
+            assignment.Status = HomeworkAssignmentStatus.TeslimEdildi;
+            assignment.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            // Öğretmene bildirim gönder
+            await _notificationService.SendAsync(new CreateNotificationDto
+            {
+                UserId = assignment.Teacher.UserId,
+                Title = "Ödev Teslim Edildi",
+                Message = $"{assignment.Student.User.FirstName} {assignment.Student.User.LastName} '{assignment.Homework.Title}' ödevini teslim etti.",
+                Type = NotificationType.Info,
+                RelatedEntityType = "HomeworkAssignment",
+                RelatedEntityId = assignment.Id
+            });
+
+            return ApiResponse<HomeworkAssignmentDto>.SuccessResponse(MapToDto(assignment), "Ödev başarıyla teslim edildi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting assignment {AssignmentId}", assignmentId);
+            return ApiResponse<HomeworkAssignmentDto>.ErrorResponse(ex.Message);
+        }
+    }
+
+    public async Task<ApiResponse<FileUploadResultDto>> UploadSubmissionFileAsync(int assignmentId, int studentId, Stream fileStream, string fileName, string contentType)
+    {
+        try
+        {
+            var assignment = await _context.HomeworkAssignments
+                .FirstOrDefaultAsync(a => a.Id == assignmentId && a.StudentId == studentId && !a.IsDeleted);
+
+            if (assignment == null)
+                return ApiResponse<FileUploadResultDto>.ErrorResponse("Ödev bulunamadı veya bu ödev size ait değil");
+
+            if (assignment.Status == HomeworkAssignmentStatus.Degerlendirildi)
+                return ApiResponse<FileUploadResultDto>.ErrorResponse("Bu ödev zaten değerlendirilmiş, dosya yüklenemez");
+
+            // Dosya boyutu kontrolü (10MB)
+            const long maxFileSize = 10 * 1024 * 1024;
+            if (fileStream.Length > maxFileSize)
+                return ApiResponse<FileUploadResultDto>.ErrorResponse("Dosya boyutu 10MB'dan büyük olamaz");
+
+            // İzin verilen dosya tipleri
+            var allowedExtensions = new[] { ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".jpg", ".jpeg", ".png", ".gif", ".zip", ".rar" };
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+                return ApiResponse<FileUploadResultDto>.ErrorResponse("Bu dosya türü desteklenmiyor. İzin verilen türler: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, JPG, PNG, GIF, ZIP, RAR");
+
+            // Dosyayı kaydet
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "homework-submissions", assignmentId.ToString());
+            Directory.CreateDirectory(uploadsFolder);
+
+            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStreamOut = new FileStream(filePath, FileMode.Create))
+            {
+                await fileStream.CopyToAsync(fileStreamOut);
+            }
+
+            var fileUrl = $"/uploads/homework-submissions/{assignmentId}/{uniqueFileName}";
+
+            // Veritabanına kaydet
+            var submissionFile = new HomeworkSubmissionFile
+            {
+                HomeworkAssignmentId = assignmentId,
+                FileName = fileName,
+                FileUrl = fileUrl,
+                FileSize = fileStream.Length,
+                ContentType = contentType,
+                UploadedAt = DateTime.UtcNow
+            };
+
+            await _context.HomeworkSubmissionFiles.AddAsync(submissionFile);
+            await _context.SaveChangesAsync();
+
+            var result = new FileUploadResultDto
+            {
+                Success = true,
+                FileUrl = fileUrl,
+                FileName = fileName,
+                FileSize = fileStream.Length,
+                ContentType = contentType
+            };
+
+            return ApiResponse<FileUploadResultDto>.SuccessResponse(result, "Dosya başarıyla yüklendi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading submission file for assignment {AssignmentId}", assignmentId);
+            return ApiResponse<FileUploadResultDto>.ErrorResponse(ex.Message);
+        }
+    }
+
+    private async Task<int> GetDefaultCourseIdAsync(int teacherId)
+    {
+        var course = await _context.Courses
+            .Where(c => !c.IsDeleted)
+            .FirstOrDefaultAsync();
+
+        return course?.Id ?? 1;
+    }
+
     private HomeworkAssignmentDto MapToDto(HomeworkAssignment assignment)
     {
         return new HomeworkAssignmentDto
@@ -680,6 +807,22 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
             ViewedAt = assignment.ViewedAt,
             Status = assignment.Status.ToString(),
             CompletionPercentage = assignment.CompletionPercentage,
+            // Öğretmenin yüklediği dosya (Homework'tan)
+            AttachmentUrl = assignment.Homework?.ResourceUrl,
+            // Öğrenci teslimi
+            SubmissionText = assignment.SubmissionText,
+            SubmissionUrl = assignment.SubmissionUrl,
+            SubmittedAt = assignment.SubmittedAt,
+            SubmissionFiles = assignment.SubmissionFiles?.Select(f => new SubmissionFileDto
+            {
+                Id = f.Id,
+                FileName = f.FileName,
+                FileUrl = f.FileUrl,
+                FileSize = f.FileSize,
+                ContentType = f.ContentType,
+                UploadedAt = f.UploadedAt
+            }).ToList() ?? new List<SubmissionFileDto>(),
+            // Değerlendirme
             TeacherFeedback = assignment.TeacherFeedback,
             Score = assignment.Score,
             GradedAt = assignment.GradedAt

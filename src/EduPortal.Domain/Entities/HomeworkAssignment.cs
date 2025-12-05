@@ -37,6 +37,15 @@ public class HomeworkAssignment : BaseAuditableEntity
     [Range(0, 100)]
     public int CompletionPercentage { get; set; } = 0;
 
+    // Öğrenci teslimi
+    [MaxLength(4000)]
+    public string? SubmissionText { get; set; }
+
+    [MaxLength(500)]
+    public string? SubmissionUrl { get; set; }
+
+    public DateTime? SubmittedAt { get; set; }
+
     // Öğretmen değerlendirmesi
     [MaxLength(2000)]
     public string? TeacherFeedback { get; set; }
@@ -61,4 +70,5 @@ public class HomeworkAssignment : BaseAuditableEntity
     public virtual Teacher Teacher { get; set; } = null!;
 
     public virtual ICollection<HomeworkViewLog> ViewLogs { get; set; } = new List<HomeworkViewLog>();
+    public virtual ICollection<HomeworkSubmissionFile> SubmissionFiles { get; set; } = new List<HomeworkSubmissionFile>();
 }
