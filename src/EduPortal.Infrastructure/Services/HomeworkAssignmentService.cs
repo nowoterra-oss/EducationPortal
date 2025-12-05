@@ -775,15 +775,6 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
         }
     }
 
-    private async Task<int> GetDefaultCourseIdAsync(int teacherId)
-    {
-        var course = await _context.Courses
-            .Where(c => !c.IsDeleted)
-            .FirstOrDefaultAsync();
-
-        return course?.Id ?? 1;
-    }
-
     private HomeworkAssignmentDto MapToDto(HomeworkAssignment assignment)
     {
         return new HomeworkAssignmentDto
