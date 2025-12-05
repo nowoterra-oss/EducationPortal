@@ -26,6 +26,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<StudentTeacherAssignment> StudentTeacherAssignments => Set<StudentTeacherAssignment>();
     public DbSet<Homework> Homeworks => Set<Homework>();
     public DbSet<StudentHomeworkSubmission> StudentHomeworkSubmissions => Set<StudentHomeworkSubmission>();
+    public DbSet<HomeworkAssignment> HomeworkAssignments => Set<HomeworkAssignment>();
+    public DbSet<HomeworkSubmissionFile> HomeworkSubmissionFiles => Set<HomeworkSubmissionFile>();
+    public DbSet<HomeworkViewLog> HomeworkViewLogs => Set<HomeworkViewLog>();
     public DbSet<InternalExam> InternalExams => Set<InternalExam>();
     public DbSet<ExamResult> ExamResults => Set<ExamResult>();
     public DbSet<InternationalExam> InternationalExams => Set<InternationalExam>();
@@ -868,6 +871,54 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        // ===============================================
+        // HOMEWORK ASSIGNMENT MODULE RELATIONSHIPS
+        // ===============================================
+
+        // HomeworkAssignment relationships
+        builder.Entity<HomeworkAssignment>(entity =>
+        {
+            entity.HasOne(ha => ha.Homework)
+                .WithMany()
+                .HasForeignKey(ha => ha.HomeworkId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ha => ha.Student)
+                .WithMany()
+                .HasForeignKey(ha => ha.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ha => ha.Teacher)
+                .WithMany()
+                .HasForeignKey(ha => ha.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(ha => new { ha.HomeworkId, ha.StudentId }).IsUnique();
+        });
+
+        // HomeworkSubmissionFile relationships
+        builder.Entity<HomeworkSubmissionFile>(entity =>
+        {
+            entity.HasOne(hsf => hsf.Submission)
+                .WithMany()
+                .HasForeignKey(hsf => hsf.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // HomeworkViewLog relationships
+        builder.Entity<HomeworkViewLog>(entity =>
+        {
+            entity.HasOne(hvl => hvl.HomeworkAssignment)
+                .WithMany(ha => ha.ViewLogs)
+                .HasForeignKey(hvl => hvl.HomeworkAssignmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(hvl => hvl.Student)
+                .WithMany()
+                .HasForeignKey(hvl => hvl.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         // Global query filter for soft delete
         builder.Entity<Student>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Parent>().HasQueryFilter(e => !e.IsDeleted);
@@ -876,6 +927,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Course>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Homework>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<AcademicDevelopmentPlan>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<HomeworkAssignment>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<HomeworkSubmissionFile>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<HomeworkViewLog>().HasQueryFilter(e => !e.IsDeleted);
 
         // Configure decimal precision
         foreach (var property in builder.Model.GetEntityTypes()

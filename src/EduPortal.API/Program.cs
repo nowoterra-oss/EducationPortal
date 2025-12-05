@@ -55,6 +55,9 @@ builder.Services.AddInfrastructure();
 // Add Application Services
 builder.Services.AddApplication();
 
+// Add Background Jobs
+builder.Services.AddHostedService<EduPortal.Infrastructure.BackgroundJobs.HomeworkReminderJob>();
+
 // Add Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
