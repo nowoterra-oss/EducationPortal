@@ -73,13 +73,19 @@ public class SchedulesController : ControllerBase
     /// <summary>
     /// Öğrencinin ders programını getir
     /// </summary>
+    /// <param name="studentId">Öğrenci ID</param>
+    /// <param name="startDate">Başlangıç tarihi (opsiyonel, format: yyyy-MM-dd)</param>
+    /// <param name="endDate">Bitiş tarihi (opsiyonel, format: yyyy-MM-dd)</param>
     [HttpGet("student/{studentId}")]
     [ProducesResponseType(typeof(ApiResponse<List<ScheduleDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<ScheduleDto>>>> GetByStudent(int studentId)
+    public async Task<ActionResult<ApiResponse<List<ScheduleDto>>>> GetByStudent(
+        int studentId,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
     {
         try
         {
-            var schedules = await _scheduleService.GetByStudentAsync(studentId);
+            var schedules = await _scheduleService.GetByStudentAsync(studentId, startDate, endDate);
             return Ok(ApiResponse<List<ScheduleDto>>.SuccessResponse(schedules.ToList()));
         }
         catch (Exception ex)
@@ -92,13 +98,19 @@ public class SchedulesController : ControllerBase
     /// <summary>
     /// Öğretmenin ders programını getir
     /// </summary>
+    /// <param name="teacherId">Öğretmen ID</param>
+    /// <param name="startDate">Başlangıç tarihi (opsiyonel, format: yyyy-MM-dd)</param>
+    /// <param name="endDate">Bitiş tarihi (opsiyonel, format: yyyy-MM-dd)</param>
     [HttpGet("teacher/{teacherId}")]
     [ProducesResponseType(typeof(ApiResponse<List<ScheduleDto>>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<ApiResponse<List<ScheduleDto>>>> GetByTeacher(int teacherId)
+    public async Task<ActionResult<ApiResponse<List<ScheduleDto>>>> GetByTeacher(
+        int teacherId,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
     {
         try
         {
-            var schedules = await _scheduleService.GetByTeacherAsync(teacherId);
+            var schedules = await _scheduleService.GetByTeacherAsync(teacherId, startDate, endDate);
             return Ok(ApiResponse<List<ScheduleDto>>.SuccessResponse(schedules.ToList()));
         }
         catch (Exception ex)

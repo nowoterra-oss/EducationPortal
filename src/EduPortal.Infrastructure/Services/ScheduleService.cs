@@ -176,9 +176,9 @@ public class ScheduleService : IScheduleService
         return true;
     }
 
-    public async Task<IEnumerable<ScheduleDto>> GetByStudentAsync(int studentId)
+    public async Task<IEnumerable<ScheduleDto>> GetByStudentAsync(int studentId, DateTime? startDate = null, DateTime? endDate = null)
     {
-        return await _context.LessonSchedules
+        var query = _context.LessonSchedules
             .Include(s => s.Student)
                 .ThenInclude(st => st.User)
             .Include(s => s.Teacher)
@@ -186,16 +186,27 @@ public class ScheduleService : IScheduleService
             .Include(s => s.Course)
             .Include(s => s.Classroom)
             .AsNoTracking()
-            .Where(s => s.StudentId == studentId)
+            .Where(s => s.StudentId == studentId && !s.IsDeleted);
+
+        // Tarih filtresi uygula
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            query = query.Where(s =>
+                // Ders programının geçerlilik tarihi istenilen aralıkla kesişmeli
+                s.EffectiveFrom <= endDate.Value &&
+                (s.EffectiveTo == null || s.EffectiveTo >= startDate.Value));
+        }
+
+        return await query
             .OrderBy(s => s.DayOfWeek)
             .ThenBy(s => s.StartTime)
             .Select(s => MapToDto(s))
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<ScheduleDto>> GetByTeacherAsync(int teacherId)
+    public async Task<IEnumerable<ScheduleDto>> GetByTeacherAsync(int teacherId, DateTime? startDate = null, DateTime? endDate = null)
     {
-        return await _context.LessonSchedules
+        var query = _context.LessonSchedules
             .Include(s => s.Student)
                 .ThenInclude(st => st.User)
             .Include(s => s.Teacher)
@@ -203,7 +214,18 @@ public class ScheduleService : IScheduleService
             .Include(s => s.Course)
             .Include(s => s.Classroom)
             .AsNoTracking()
-            .Where(s => s.TeacherId == teacherId)
+            .Where(s => s.TeacherId == teacherId && !s.IsDeleted);
+
+        // Tarih filtresi uygula
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            query = query.Where(s =>
+                // Ders programının geçerlilik tarihi istenilen aralıkla kesişmeli
+                s.EffectiveFrom <= endDate.Value &&
+                (s.EffectiveTo == null || s.EffectiveTo >= startDate.Value));
+        }
+
+        return await query
             .OrderBy(s => s.DayOfWeek)
             .ThenBy(s => s.StartTime)
             .Select(s => MapToDto(s))
