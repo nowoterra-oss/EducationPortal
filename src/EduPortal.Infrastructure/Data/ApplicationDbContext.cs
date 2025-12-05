@@ -899,9 +899,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         // HomeworkSubmissionFile relationships
         builder.Entity<HomeworkSubmissionFile>(entity =>
         {
-            entity.HasOne(hsf => hsf.Submission)
-                .WithMany()
-                .HasForeignKey(hsf => hsf.SubmissionId)
+            entity.HasOne(hsf => hsf.HomeworkAssignment)
+                .WithMany(ha => ha.SubmissionFiles)
+                .HasForeignKey(hsf => hsf.HomeworkAssignmentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

@@ -10,7 +10,7 @@ namespace EduPortal.Domain.Entities;
 public class HomeworkSubmissionFile : BaseAuditableEntity
 {
     [Required]
-    public int SubmissionId { get; set; }
+    public int HomeworkAssignmentId { get; set; }
 
     [Required]
     [MaxLength(255)]
@@ -20,13 +20,14 @@ public class HomeworkSubmissionFile : BaseAuditableEntity
     [MaxLength(500)]
     public string FileUrl { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(50)]
-    public string FileType { get; set; } = string.Empty; // pdf, doc, docx, etc.
+    public long FileSize { get; set; }
 
-    public long FileSizeBytes { get; set; }
+    [MaxLength(100)]
+    public string? ContentType { get; set; }
+
+    public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation property
-    [ForeignKey(nameof(SubmissionId))]
-    public virtual StudentHomeworkSubmission Submission { get; set; } = null!;
+    [ForeignKey(nameof(HomeworkAssignmentId))]
+    public virtual HomeworkAssignment HomeworkAssignment { get; set; } = null!;
 }
