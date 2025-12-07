@@ -47,15 +47,24 @@ public class CourseService : ICourseService
 
     public async Task<CourseDto> CreateAsync(CreateCourseDto dto)
     {
+        // Aynı kod ile ders var mı kontrol et
+        var existingCourse = await _context.Courses
+            .FirstOrDefaultAsync(c => c.CourseCode == dto.CourseCode);
+
+        if (existingCourse != null)
+        {
+            throw new InvalidOperationException($"'{dto.CourseCode}' kodu ile bir ders zaten mevcut");
+        }
+
         var course = new Course
         {
             CourseName = dto.CourseName,
             CourseCode = dto.CourseCode,
-            Subject = dto.Subject,
-            Level = dto.Level,
-            Credits = dto.Credits,
-            Description = dto.Description,
-            IsActive = dto.IsActive
+            Subject = null,              // Varsayılan: null
+            Level = null,                // Varsayılan: null
+            Credits = 3,                 // Varsayılan: 3 kredi
+            Description = null,          // Varsayılan: null
+            IsActive = true              // Varsayılan: aktif
         };
 
         _context.Courses.Add(course);

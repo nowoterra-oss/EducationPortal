@@ -9,12 +9,12 @@ public class Course : BaseAuditableEntity
     [MaxLength(200)]
     public string CourseName { get; set; } = string.Empty;
 
-    [MaxLength(50)]
-    public string? CourseCode { get; set; }
-
     [Required]
+    [MaxLength(50)]
+    public string CourseCode { get; set; } = string.Empty;
+
     [MaxLength(100)]
-    public string Subject { get; set; } = string.Empty; // "Matematik", "Fizik", etc.
+    public string? Subject { get; set; } // "Matematik", "Fizik", etc.
 
     [MaxLength(50)]
     public string? Level { get; set; }

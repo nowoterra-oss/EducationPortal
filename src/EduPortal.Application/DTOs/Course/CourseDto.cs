@@ -23,22 +23,9 @@ public class CreateCourseDto
     [MaxLength(200, ErrorMessage = "Ders adı en fazla 200 karakter olabilir")]
     public string CourseName { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Ders kodu belirtilmelidir")]
     [MaxLength(50, ErrorMessage = "Ders kodu en fazla 50 karakter olabilir")]
-    public string? CourseCode { get; set; }
-
-    [Required(ErrorMessage = "Konu alanı belirtilmelidir")]
-    [MaxLength(100, ErrorMessage = "Konu alanı en fazla 100 karakter olabilir")]
-    public string Subject { get; set; } = string.Empty;
-
-    [MaxLength(50, ErrorMessage = "Seviye en fazla 50 karakter olabilir")]
-    public string? Level { get; set; }
-
-    public int? Credits { get; set; }
-
-    [MaxLength(1000, ErrorMessage = "Açıklama en fazla 1000 karakter olabilir")]
-    public string? Description { get; set; }
-
-    public bool IsActive { get; set; } = true;
+    public string CourseCode { get; set; } = string.Empty;
 }
 
 public class UpdateCourseDto
