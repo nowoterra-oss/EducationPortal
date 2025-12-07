@@ -81,11 +81,25 @@ public class CoursesController : ControllerBase
         try
         {
             if (!ModelState.IsValid)
-                return BadRequest(ApiResponse<CourseDto>.ErrorResponse("Geçersiz veri"));
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                var errorMessage = string.Join(", ", errors);
+                _logger.LogWarning("Course creation validation failed: {Errors}. Received DTO: CourseName={CourseName}, CourseCode={CourseCode}",
+                    errorMessage, dto?.CourseName ?? "null", dto?.CourseCode ?? "null");
+                return BadRequest(ApiResponse<CourseDto>.ErrorResponse($"Geçersiz veri: {errorMessage}"));
+            }
 
             var course = await _courseService.CreateAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = course.Id },
                 ApiResponse<CourseDto>.SuccessResponse(course, "Ders başarıyla oluşturuldu"));
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogWarning(ex, "Course creation failed: {Message}", ex.Message);
+            return BadRequest(ApiResponse<CourseDto>.ErrorResponse(ex.Message));
         }
         catch (Exception ex)
         {
