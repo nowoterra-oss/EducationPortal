@@ -22,10 +22,12 @@ public class CreateCourseDto
 {
     [Required(ErrorMessage = "Ders adı belirtilmelidir")]
     [MaxLength(200, ErrorMessage = "Ders adı en fazla 200 karakter olabilir")]
+    [JsonPropertyName("courseName")]
     public string CourseName { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Ders kodu belirtilmelidir")]
     [MaxLength(50, ErrorMessage = "Ders kodu en fazla 50 karakter olabilir")]
+    [JsonPropertyName("courseCode")]
     public string CourseCode { get; set; } = string.Empty;
 }
 
@@ -33,22 +35,29 @@ public class UpdateCourseDto
 {
     [Required(ErrorMessage = "Ders adı belirtilmelidir")]
     [MaxLength(200, ErrorMessage = "Ders adı en fazla 200 karakter olabilir")]
+    [JsonPropertyName("courseName")]
     public string CourseName { get; set; } = string.Empty;
 
+    [Required(ErrorMessage = "Ders kodu belirtilmelidir")]
     [MaxLength(50, ErrorMessage = "Ders kodu en fazla 50 karakter olabilir")]
-    public string? CourseCode { get; set; }
+    [JsonPropertyName("courseCode")]
+    public string CourseCode { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Konu alanı belirtilmelidir")]
     [MaxLength(100, ErrorMessage = "Konu alanı en fazla 100 karakter olabilir")]
-    public string Subject { get; set; } = string.Empty;
+    [JsonPropertyName("subject")]
+    public string? Subject { get; set; }
 
     [MaxLength(50, ErrorMessage = "Seviye en fazla 50 karakter olabilir")]
+    [JsonPropertyName("level")]
     public string? Level { get; set; }
 
+    [JsonPropertyName("credits")]
     public int? Credits { get; set; }
 
     [MaxLength(1000, ErrorMessage = "Açıklama en fazla 1000 karakter olabilir")]
+    [JsonPropertyName("description")]
     public string? Description { get; set; }
 
+    [JsonPropertyName("isActive")]
     public bool IsActive { get; set; }
 }
