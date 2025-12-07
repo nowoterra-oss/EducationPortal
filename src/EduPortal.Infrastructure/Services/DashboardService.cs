@@ -26,7 +26,7 @@ public class DashboardService : IDashboardService
             {
                 TotalStudents = await _context.Students.CountAsync(s => !s.IsDeleted),
                 TotalTeachers = await _context.Teachers.CountAsync(t => !t.IsDeleted),
-                TotalCourses = await _context.Courses.CountAsync(c => !c.IsDeleted),
+                TotalCourses = await _context.Courses.CountAsync(),
                 ActiveStudents = await _context.Students.CountAsync(s => !s.IsDeleted),
                 TotalClasses = await _context.Classes.CountAsync(c => !c.IsDeleted),
 

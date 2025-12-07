@@ -59,18 +59,18 @@ public class CourseService : ICourseService
         var course = new Course
         {
             CourseName = dto.CourseName,
-            CourseCode = dto.CourseCode,
-            Subject = null,              // Varsayılan: null
-            Level = null,                // Varsayılan: null
-            Credits = 3,                 // Varsayılan: 3 kredi
-            Description = null,          // Varsayılan: null
-            IsActive = true              // Varsayılan: aktif
+            CourseCode = dto.CourseCode
         };
 
         _context.Courses.Add(course);
         await _context.SaveChangesAsync();
 
-        return await GetByIdAsync(course.Id) ?? throw new InvalidOperationException("Ders oluşturulamadı");
+        return new CourseDto
+        {
+            Id = course.Id,
+            CourseName = course.CourseName,
+            CourseCode = course.CourseCode
+        };
     }
 
     public async Task<CourseDto> UpdateAsync(int id, UpdateCourseDto dto)
@@ -78,19 +78,28 @@ public class CourseService : ICourseService
         var course = await _context.Courses.FindAsync(id);
 
         if (course == null)
-            throw new KeyNotFoundException("Ders bulunamadı");
+            throw new KeyNotFoundException($"ID {id} olan ders bulunamadı");
+
+        // Ders kodu benzersizliği kontrolü (kendisi hariç)
+        var existingCourse = await _context.Courses
+            .FirstOrDefaultAsync(c => c.CourseCode == dto.CourseCode && c.Id != id);
+
+        if (existingCourse != null)
+        {
+            throw new InvalidOperationException("Bu ders kodu başka bir ders tarafından kullanılıyor");
+        }
 
         course.CourseName = dto.CourseName;
         course.CourseCode = dto.CourseCode;
-        course.Subject = dto.Subject;
-        course.Level = dto.Level;
-        course.Credits = dto.Credits;
-        course.Description = dto.Description;
-        course.IsActive = dto.IsActive;
 
         await _context.SaveChangesAsync();
 
-        return await GetByIdAsync(id) ?? throw new InvalidOperationException("Ders güncellenemedi");
+        return new CourseDto
+        {
+            Id = course.Id,
+            CourseName = course.CourseName,
+            CourseCode = course.CourseCode
+        };
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -237,15 +246,7 @@ public class CourseService : ICourseService
         {
             Id = course.Id,
             CourseName = course.CourseName,
-            CourseCode = course.CourseCode,
-            Subject = course.Subject,
-            Level = course.Level,
-            Credits = course.Credits,
-            Description = course.Description,
-            IsActive = course.IsActive,
-            CurriculumCount = course.Curriculum?.Count ?? 0,
-            ResourceCount = course.Resources?.Count ?? 0,
-            CreatedAt = course.CreatedAt
+            CourseCode = course.CourseCode
         };
     }
 

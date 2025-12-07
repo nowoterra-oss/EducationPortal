@@ -1,30 +1,19 @@
-using EduPortal.Domain.Common;
 using System.ComponentModel.DataAnnotations;
 
 namespace EduPortal.Domain.Entities;
 
-public class Course : BaseAuditableEntity
+public class Course
 {
-    [Required]
+    [Key]
+    public int Id { get; set; }
+
+    [Required(ErrorMessage = "Ders adı belirtilmelidir")]
     [MaxLength(200)]
     public string CourseName { get; set; } = string.Empty;
 
-    [Required]
-    [MaxLength(50)]
+    [Required(ErrorMessage = "Ders kodu belirtilmelidir")]
+    [MaxLength(20)]
     public string CourseCode { get; set; } = string.Empty;
-
-    [MaxLength(100)]
-    public string? Subject { get; set; } // "Matematik", "Fizik", etc.
-
-    [MaxLength(50)]
-    public string? Level { get; set; }
-
-    public int? Credits { get; set; }
-
-    [MaxLength(1000)]
-    public string? Description { get; set; }
-
-    public bool IsActive { get; set; } = true;
 
     // Navigation Properties
     public virtual ICollection<Teacher> Teachers { get; set; } = new List<Teacher>();

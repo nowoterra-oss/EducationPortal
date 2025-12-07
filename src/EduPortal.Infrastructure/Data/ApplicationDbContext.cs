@@ -924,7 +924,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<Parent>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Teacher>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Counselor>().HasQueryFilter(e => !e.IsDeleted);
-        builder.Entity<Course>().HasQueryFilter(e => !e.IsDeleted);
+        // Course entity no longer has IsDeleted property
         builder.Entity<Homework>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<AcademicDevelopmentPlan>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<HomeworkAssignment>().HasQueryFilter(e => !e.IsDeleted);

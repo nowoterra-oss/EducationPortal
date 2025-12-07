@@ -226,48 +226,48 @@ public static class DbInitializer
         var courses = new List<Course>
         {
             // Matematik Dersleri
-            new Course { CourseName = "Temel Matematik", CourseCode = "MAT-101", Subject = "Matematik", Level = "Başlangıç", Credits = 4, Description = "Temel matematik kavramları", IsActive = true },
-            new Course { CourseName = "İleri Matematik", CourseCode = "MAT-201", Subject = "Matematik", Level = "Orta", Credits = 5, Description = "İleri düzey matematik", IsActive = true },
-            new Course { CourseName = "Analitik Geometri", CourseCode = "MAT-301", Subject = "Matematik", Level = "İleri", Credits = 4, Description = "Analitik geometri ve uygulamaları", IsActive = true },
-            new Course { CourseName = "Kalkülüs I", CourseCode = "MAT-401", Subject = "Matematik", Level = "İleri", Credits = 6, Description = "Diferansiyel kalkülüs", IsActive = true },
-            new Course { CourseName = "Kalkülüs II", CourseCode = "MAT-402", Subject = "Matematik", Level = "İleri", Credits = 6, Description = "İntegral kalkülüs", IsActive = true },
+            new Course { CourseName = "Temel Matematik", CourseCode = "MAT-101" },
+            new Course { CourseName = "İleri Matematik", CourseCode = "MAT-201" },
+            new Course { CourseName = "Analitik Geometri", CourseCode = "MAT-301" },
+            new Course { CourseName = "Kalkülüs I", CourseCode = "MAT-401" },
+            new Course { CourseName = "Kalkülüs II", CourseCode = "MAT-402" },
 
             // Fizik Dersleri
-            new Course { CourseName = "Temel Fizik", CourseCode = "FIZ-101", Subject = "Fizik", Level = "Başlangıç", Credits = 4, Description = "Temel fizik kavramları", IsActive = true },
-            new Course { CourseName = "Mekanik", CourseCode = "FIZ-201", Subject = "Fizik", Level = "Orta", Credits = 5, Description = "Klasik mekanik", IsActive = true },
-            new Course { CourseName = "Elektrik ve Manyetizma", CourseCode = "FIZ-301", Subject = "Fizik", Level = "İleri", Credits = 5, Description = "Elektromanyetik teori", IsActive = true },
-            new Course { CourseName = "Modern Fizik", CourseCode = "FIZ-401", Subject = "Fizik", Level = "İleri", Credits = 6, Description = "Kuantum fiziği ve görelilik", IsActive = true },
+            new Course { CourseName = "Temel Fizik", CourseCode = "FIZ-101" },
+            new Course { CourseName = "Mekanik", CourseCode = "FIZ-201" },
+            new Course { CourseName = "Elektrik ve Manyetizma", CourseCode = "FIZ-301" },
+            new Course { CourseName = "Modern Fizik", CourseCode = "FIZ-401" },
 
             // Kimya Dersleri
-            new Course { CourseName = "Genel Kimya", CourseCode = "KIM-101", Subject = "Kimya", Level = "Başlangıç", Credits = 4, Description = "Temel kimya kavramları", IsActive = true },
-            new Course { CourseName = "Organik Kimya", CourseCode = "KIM-201", Subject = "Kimya", Level = "Orta", Credits = 5, Description = "Organik bileşikler", IsActive = true },
-            new Course { CourseName = "Anorganik Kimya", CourseCode = "KIM-301", Subject = "Kimya", Level = "İleri", Credits = 5, Description = "Anorganik bileşikler", IsActive = true },
+            new Course { CourseName = "Genel Kimya", CourseCode = "KIM-101" },
+            new Course { CourseName = "Organik Kimya", CourseCode = "KIM-201" },
+            new Course { CourseName = "Anorganik Kimya", CourseCode = "KIM-301" },
 
             // Biyoloji Dersleri
-            new Course { CourseName = "Genel Biyoloji", CourseCode = "BIO-101", Subject = "Biyoloji", Level = "Başlangıç", Credits = 4, Description = "Canlılar dünyası", IsActive = true },
-            new Course { CourseName = "Moleküler Biyoloji", CourseCode = "BIO-201", Subject = "Biyoloji", Level = "Orta", Credits = 5, Description = "DNA ve genetik", IsActive = true },
-            new Course { CourseName = "Ekoloji", CourseCode = "BIO-301", Subject = "Biyoloji", Level = "İleri", Credits = 4, Description = "Ekosistemler ve çevre", IsActive = true },
+            new Course { CourseName = "Genel Biyoloji", CourseCode = "BIO-101" },
+            new Course { CourseName = "Moleküler Biyoloji", CourseCode = "BIO-201" },
+            new Course { CourseName = "Ekoloji", CourseCode = "BIO-301" },
 
             // İngilizce Dersleri
-            new Course { CourseName = "Başlangıç İngilizce", CourseCode = "ENG-101", Subject = "İngilizce", Level = "A1-A2", Credits = 3, Description = "Temel İngilizce", IsActive = true },
-            new Course { CourseName = "Orta Düzey İngilizce", CourseCode = "ENG-201", Subject = "İngilizce", Level = "B1-B2", Credits = 4, Description = "Orta seviye İngilizce", IsActive = true },
-            new Course { CourseName = "İleri İngilizce", CourseCode = "ENG-301", Subject = "İngilizce", Level = "C1-C2", Credits = 5, Description = "İleri seviye İngilizce", IsActive = true },
-            new Course { CourseName = "SAT İngilizce Hazırlık", CourseCode = "ENG-SAT", Subject = "İngilizce", Level = "İleri", Credits = 6, Description = "SAT sınavı İngilizce", IsActive = true },
-            new Course { CourseName = "TOEFL Hazırlık", CourseCode = "ENG-TOEFL", Subject = "İngilizce", Level = "İleri", Credits = 6, Description = "TOEFL sınavı hazırlık", IsActive = true },
+            new Course { CourseName = "Başlangıç İngilizce", CourseCode = "ENG-101" },
+            new Course { CourseName = "Orta Düzey İngilizce", CourseCode = "ENG-201" },
+            new Course { CourseName = "İleri İngilizce", CourseCode = "ENG-301" },
+            new Course { CourseName = "SAT İngilizce Hazırlık", CourseCode = "ENG-SAT" },
+            new Course { CourseName = "TOEFL Hazırlık", CourseCode = "ENG-TOEFL" },
 
             // Edebiyat Dersleri
-            new Course { CourseName = "Türk Dili ve Edebiyatı", CourseCode = "TDE-101", Subject = "Edebiyat", Level = "Başlangıç", Credits = 3, Description = "Türk edebiyatı", IsActive = true },
-            new Course { CourseName = "Dünya Edebiyatı", CourseCode = "TDE-201", Subject = "Edebiyat", Level = "Orta", Credits = 3, Description = "Dünya klasikleri", IsActive = true },
+            new Course { CourseName = "Türk Dili ve Edebiyatı", CourseCode = "TDE-101" },
+            new Course { CourseName = "Dünya Edebiyatı", CourseCode = "TDE-201" },
 
             // Sosyal Bilimler
-            new Course { CourseName = "Tarih", CourseCode = "TAR-101", Subject = "Tarih", Level = "Başlangıç", Credits = 3, Description = "Dünya ve Türk tarihi", IsActive = true },
-            new Course { CourseName = "Coğrafya", CourseCode = "COG-101", Subject = "Coğrafya", Level = "Başlangıç", Credits = 3, Description = "Fiziki ve beşeri coğrafya", IsActive = true },
-            new Course { CourseName = "Felsefe", CourseCode = "FEL-101", Subject = "Felsefe", Level = "Orta", Credits = 2, Description = "Temel felsefe", IsActive = true },
+            new Course { CourseName = "Tarih", CourseCode = "TAR-101" },
+            new Course { CourseName = "Coğrafya", CourseCode = "COG-101" },
+            new Course { CourseName = "Felsefe", CourseCode = "FEL-101" },
 
             // Bilgisayar Bilimleri
-            new Course { CourseName = "Programlamaya Giriş", CourseCode = "CS-101", Subject = "Bilgisayar", Level = "Başlangıç", Credits = 4, Description = "Python ile programlama", IsActive = true },
-            new Course { CourseName = "Web Geliştirme", CourseCode = "CS-201", Subject = "Bilgisayar", Level = "Orta", Credits = 5, Description = "HTML, CSS, JavaScript", IsActive = true },
-            new Course { CourseName = "Veri Yapıları", CourseCode = "CS-301", Subject = "Bilgisayar", Level = "İleri", Credits = 6, Description = "Algoritmalar ve veri yapıları", IsActive = true }
+            new Course { CourseName = "Programlamaya Giriş", CourseCode = "CS-101" },
+            new Course { CourseName = "Web Geliştirme", CourseCode = "CS-201" },
+            new Course { CourseName = "Veri Yapıları", CourseCode = "CS-301" }
         };
 
         await context.Courses.AddRangeAsync(courses);
@@ -630,7 +630,7 @@ public static class DbInitializer
     {
         var students = await context.Students.Include(s => s.User).ToListAsync();
         var teachers = await context.Teachers.Include(t => t.User).ToListAsync();
-        var courses = await context.Courses.Where(c => c.IsActive).ToListAsync();
+        var courses = await context.Courses.ToListAsync();
         var random = new Random();
 
         var studentAvailabilities = new List<StudentAvailability>();

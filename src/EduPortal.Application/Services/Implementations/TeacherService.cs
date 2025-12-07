@@ -261,11 +261,7 @@ public class TeacherService : ITeacherService
             {
                 c.Id,
                 CourseName = c.CourseName,
-                CourseCode = c.CourseCode,
-                Subject = c.Subject,
-                Level = c.Level,
-                Credits = c.Credits,
-                c.IsActive
+                CourseCode = c.CourseCode
             }).ToList<object>();
 
             return ApiResponse<List<object>>.SuccessResponse(courseDtos);

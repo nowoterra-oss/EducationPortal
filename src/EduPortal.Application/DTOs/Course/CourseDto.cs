@@ -5,17 +5,14 @@ namespace EduPortal.Application.DTOs.Course;
 
 public class CourseDto
 {
+    [JsonPropertyName("id")]
     public int Id { get; set; }
+
+    [JsonPropertyName("courseName")]
     public string CourseName { get; set; } = string.Empty;
-    public string? CourseCode { get; set; }
-    public string Subject { get; set; } = string.Empty;
-    public string? Level { get; set; }
-    public int? Credits { get; set; }
-    public string? Description { get; set; }
-    public bool IsActive { get; set; }
-    public int CurriculumCount { get; set; }
-    public int ResourceCount { get; set; }
-    public DateTime CreatedAt { get; set; }
+
+    [JsonPropertyName("courseCode")]
+    public string CourseCode { get; set; } = string.Empty;
 }
 
 public class CreateCourseDto
@@ -26,7 +23,7 @@ public class CreateCourseDto
     public string CourseName { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Ders kodu belirtilmelidir")]
-    [MaxLength(50, ErrorMessage = "Ders kodu en fazla 50 karakter olabilir")]
+    [MaxLength(20, ErrorMessage = "Ders kodu en fazla 20 karakter olabilir")]
     [JsonPropertyName("courseCode")]
     public string CourseCode { get; set; } = string.Empty;
 }
@@ -39,25 +36,7 @@ public class UpdateCourseDto
     public string CourseName { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Ders kodu belirtilmelidir")]
-    [MaxLength(50, ErrorMessage = "Ders kodu en fazla 50 karakter olabilir")]
+    [MaxLength(20, ErrorMessage = "Ders kodu en fazla 20 karakter olabilir")]
     [JsonPropertyName("courseCode")]
     public string CourseCode { get; set; } = string.Empty;
-
-    [MaxLength(100, ErrorMessage = "Konu alanı en fazla 100 karakter olabilir")]
-    [JsonPropertyName("subject")]
-    public string? Subject { get; set; }
-
-    [MaxLength(50, ErrorMessage = "Seviye en fazla 50 karakter olabilir")]
-    [JsonPropertyName("level")]
-    public string? Level { get; set; }
-
-    [JsonPropertyName("credits")]
-    public int? Credits { get; set; }
-
-    [MaxLength(1000, ErrorMessage = "Açıklama en fazla 1000 karakter olabilir")]
-    [JsonPropertyName("description")]
-    public string? Description { get; set; }
-
-    [JsonPropertyName("isActive")]
-    public bool IsActive { get; set; }
 }
