@@ -26,7 +26,6 @@ public class CreateCourseDto
     [MaxLength(50, ErrorMessage = "Ders kodu en fazla 50 karakter olabilir")]
     public string? CourseCode { get; set; }
 
-    [Required(ErrorMessage = "Konu alanı belirtilmelidir")]
     [MaxLength(100, ErrorMessage = "Konu alanı en fazla 100 karakter olabilir")]
     public string? Subject { get; set; }
 
@@ -50,7 +49,6 @@ public class UpdateCourseDto
     [MaxLength(50, ErrorMessage = "Ders kodu en fazla 50 karakter olabilir")]
     public string? CourseCode { get; set; }
 
-    [Required(ErrorMessage = "Konu alanı belirtilmelidir")]
     [MaxLength(100, ErrorMessage = "Konu alanı en fazla 100 karakter olabilir")]
     public string? Subject { get; set; }
 
