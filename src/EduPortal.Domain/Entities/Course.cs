@@ -12,9 +12,8 @@ public class Course : BaseAuditableEntity
     [MaxLength(50)]
     public string? CourseCode { get; set; }
 
-    [Required]
     [MaxLength(100)]
-    public string Subject { get; set; } = string.Empty; // "Matematik", "Fizik", etc.
+    public string? Subject { get; set; } // "Matematik", "Fizik", etc.
 
     [MaxLength(50)]
     public string? Level { get; set; }
@@ -36,3 +35,4 @@ public class Course : BaseAuditableEntity
     public virtual ICollection<ClassPerformance> ClassPerformances { get; set; } = new List<ClassPerformance>();
     public virtual ICollection<InternalExam> InternalExams { get; set; } = new List<InternalExam>();
 }
+

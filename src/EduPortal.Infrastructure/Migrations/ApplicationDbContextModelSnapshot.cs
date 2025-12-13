@@ -34,7 +34,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("TeachersId");
 
-                    b.ToTable("CourseTeacher");
+                    b.ToTable("CourseTeacher", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.AGPMilestone", b =>
@@ -89,7 +89,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("AGPId");
 
-                    b.ToTable("AGPMilestones");
+                    b.ToTable("AGPMilestones", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.AcademicDevelopmentPlan", b =>
@@ -140,7 +140,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("AcademicDevelopmentPlans");
+                    b.ToTable("AcademicDevelopmentPlans", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.AcademicTerm", b =>
@@ -209,7 +209,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AcademicTerms");
+                    b.ToTable("AcademicTerms", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.AccommodationArrangement", b =>
@@ -288,7 +288,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("ProgramId");
 
-                    b.ToTable("AccommodationArrangements");
+                    b.ToTable("AccommodationArrangements", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.AgpActivity", b =>
@@ -327,7 +327,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("AgpPeriodId");
 
-                    b.ToTable("AgpActivities");
+                    b.ToTable("AgpActivities", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.AgpPeriod", b =>
@@ -372,7 +372,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("AgpId");
 
-                    b.ToTable("AgpPeriods");
+                    b.ToTable("AgpPeriods", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.AgpTimelineMilestone", b =>
@@ -416,7 +416,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("AgpPeriodId");
 
-                    b.ToTable("AgpTimelineMilestones");
+                    b.ToTable("AgpTimelineMilestones", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Announcement", b =>
@@ -486,7 +486,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("PublishedBy");
 
-                    b.ToTable("Announcements");
+                    b.ToTable("Announcements", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.ApplicationDocument", b =>
@@ -545,7 +545,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("ProgramId");
 
-                    b.ToTable("ApplicationDocuments");
+                    b.ToTable("ApplicationDocuments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.ApplicationUser", b =>
@@ -686,7 +686,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("TeacherId");
 
-                    b.ToTable("Attendances");
+                    b.ToTable("Attendances", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.AuditLog", b =>
@@ -756,7 +756,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Branch", b =>
@@ -838,7 +838,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("ManagerId");
 
-                    b.ToTable("Branches");
+                    b.ToTable("Branches", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.CalendarEvent", b =>
@@ -913,7 +913,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("CalendarEvents");
+                    b.ToTable("CalendarEvents", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.CareerAssessment", b =>
@@ -979,7 +979,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("CareerAssessments");
+                    b.ToTable("CareerAssessments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Class", b =>
@@ -1041,7 +1041,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("ClassTeacherId");
 
-                    b.ToTable("Classes");
+                    b.ToTable("Classes", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.ClassPerformance", b =>
@@ -1094,7 +1094,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("TeacherId");
 
-                    b.ToTable("ClassPerformances");
+                    b.ToTable("ClassPerformances", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Classroom", b =>
@@ -1167,7 +1167,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("BranchId");
 
-                    b.ToTable("Classrooms");
+                    b.ToTable("Classrooms", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Club", b =>
@@ -1242,7 +1242,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("AdvisorTeacherId");
 
-                    b.ToTable("Clubs");
+                    b.ToTable("Clubs", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Coach", b =>
@@ -1317,7 +1317,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Coaches");
+                    b.ToTable("Coaches", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.CoachingSession", b =>
@@ -1402,7 +1402,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("CoachingSessions");
+                    b.ToTable("CoachingSessions", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.CompetitionAndAward", b =>
@@ -1457,7 +1457,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("CompetitionsAndAwards");
+                    b.ToTable("CompetitionsAndAwards", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.CounselingMeeting", b =>
@@ -1519,7 +1519,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("CounselingMeetings");
+                    b.ToTable("CounselingMeetings", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Counselor", b =>
@@ -1555,7 +1555,7 @@ namespace EduPortal.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Counselors");
+                    b.ToTable("Counselors", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Course", b =>
@@ -1611,7 +1611,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Courses");
+                    b.ToTable("Courses", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.CourseResource", b =>
@@ -1671,7 +1671,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("CurriculumId");
 
-                    b.ToTable("CourseResources");
+                    b.ToTable("CourseResources", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Curriculum", b =>
@@ -1716,7 +1716,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Curricula");
+                    b.ToTable("Curricula", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.EmailTemplate", b =>
@@ -1768,7 +1768,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EmailTemplates");
+                    b.ToTable("EmailTemplates", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.ExamResult", b =>
@@ -1813,7 +1813,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("ExamResults");
+                    b.ToTable("ExamResults", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.GroupMessage", b =>
@@ -1858,7 +1858,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("GroupMessages");
+                    b.ToTable("GroupMessages", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Homework", b =>
@@ -1928,7 +1928,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("TeacherId");
 
-                    b.ToTable("Homeworks");
+                    b.ToTable("Homeworks", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.HomeworkAssignment", b =>
@@ -2017,7 +2017,7 @@ namespace EduPortal.Infrastructure.Migrations
                     b.HasIndex("HomeworkId", "StudentId")
                         .IsUnique();
 
-                    b.ToTable("HomeworkAssignments");
+                    b.ToTable("HomeworkAssignments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.HomeworkSubmissionFile", b =>
@@ -2070,7 +2070,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("HomeworkAssignmentId");
 
-                    b.ToTable("HomeworkSubmissionFiles");
+                    b.ToTable("HomeworkSubmissionFiles", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.HomeworkViewLog", b =>
@@ -2119,7 +2119,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("HomeworkViewLogs");
+                    b.ToTable("HomeworkViewLogs", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.InternalExam", b =>
@@ -2190,7 +2190,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("TeacherId");
 
-                    b.ToTable("InternalExams");
+                    b.ToTable("InternalExams", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.InternationalExam", b =>
@@ -2258,7 +2258,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("InternationalExams");
+                    b.ToTable("InternationalExams", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.LessonSchedule", b =>
@@ -2335,7 +2335,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId", "TeacherId", "DayOfWeek");
 
-                    b.ToTable("LessonSchedules");
+                    b.ToTable("LessonSchedules", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Message", b =>
@@ -2396,7 +2396,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.MessageGroup", b =>
@@ -2432,7 +2432,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("MessageGroups");
+                    b.ToTable("MessageGroups", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.MessageGroupMember", b =>
@@ -2468,7 +2468,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("MessageGroupMembers");
+                    b.ToTable("MessageGroupMembers", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Notification", b =>
@@ -2536,7 +2536,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Parent", b =>
@@ -2577,7 +2577,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Parents");
+                    b.ToTable("Parents", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Payment", b =>
@@ -2669,7 +2669,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.PaymentInstallment", b =>
@@ -2729,7 +2729,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentPaymentPlanId");
 
-                    b.ToTable("PaymentInstallments");
+                    b.ToTable("PaymentInstallments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.PaymentPlan", b =>
@@ -2782,7 +2782,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PaymentPlans");
+                    b.ToTable("PaymentPlans", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.SchoolRecommendation", b =>
@@ -2853,7 +2853,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("SchoolRecommendations");
+                    b.ToTable("SchoolRecommendations", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.ServicePackage", b =>
@@ -2909,7 +2909,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ServicePackages");
+                    b.ToTable("ServicePackages", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.SportsAssessment", b =>
@@ -2991,7 +2991,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("SportsAssessments");
+                    b.ToTable("SportsAssessments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Student", b =>
@@ -3108,7 +3108,7 @@ namespace EduPortal.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Students");
+                    b.ToTable("Students", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentAvailability", b =>
@@ -3163,7 +3163,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId", "DayOfWeek", "StartTime");
 
-                    b.ToTable("StudentAvailabilities");
+                    b.ToTable("StudentAvailabilities", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentBranchTransfer", b =>
@@ -3225,7 +3225,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("ToBranchId");
 
-                    b.ToTable("StudentBranchTransfers");
+                    b.ToTable("StudentBranchTransfers", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentClassAssignment", b =>
@@ -3281,7 +3281,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentClassAssignments");
+                    b.ToTable("StudentClassAssignments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentClubMembership", b =>
@@ -3332,7 +3332,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentClubMemberships");
+                    b.ToTable("StudentClubMemberships", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentCoachAssignment", b =>
@@ -3390,7 +3390,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentCoachAssignments");
+                    b.ToTable("StudentCoachAssignments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentCounselorAssignment", b =>
@@ -3431,7 +3431,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentCounselorAssignments");
+                    b.ToTable("StudentCounselorAssignments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentDocument", b =>
@@ -3489,7 +3489,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentDocuments");
+                    b.ToTable("StudentDocuments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentHobby", b =>
@@ -3544,7 +3544,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentHobbies");
+                    b.ToTable("StudentHobbies", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentHomeworkSubmission", b =>
@@ -3602,7 +3602,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentHomeworkSubmissions");
+                    b.ToTable("StudentHomeworkSubmissions", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentInternship", b =>
@@ -3699,7 +3699,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentInternships");
+                    b.ToTable("StudentInternships", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentPackagePurchase", b =>
@@ -3752,7 +3752,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentPackagePurchases");
+                    b.ToTable("StudentPackagePurchases", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentParent", b =>
@@ -3795,7 +3795,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentParents");
+                    b.ToTable("StudentParents", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentPaymentPlan", b =>
@@ -3860,7 +3860,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentPaymentPlans");
+                    b.ToTable("StudentPaymentPlans", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentSibling", b =>
@@ -3899,7 +3899,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentSiblings");
+                    b.ToTable("StudentSiblings", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentSocialProject", b =>
@@ -3989,7 +3989,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentSocialProjects");
+                    b.ToTable("StudentSocialProjects", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentSummerActivity", b =>
@@ -4063,7 +4063,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudentSummerActivities");
+                    b.ToTable("StudentSummerActivities", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudentTeacherAssignment", b =>
@@ -4113,7 +4113,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("TeacherId");
 
-                    b.ToTable("StudentTeacherAssignments");
+                    b.ToTable("StudentTeacherAssignments", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.StudyAbroadProgram", b =>
@@ -4189,7 +4189,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("StudyAbroadPrograms");
+                    b.ToTable("StudyAbroadPrograms", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Teacher", b =>
@@ -4281,7 +4281,7 @@ namespace EduPortal.Infrastructure.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Teachers");
+                    b.ToTable("Teachers", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.TeacherAvailability", b =>
@@ -4336,7 +4336,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("TeacherId", "DayOfWeek", "StartTime");
 
-                    b.ToTable("TeacherAvailabilities");
+                    b.ToTable("TeacherAvailabilities", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.UniversityApplication", b =>
@@ -4404,7 +4404,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("StudentId");
 
-                    b.ToTable("UniversityApplications");
+                    b.ToTable("UniversityApplications", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.UniversitySpecificExam", b =>
@@ -4448,7 +4448,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("ApplicationId");
 
-                    b.ToTable("UniversitySpecificExams");
+                    b.ToTable("UniversitySpecificExams", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.VisaProcess", b =>
@@ -4513,7 +4513,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("ProgramId");
 
-                    b.ToTable("VisaProcesses");
+                    b.ToTable("VisaProcesses", (string)null);
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.WeeklySchedule", b =>
@@ -4587,7 +4587,7 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.HasIndex("TeacherId");
 
-                    b.ToTable("WeeklySchedules");
+                    b.ToTable("WeeklySchedules", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

@@ -7,7 +7,7 @@ public class CourseDto
     public int Id { get; set; }
     public string CourseName { get; set; } = string.Empty;
     public string? CourseCode { get; set; }
-    public string Subject { get; set; } = string.Empty;
+    public string? Subject { get; set; }
     public string? Level { get; set; }
     public int? Credits { get; set; }
     public string? Description { get; set; }
@@ -28,7 +28,7 @@ public class CreateCourseDto
 
     [Required(ErrorMessage = "Konu alanı belirtilmelidir")]
     [MaxLength(100, ErrorMessage = "Konu alanı en fazla 100 karakter olabilir")]
-    public string Subject { get; set; } = string.Empty;
+    public string? Subject { get; set; }
 
     [MaxLength(50, ErrorMessage = "Seviye en fazla 50 karakter olabilir")]
     public string? Level { get; set; }
@@ -52,7 +52,7 @@ public class UpdateCourseDto
 
     [Required(ErrorMessage = "Konu alanı belirtilmelidir")]
     [MaxLength(100, ErrorMessage = "Konu alanı en fazla 100 karakter olabilir")]
-    public string Subject { get; set; } = string.Empty;
+    public string? Subject { get; set; }
 
     [MaxLength(50, ErrorMessage = "Seviye en fazla 50 karakter olabilir")]
     public string? Level { get; set; }
@@ -64,3 +64,4 @@ public class UpdateCourseDto
 
     public bool IsActive { get; set; }
 }
+
