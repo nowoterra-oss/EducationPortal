@@ -79,6 +79,9 @@ public static class DependencyInjection
         // Student Activity Services
         services.AddScoped<IStudentActivityService, StudentActivityService>();
 
+        // Student Group Services
+        services.AddScoped<IStudentGroupService, StudentGroupService>();
+
         return services;
     }
 }

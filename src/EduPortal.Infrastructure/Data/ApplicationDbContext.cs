@@ -107,6 +107,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<TeacherReference> TeacherReferences => Set<TeacherReference>();
     public DbSet<TeacherWorkType> TeacherWorkTypes => Set<TeacherWorkType>();
 
+    // Student Groups
+    public DbSet<StudentGroup> StudentGroups => Set<StudentGroup>();
+    public DbSet<StudentGroupMember> StudentGroupMembers => Set<StudentGroupMember>();
+    public DbSet<GroupLessonSchedule> GroupLessonSchedules => Set<GroupLessonSchedule>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -978,6 +983,56 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany()
                 .HasForeignKey(hvl => hvl.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ===============================================
+        // STUDENT GROUP MODULE RELATIONSHIPS
+        // ===============================================
+
+        builder.Entity<StudentGroup>(entity =>
+        {
+            entity.HasIndex(sg => sg.Name);
+        });
+
+        builder.Entity<StudentGroupMember>(entity =>
+        {
+            entity.HasOne(sgm => sgm.Group)
+                .WithMany(g => g.Members)
+                .HasForeignKey(sgm => sgm.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sgm => sgm.Student)
+                .WithMany()
+                .HasForeignKey(sgm => sgm.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Bir öğrenci aynı grupta birden fazla olamaz
+            entity.HasIndex(sgm => new { sgm.GroupId, sgm.StudentId }).IsUnique();
+        });
+
+        builder.Entity<GroupLessonSchedule>(entity =>
+        {
+            entity.HasOne(gls => gls.Group)
+                .WithMany(g => g.LessonSchedules)
+                .HasForeignKey(gls => gls.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(gls => gls.Teacher)
+                .WithMany()
+                .HasForeignKey(gls => gls.TeacherId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(gls => gls.Course)
+                .WithMany()
+                .HasForeignKey(gls => gls.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(gls => gls.Classroom)
+                .WithMany()
+                .HasForeignKey(gls => gls.ClassroomId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(gls => new { gls.GroupId, gls.TeacherId, gls.DayOfWeek });
         });
 
         // Global query filter for soft delete
