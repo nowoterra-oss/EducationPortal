@@ -6,7 +6,8 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$(cat <<''EOF''\nfeat: Add InterviewsJson field to Student entity\n\n- Added InterviewsJson property to Student entity for storing interview data in JSON format\n- Added InterviewsJson to StudentDto, StudentCreateDto, and StudentUpdateDto\n- AutoMapper handles mapping automatically (same property name)\n- Created and applied migration AddInterviewsJsonToStudent\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git commit:*)",
-      "Bash(dotnet ef migrations remove:*)"
+      "Bash(dotnet ef migrations remove:*)",
+      "Bash(grep:*)"
     ]
   }
 }
