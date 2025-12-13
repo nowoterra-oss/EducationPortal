@@ -5,7 +5,8 @@
       "Bash(dotnet build:*)",
       "Bash(Stop-Process -Id 20644 -Force)",
       "Bash(taskkill /F /PID 20644)",
-      "Bash(dotnet ef database update:*)"
+      "Bash(dotnet ef database update:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

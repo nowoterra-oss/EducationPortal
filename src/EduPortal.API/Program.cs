@@ -177,6 +177,9 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Education Portal Backend API"
     });
 
+    // Custom schema ID generator to avoid conflicts between types with same name in different namespaces
+    c.CustomSchemaIds(type => type.FullName);
+
     // JWT configuration for Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
