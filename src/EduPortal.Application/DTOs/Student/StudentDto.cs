@@ -27,6 +27,7 @@ public class StudentDto
     public string? TargetCountry { get; set; }
     public string? ReferenceSource { get; set; }
     public InterviewResult? InterviewResult { get; set; }
+    public string? InterviewsJson { get; set; }
     public DateTime EnrollmentDate { get; set; }
     public bool IsActive { get; set; }
     public string? ProfilePhotoUrl { get; set; }

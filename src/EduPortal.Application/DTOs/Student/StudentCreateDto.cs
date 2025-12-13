@@ -83,6 +83,11 @@ public class StudentCreateDto
     /// </summary>
     public InterviewResult? InterviewResult { get; set; }
 
+    /// <summary>
+    /// Öðrenci görüþmeleri (JSON formatýnda)
+    /// </summary>
+    public string? InterviewsJson { get; set; }
+
     public DateTime EnrollmentDate { get; set; } = DateTime.UtcNow;
 
     /// <summary>
