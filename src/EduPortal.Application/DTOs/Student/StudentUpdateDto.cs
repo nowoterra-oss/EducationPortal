@@ -74,7 +74,7 @@ public class StudentUpdateDto
     public InterviewResult? InterviewResult { get; set; }
 
     /// <summary>
-    /// Öðrenci görüþmeleri (JSON formatýnda)
+    /// Ogrenci gorusmeleri (JSON formatinda)
     /// </summary>
     public string? InterviewsJson { get; set; }
 

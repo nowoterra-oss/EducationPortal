@@ -77,8 +77,8 @@ public class Student : BaseAuditableEntity
     public InterviewResult? InterviewResult { get; set; }
 
     /// <summary>
-    /// Öðrenci görüþmeleri (JSON formatýnda)
-    /// Format: [{number:1,notes:...,evaluation:...,date:2025-01-15T10:00:00Z}, ...]
+    /// Ogrenci gorusmeleri (JSON formatinda)
+    /// Format: [{"number":1,"notes":"...","evaluation":"...","date":"2025-01-15T10:00:00Z"}, ...]
     /// </summary>
     public string? InterviewsJson { get; set; }
 
