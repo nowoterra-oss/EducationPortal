@@ -248,6 +248,8 @@ public class StudentService : IStudentService
                 student.ReferenceSource = dto.ReferenceSource;
             if (dto.InterviewResult.HasValue)
                 student.InterviewResult = dto.InterviewResult.Value;
+            if (dto.InterviewsJson != null)
+                student.InterviewsJson = dto.InterviewsJson;
             if (dto.EnrollmentDate.HasValue)
                 student.EnrollmentDate = dto.EnrollmentDate.Value;
             if (dto.ProfilePhotoUrl != null)
