@@ -100,6 +100,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<StudentInternship> StudentInternships => Set<StudentInternship>();
     public DbSet<StudentSocialProject> StudentSocialProjects => Set<StudentSocialProject>();
 
+    // Teacher Extended Form
+    public DbSet<TeacherAddress> TeacherAddresses => Set<TeacherAddress>();
+    public DbSet<TeacherBranch> TeacherBranches => Set<TeacherBranch>();
+    public DbSet<TeacherCertificate> TeacherCertificates => Set<TeacherCertificate>();
+    public DbSet<TeacherReference> TeacherReferences => Set<TeacherReference>();
+    public DbSet<TeacherWorkType> TeacherWorkTypes => Set<TeacherWorkType>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -754,6 +761,60 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(b => b.Teachers)
                 .HasForeignKey(t => t.BranchId)
                 .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ===============================================
+        // TEACHER EXTENDED FORM RELATIONSHIPS
+        // ===============================================
+
+        // TeacherAddress relationships (one-to-one)
+        builder.Entity<TeacherAddress>(entity =>
+        {
+            entity.HasOne(ta => ta.Teacher)
+                .WithOne(t => t.Address)
+                .HasForeignKey<TeacherAddress>(ta => ta.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TeacherBranch relationships (many-to-many through junction table)
+        builder.Entity<TeacherBranch>(entity =>
+        {
+            entity.HasOne(tb => tb.Teacher)
+                .WithMany(t => t.TeacherBranches)
+                .HasForeignKey(tb => tb.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(tb => tb.Course)
+                .WithMany()
+                .HasForeignKey(tb => tb.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TeacherCertificate relationships
+        builder.Entity<TeacherCertificate>(entity =>
+        {
+            entity.HasOne(tc => tc.Teacher)
+                .WithMany(t => t.TeacherCertificates)
+                .HasForeignKey(tc => tc.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TeacherReference relationships
+        builder.Entity<TeacherReference>(entity =>
+        {
+            entity.HasOne(tr => tr.Teacher)
+                .WithMany(t => t.TeacherReferences)
+                .HasForeignKey(tr => tr.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // TeacherWorkType relationships
+        builder.Entity<TeacherWorkType>(entity =>
+        {
+            entity.HasOne(twt => twt.Teacher)
+                .WithMany(t => t.TeacherWorkTypes)
+                .HasForeignKey(twt => twt.TeacherId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<Coach>(entity =>

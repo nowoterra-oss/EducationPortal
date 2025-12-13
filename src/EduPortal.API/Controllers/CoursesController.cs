@@ -36,7 +36,7 @@ public class CoursesController : ControllerBase
         try
         {
             var (items, totalCount) = await _courseService.GetAllPagedAsync(pageNumber, pageSize);
-            var response = new PagedResponse<CourseDto>(items.ToList(), pageNumber, pageSize, totalCount);
+            var response = new PagedResponse<CourseDto>(items.ToList(), totalCount, pageNumber, pageSize);
             return Ok(ApiResponse<PagedResponse<CourseDto>>.SuccessResponse(response));
         }
         catch (Exception ex)

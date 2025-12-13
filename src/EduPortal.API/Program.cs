@@ -45,6 +45,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         sqlOptions.CommandTimeout(60);
     }));
 
+// Register DbContext as interface for DI
+builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+
 // Configure EmailSettings
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));

@@ -4,6 +4,7 @@ using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduPortal.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251213134034_AddMissingColumnsToCourse")]
+    partial class AddMissingColumnsToCourse
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -4216,10 +4219,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CvUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<string>("Department")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
@@ -4229,9 +4228,6 @@ namespace EduPortal.Infrastructure.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<int?>("Experience")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("ExperienceScore")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("HireDate")
@@ -4290,45 +4286,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.ToTable("Teachers");
                 });
 
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherAddress", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("City")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Country")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("District")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("PostalCode")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("Street")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("TeacherId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TeacherId")
-                        .IsUnique();
-
-                    b.ToTable("TeacherAddresses");
-                });
-
             modelBuilder.Entity("EduPortal.Domain.Entities.TeacherAvailability", b =>
                 {
                     b.Property<int>("Id")
@@ -4382,129 +4339,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.HasIndex("TeacherId", "DayOfWeek", "StartTime");
 
                     b.ToTable("TeacherAvailabilities");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherBranch", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CourseId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TeacherId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseId");
-
-                    b.HasIndex("TeacherId");
-
-                    b.ToTable("TeacherBranches");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherCertificate", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("ExpiryDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("FileUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Institution")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<DateTime?>("IssueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("TeacherId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TeacherId");
-
-                    b.ToTable("TeacherCertificates");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherReference", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Organization")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("TeacherId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TeacherId");
-
-                    b.ToTable("TeacherReferences");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherWorkType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("TeacherId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WorkType")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TeacherId");
-
-                    b.ToTable("TeacherWorkTypes");
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.UniversityApplication", b =>
@@ -5981,73 +5815,10 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherAddress", b =>
-                {
-                    b.HasOne("EduPortal.Domain.Entities.Teacher", "Teacher")
-                        .WithOne("Address")
-                        .HasForeignKey("EduPortal.Domain.Entities.TeacherAddress", "TeacherId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Teacher");
-                });
-
             modelBuilder.Entity("EduPortal.Domain.Entities.TeacherAvailability", b =>
                 {
                     b.HasOne("EduPortal.Domain.Entities.Teacher", "Teacher")
                         .WithMany()
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Teacher");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherBranch", b =>
-                {
-                    b.HasOne("EduPortal.Domain.Entities.Course", "Course")
-                        .WithMany()
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EduPortal.Domain.Entities.Teacher", "Teacher")
-                        .WithMany("TeacherBranches")
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Course");
-
-                    b.Navigation("Teacher");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherCertificate", b =>
-                {
-                    b.HasOne("EduPortal.Domain.Entities.Teacher", "Teacher")
-                        .WithMany("TeacherCertificates")
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Teacher");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherReference", b =>
-                {
-                    b.HasOne("EduPortal.Domain.Entities.Teacher", "Teacher")
-                        .WithMany("TeacherReferences")
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Teacher");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.TeacherWorkType", b =>
-                {
-                    b.HasOne("EduPortal.Domain.Entities.Teacher", "Teacher")
-                        .WithMany("TeacherWorkTypes")
                         .HasForeignKey("TeacherId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -6406,8 +6177,6 @@ namespace EduPortal.Infrastructure.Migrations
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Teacher", b =>
                 {
-                    b.Navigation("Address");
-
                     b.Navigation("Attendances");
 
                     b.Navigation("ClassPerformances");
@@ -6419,14 +6188,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Navigation("InternalExams");
 
                     b.Navigation("StudentAssignments");
-
-                    b.Navigation("TeacherBranches");
-
-                    b.Navigation("TeacherCertificates");
-
-                    b.Navigation("TeacherReferences");
-
-                    b.Navigation("TeacherWorkTypes");
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.UniversityApplication", b =>

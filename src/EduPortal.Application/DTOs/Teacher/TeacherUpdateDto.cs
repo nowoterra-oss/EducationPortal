@@ -55,4 +55,17 @@ public class TeacherUpdateDto
 
     [StringLength(500)]
     public string? ProfilePhotoUrl { get; set; }
+
+    // New fields for extended teacher form
+    [Range(0, 100, ErrorMessage = "Deneyim puanı 0-100 arasında olmalıdır")]
+    public int? ExperienceScore { get; set; }
+
+    [StringLength(500)]
+    public string? CvUrl { get; set; }
+
+    public TeacherAddressDto? Address { get; set; }
+    public List<TeacherBranchDto>? Branches { get; set; }
+    public List<TeacherCertificateDto>? Certificates { get; set; }
+    public List<TeacherReferenceDto>? References { get; set; }
+    public List<int>? WorkTypes { get; set; }
 }

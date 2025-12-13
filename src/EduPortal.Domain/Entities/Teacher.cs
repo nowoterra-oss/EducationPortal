@@ -55,6 +55,12 @@ public class Teacher : BaseEntity
     [MaxLength(500)]
     public string? ProfilePhotoUrl { get; set; }
 
+    // New fields for extended teacher form
+    public int? ExperienceScore { get; set; }  // 0-100 score
+
+    [MaxLength(500)]
+    public string? CvUrl { get; set; }
+
     // Navigation Properties
     [ForeignKey(nameof(BranchId))]
     public virtual Branch? Branch { get; set; }
@@ -70,4 +76,11 @@ public class Teacher : BaseEntity
     public virtual ICollection<ClassPerformance> ClassPerformances { get; set; } = new List<ClassPerformance>();
     public virtual ICollection<StudentTeacherAssignment> StudentAssignments { get; set; } = new List<StudentTeacherAssignment>();
     public virtual ICollection<InternalExam> InternalExams { get; set; } = new List<InternalExam>();
+
+    // New navigation properties for extended teacher form
+    public virtual TeacherAddress? Address { get; set; }
+    public virtual ICollection<TeacherBranch> TeacherBranches { get; set; } = new List<TeacherBranch>();
+    public virtual ICollection<TeacherCertificate> TeacherCertificates { get; set; } = new List<TeacherCertificate>();
+    public virtual ICollection<TeacherReference> TeacherReferences { get; set; } = new List<TeacherReference>();
+    public virtual ICollection<TeacherWorkType> TeacherWorkTypes { get; set; } = new List<TeacherWorkType>();
 }

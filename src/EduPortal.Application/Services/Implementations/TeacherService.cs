@@ -4,7 +4,9 @@ using EduPortal.Application.DTOs.Teacher;
 using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using EduPortal.Domain.Entities;
+using EduPortal.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace EduPortal.Application.Services.Implementations;
 
@@ -13,15 +15,18 @@ public class TeacherService : ITeacherService
     private readonly ITeacherRepository _teacherRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IMapper _mapper;
+    private readonly DbContext _dbContext;
 
     public TeacherService(
         ITeacherRepository teacherRepository,
         UserManager<ApplicationUser> userManager,
-        IMapper mapper)
+        IMapper mapper,
+        DbContext dbContext)
     {
         _teacherRepository = teacherRepository;
         _userManager = userManager;
         _mapper = mapper;
+        _dbContext = dbContext;
     }
 
     public async Task<ApiResponse<PagedResponse<TeacherDto>>> GetAllAsync(int pageNumber = 1, int pageSize = 10, bool includeInactive = false)
@@ -55,7 +60,8 @@ public class TeacherService : ITeacherService
     {
         try
         {
-            var teacher = await _teacherRepository.GetByIdAsync(id);
+            // Use extended details to include all related data
+            var teacher = await _teacherRepository.GetTeacherWithExtendedDetailsAsync(id);
             if (teacher == null)
             {
                 return ApiResponse<TeacherDto>.ErrorResponse("Öğretmen bulunamadı");
@@ -126,7 +132,8 @@ public class TeacherService : ITeacherService
     {
         try
         {
-            var teacher = await _teacherRepository.GetByIdAsync(dto.Id);
+            // Get teacher with extended details
+            var teacher = await _teacherRepository.GetTeacherWithExtendedDetailsAsync(dto.Id);
             if (teacher == null)
             {
                 return ApiResponse<TeacherDto>.ErrorResponse("Öğretmen bulunamadı");
@@ -183,6 +190,107 @@ public class TeacherService : ITeacherService
             if (dto.ProfilePhotoUrl != null)
                 teacher.ProfilePhotoUrl = dto.ProfilePhotoUrl;
 
+            // Update new extended form fields
+            if (dto.ExperienceScore.HasValue)
+                teacher.ExperienceScore = dto.ExperienceScore.Value;
+
+            if (dto.CvUrl != null)
+                teacher.CvUrl = dto.CvUrl;
+
+            // Update Address (one-to-one)
+            if (dto.Address != null)
+            {
+                if (teacher.Address == null)
+                {
+                    teacher.Address = new TeacherAddress { TeacherId = teacher.Id };
+                }
+                teacher.Address.Street = dto.Address.Street;
+                teacher.Address.District = dto.Address.District;
+                teacher.Address.City = dto.Address.City;
+                teacher.Address.PostalCode = dto.Address.PostalCode;
+                teacher.Address.Country = dto.Address.Country;
+            }
+
+            // Update Branches (replace all)
+            if (dto.Branches != null)
+            {
+                // Remove existing branches
+                var existingBranches = _dbContext.Set<TeacherBranch>().Where(b => b.TeacherId == teacher.Id);
+                _dbContext.Set<TeacherBranch>().RemoveRange(existingBranches);
+
+                // Add new branches
+                foreach (var branchDto in dto.Branches)
+                {
+                    _dbContext.Set<TeacherBranch>().Add(new TeacherBranch
+                    {
+                        TeacherId = teacher.Id,
+                        CourseId = branchDto.CourseId
+                    });
+                }
+            }
+
+            // Update Certificates (replace all)
+            if (dto.Certificates != null)
+            {
+                // Remove existing certificates
+                var existingCerts = _dbContext.Set<TeacherCertificate>().Where(c => c.TeacherId == teacher.Id);
+                _dbContext.Set<TeacherCertificate>().RemoveRange(existingCerts);
+
+                // Add new certificates
+                foreach (var certDto in dto.Certificates)
+                {
+                    _dbContext.Set<TeacherCertificate>().Add(new TeacherCertificate
+                    {
+                        TeacherId = teacher.Id,
+                        Name = certDto.Name,
+                        Institution = certDto.Institution,
+                        IssueDate = certDto.IssueDate,
+                        ExpiryDate = certDto.ExpiryDate,
+                        FileUrl = certDto.FileUrl
+                    });
+                }
+            }
+
+            // Update References (replace all)
+            if (dto.References != null)
+            {
+                // Remove existing references
+                var existingRefs = _dbContext.Set<TeacherReference>().Where(r => r.TeacherId == teacher.Id);
+                _dbContext.Set<TeacherReference>().RemoveRange(existingRefs);
+
+                // Add new references
+                foreach (var refDto in dto.References)
+                {
+                    _dbContext.Set<TeacherReference>().Add(new TeacherReference
+                    {
+                        TeacherId = teacher.Id,
+                        FullName = refDto.FullName,
+                        Title = refDto.Title,
+                        Organization = refDto.Organization,
+                        PhoneNumber = refDto.PhoneNumber,
+                        Email = refDto.Email
+                    });
+                }
+            }
+
+            // Update WorkTypes (replace all)
+            if (dto.WorkTypes != null)
+            {
+                // Remove existing work types
+                var existingWorkTypes = _dbContext.Set<TeacherWorkType>().Where(w => w.TeacherId == teacher.Id);
+                _dbContext.Set<TeacherWorkType>().RemoveRange(existingWorkTypes);
+
+                // Add new work types
+                foreach (var workType in dto.WorkTypes)
+                {
+                    _dbContext.Set<TeacherWorkType>().Add(new TeacherWorkType
+                    {
+                        TeacherId = teacher.Id,
+                        WorkType = (WorkType)workType
+                    });
+                }
+            }
+
             // Update user phone number if provided
             if (!string.IsNullOrEmpty(dto.PhoneNumber))
             {
@@ -194,9 +302,11 @@ public class TeacherService : ITeacherService
                 }
             }
 
-            await _teacherRepository.UpdateAsync(teacher);
+            await _dbContext.SaveChangesAsync();
 
-            var teacherDto = _mapper.Map<TeacherDto>(teacher);
+            // Refresh teacher with all related data for response
+            var updatedTeacher = await _teacherRepository.GetTeacherWithExtendedDetailsAsync(dto.Id);
+            var teacherDto = _mapper.Map<TeacherDto>(updatedTeacher);
             return ApiResponse<TeacherDto>.SuccessResponse(teacherDto, "Öğretmen başarıyla güncellendi");
         }
         catch (Exception ex)

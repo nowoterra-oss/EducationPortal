@@ -46,6 +46,19 @@ public class TeacherRepository : GenericRepository<Teacher>, ITeacherRepository
             .FirstOrDefaultAsync(t => t.Id == teacherId, cancellationToken);
     }
 
+    public async Task<Teacher?> GetTeacherWithExtendedDetailsAsync(int teacherId, CancellationToken cancellationToken = default)
+    {
+        return await _dbSet
+            .Include(t => t.User)
+            .Include(t => t.Branch)
+            .Include(t => t.Address)
+            .Include(t => t.TeacherBranches).ThenInclude(b => b.Course)
+            .Include(t => t.TeacherCertificates)
+            .Include(t => t.TeacherReferences)
+            .Include(t => t.TeacherWorkTypes)
+            .FirstOrDefaultAsync(t => t.Id == teacherId && !t.IsDeleted, cancellationToken);
+    }
+
     public async Task<IEnumerable<Teacher>> GetTeachersByBranchAsync(int branchId, CancellationToken cancellationToken = default)
     {
         return await _dbSet
