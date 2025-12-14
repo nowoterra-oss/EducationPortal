@@ -1,6 +1,8 @@
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Scheduling;
+using EduPortal.Application.DTOs.StudentGroup;
 using EduPortal.Application.Interfaces;
+using EduPortal.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,10 +15,12 @@ namespace EduPortal.API.Controllers;
 public class SchedulingController : ControllerBase
 {
     private readonly ISchedulingService _schedulingService;
+    private readonly IStudentGroupService _studentGroupService;
 
-    public SchedulingController(ISchedulingService schedulingService)
+    public SchedulingController(ISchedulingService schedulingService, IStudentGroupService studentGroupService)
     {
         _schedulingService = schedulingService;
+        _studentGroupService = studentGroupService;
     }
 
     // ===============================================
@@ -142,6 +146,17 @@ public class SchedulingController : ControllerBase
     public async Task<ActionResult<ApiResponse<List<LessonScheduleDto>>>> GetTeacherLessons(int teacherId)
     {
         var result = await _schedulingService.GetTeacherLessonsAsync(teacherId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Öğretmenin grup derslerini getir
+    /// </summary>
+    [HttpGet("teacher/{teacherId}/group-lessons")]
+    [ProducesResponseType(typeof(ApiResponse<List<GroupLessonScheduleDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<GroupLessonScheduleDto>>>> GetTeacherGroupLessons(int teacherId)
+    {
+        var result = await _studentGroupService.GetTeacherGroupLessonsAsync(teacherId);
         return Ok(result);
     }
 
