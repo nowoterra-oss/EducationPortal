@@ -16,7 +16,8 @@
       "Bash(dotnet ef migrations:*)",
       "Bash(git cherry-pick:*)",
       "Bash(dotnet build:*)",
-      "Bash(dotnet ef database update:*)"
+      "Bash(dotnet ef database update:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
