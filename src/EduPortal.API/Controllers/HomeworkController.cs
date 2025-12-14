@@ -230,35 +230,120 @@ public class HomeworkController : ControllerBase
     //     }
     // }
 
-    // TODO: Implement GetByStudentAsync in IHomeworkService and HomeworkService before uncommenting
-    // /// <summary>
-    // /// Get homework assigned to a specific student
-    // /// </summary>
-    // /// <param name="studentId">Student ID</param>
-    // /// <param name="pageNumber">Page number (default: 1)</param>
-    // /// <param name="pageSize">Page size (default: 10)</param>
-    // /// <returns>Paginated list of homework</returns>
-    // /// <response code="200">Homework retrieved successfully</response>
-    // /// <response code="401">Unauthorized</response>
-    // [HttpGet("student/{studentId}")]
-    // [ProducesResponseType(typeof(ApiResponse<PagedResponse<HomeworkDto>>), StatusCodes.Status200OK)]
-    // [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    // public async Task<ActionResult<ApiResponse<PagedResponse<HomeworkDto>>>> GetByStudent(
-    //     int studentId,
-    //     [FromQuery] int pageNumber = 1,
-    //     [FromQuery] int pageSize = 10)
-    // {
-    //     try
-    //     {
-    //         var result = await _homeworkService.GetByStudentAsync(studentId, pageNumber, pageSize);
-    //         return Ok(result);
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         _logger.LogError(ex, "Error occurred while getting homework for student: {StudentId}", studentId);
-    //         return StatusCode(500, ApiResponse<PagedResponse<HomeworkDto>>.ErrorResponse("Öğrenci ödevleri getirilirken bir hata oluştu"));
-    //     }
-    // }
+    /// <summary>
+    /// Get homework assigned to a specific student (MOCK DATA)
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="pageNumber">Page number (default: 1)</param>
+    /// <param name="pageSize">Page size (default: 10)</param>
+    /// <returns>Paginated list of homework</returns>
+    [HttpGet("student/{studentId}")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<HomeworkDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<ApiResponse<PagedResponse<HomeworkDto>>> GetByStudent(
+        string studentId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        // MOCK DATA - Gerçek veri gelene kadar
+        var mockHomeworks = new List<HomeworkDto>
+        {
+            new HomeworkDto
+            {
+                Id = 1,
+                CourseId = 1,
+                Title = "Matematik Deneme Sınavı Çözümü",
+                Description = "2024 TYT Deneme sınavındaki tüm soruları çözün ve yanlışlarınızı not alın.",
+                CourseName = "Matematik",
+                AssignedDate = DateTime.UtcNow.AddDays(-2),
+                DueDate = DateTime.UtcNow.AddDays(3),
+                MaxScore = 100,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-2)
+            },
+            new HomeworkDto
+            {
+                Id = 2,
+                CourseId = 2,
+                Title = "İngilizce Essay Yazımı",
+                Description = "Climate Change konusunda 300 kelimelik bir essay yazın.",
+                CourseName = "İngilizce",
+                AssignedDate = DateTime.UtcNow.AddDays(-1),
+                DueDate = DateTime.UtcNow.AddDays(5),
+                MaxScore = 100,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
+            },
+            new HomeworkDto
+            {
+                Id = 3,
+                CourseId = 3,
+                Title = "Fizik Deney Raporu",
+                Description = "Basit harmonik hareket deneyinin raporunu hazırlayın.",
+                CourseName = "Fizik",
+                AssignedDate = DateTime.UtcNow.AddDays(-3),
+                DueDate = DateTime.UtcNow.AddDays(7),
+                MaxScore = 50,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-3)
+            },
+            new HomeworkDto
+            {
+                Id = 4,
+                CourseId = 4,
+                Title = "Türk Dili ve Edebiyatı Kitap Özeti",
+                Description = "Seçtiğiniz bir Türk romanının özetini çıkarın.",
+                CourseName = "Türk Dili ve Edebiyatı",
+                AssignedDate = DateTime.UtcNow,
+                DueDate = DateTime.UtcNow.AddDays(10),
+                MaxScore = 100,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new HomeworkDto
+            {
+                Id = 5,
+                CourseId = 5,
+                Title = "Kimya Formül Çalışması",
+                Description = "Organik kimya formüllerini ezberleyin ve test çözün.",
+                CourseName = "Kimya",
+                AssignedDate = DateTime.UtcNow.AddDays(-1),
+                DueDate = DateTime.UtcNow.AddDays(2),
+                MaxScore = 80,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-1)
+            }
+        };
+
+        var pagedData = mockHomeworks.Skip((pageNumber - 1) * pageSize).Take(pageSize).ToList();
+        var pagedResponse = new PagedResponse<HomeworkDto>(pagedData, mockHomeworks.Count, pageNumber, pageSize);
+
+        return Ok(ApiResponse<PagedResponse<HomeworkDto>>.SuccessResponse(pagedResponse, "Öğrenci ödevleri getirildi"));
+    }
+
+    /// <summary>
+    /// Get homework statistics for a specific student (MOCK DATA)
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <returns>Homework statistics</returns>
+    [HttpGet("student/{studentId}/stats")]
+    [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<ApiResponse<object>> GetStudentStats(string studentId)
+    {
+        // MOCK DATA - Gerçek veri gelene kadar
+        var mockStats = new
+        {
+            totalHomeworks = 10,
+            completed = 7,
+            inProgress = 2,
+            late = 1,
+            notStarted = 0,
+            averageScore = 85.5
+        };
+
+        return Ok(ApiResponse<object>.SuccessResponse(mockStats, "Ödev istatistikleri getirildi"));
+    }
 
     /// <summary>
     /// Get submissions for a specific homework
