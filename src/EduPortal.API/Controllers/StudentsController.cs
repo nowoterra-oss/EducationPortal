@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Certificate;
 using EduPortal.Application.DTOs.Student;
+using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,15 +20,18 @@ public class StudentsController : ControllerBase
 {
     private readonly IStudentService _studentService;
     private readonly IStudentCertificateService _certificateService;
+    private readonly IStudentRepository _studentRepository;
     private readonly ILogger<StudentsController> _logger;
 
     public StudentsController(
         IStudentService studentService,
         IStudentCertificateService certificateService,
+        IStudentRepository studentRepository,
         ILogger<StudentsController> logger)
     {
         _studentService = studentService;
         _certificateService = certificateService;
+        _studentRepository = studentRepository;
         _logger = logger;
     }
 
@@ -234,7 +239,7 @@ public class StudentsController : ControllerBase
     /// <response code="403">Forbidden - Insufficient permissions</response>
     /// <response code="404">Student not found</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Danışman")]
+    [Authorize(Roles = "Admin,Danışman,Öğrenci")]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -244,7 +249,30 @@ public class StudentsController : ControllerBase
     {
         try
         {
-            studentUpdateDto.Id = id;
+            // Öğrenci rolü için kısıtlama: sadece kendi kaydını güncelleyebilir
+            if (User.IsInRole("Öğrenci"))
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                    return Forbid();
+
+                var student = await _studentRepository.GetByUserIdAsync(userId);
+                if (student == null || student.Id != id)
+                    return Forbid();
+
+                // Öğrenci sadece email ve address alanlarını güncelleyebilir
+                studentUpdateDto = new StudentUpdateDto
+                {
+                    Id = id,
+                    Email = studentUpdateDto.Email,
+                    Address = studentUpdateDto.Address
+                };
+            }
+            else
+            {
+                studentUpdateDto.Id = id;
+            }
+
             var result = await _studentService.UpdateAsync(studentUpdateDto);
 
             if (result.Success)
