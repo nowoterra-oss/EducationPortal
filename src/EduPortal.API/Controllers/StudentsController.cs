@@ -1,4 +1,5 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.Certificate;
 using EduPortal.Application.DTOs.Student;
 using EduPortal.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -16,11 +17,16 @@ namespace EduPortal.API.Controllers;
 public class StudentsController : ControllerBase
 {
     private readonly IStudentService _studentService;
+    private readonly IStudentCertificateService _certificateService;
     private readonly ILogger<StudentsController> _logger;
 
-    public StudentsController(IStudentService studentService, ILogger<StudentsController> logger)
+    public StudentsController(
+        IStudentService studentService,
+        IStudentCertificateService certificateService,
+        ILogger<StudentsController> logger)
     {
         _studentService = studentService;
+        _certificateService = certificateService;
         _logger = logger;
     }
 
@@ -718,4 +724,88 @@ public class StudentsController : ControllerBase
     //         return StatusCode(500, ApiResponse<object>.ErrorResponse("Ödev performansı getirilirken bir hata oluştu"));
     //     }
     // }
+
+    // ===============================================
+    // STUDENT CERTIFICATES
+    // ===============================================
+
+    /// <summary>
+    /// Get student certificates
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <returns>List of certificates</returns>
+    [HttpGet("{studentId}/certificates")]
+    [ProducesResponseType(typeof(ApiResponse<List<StudentCertificateDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<StudentCertificateDto>>>> GetCertificates(int studentId)
+    {
+        var result = await _certificateService.GetByStudentIdAsync(studentId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Upload a new certificate
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="file">Certificate file (PDF, JPG, PNG - max 5MB)</param>
+    /// <param name="name">Certificate name</param>
+    /// <param name="description">Description (optional)</param>
+    /// <param name="issueDate">Issue date (optional)</param>
+    /// <param name="issuingOrganization">Issuing organization (optional)</param>
+    [HttpPost("{studentId}/certificates")]
+    [Authorize(Roles = "Admin,Öğrenci")]
+    [ProducesResponseType(typeof(ApiResponse<StudentCertificateUploadResultDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<StudentCertificateUploadResultDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<StudentCertificateUploadResultDto>>> UploadCertificate(
+        int studentId,
+        IFormFile file,
+        [FromForm] string name,
+        [FromForm] string? description = null,
+        [FromForm] DateTime? issueDate = null,
+        [FromForm] string? issuingOrganization = null)
+    {
+        var dto = new StudentCertificateCreateDto
+        {
+            Name = name,
+            Description = description,
+            IssueDate = issueDate,
+            IssuingOrganization = issuingOrganization
+        };
+
+        var result = await _certificateService.UploadAsync(studentId, file, dto);
+        if (result.Success)
+            return CreatedAtAction(nameof(GetCertificates), new { studentId }, result);
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Delete a certificate
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="certificateId">Certificate ID</param>
+    [HttpDelete("{studentId}/certificates/{certificateId}")]
+    [Authorize(Roles = "Admin,Öğrenci")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteCertificate(int studentId, int certificateId)
+    {
+        var result = await _certificateService.DeleteAsync(studentId, certificateId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Download/view a certificate file
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="certificateId">Certificate ID</param>
+    [HttpGet("{studentId}/certificates/{certificateId}/download")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadCertificate(int studentId, int certificateId)
+    {
+        var (fileBytes, contentType, fileName) = await _certificateService.DownloadAsync(studentId, certificateId);
+
+        if (fileBytes == null || contentType == null || fileName == null)
+            return NotFound(ApiResponse<bool>.ErrorResponse("Sertifika dosyası bulunamadı."));
+
+        return File(fileBytes, contentType, fileName);
+    }
 }

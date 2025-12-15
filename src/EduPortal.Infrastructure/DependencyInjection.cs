@@ -85,6 +85,9 @@ public static class DependencyInjection
         // Admin Calendar Service
         services.AddScoped<IAdminCalendarService, AdminCalendarService>();
 
+        // Student Certificate Service
+        services.AddScoped<IStudentCertificateService, StudentCertificateService>();
+
         return services;
     }
 }

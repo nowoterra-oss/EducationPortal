@@ -115,6 +115,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     // Admin Calendar
     public DbSet<AdminCalendarEvent> AdminCalendarEvents => Set<AdminCalendarEvent>();
 
+    // Student Certificates
+    public DbSet<StudentCertificate> StudentCertificates => Set<StudentCertificate>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -1036,6 +1039,20 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasIndex(gls => new { gls.GroupId, gls.TeacherId, gls.DayOfWeek });
+        });
+
+        // ===============================================
+        // STUDENT CERTIFICATE MODULE RELATIONSHIPS
+        // ===============================================
+
+        builder.Entity<StudentCertificate>(entity =>
+        {
+            entity.HasOne(sc => sc.Student)
+                .WithMany()
+                .HasForeignKey(sc => sc.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(sc => sc.StudentId);
         });
 
         // Global query filter for soft delete
