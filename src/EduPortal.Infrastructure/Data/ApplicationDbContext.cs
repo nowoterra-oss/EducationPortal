@@ -112,6 +112,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<StudentGroupMember> StudentGroupMembers => Set<StudentGroupMember>();
     public DbSet<GroupLessonSchedule> GroupLessonSchedules => Set<GroupLessonSchedule>();
 
+    // Admin Calendar
+    public DbSet<AdminCalendarEvent> AdminCalendarEvents => Set<AdminCalendarEvent>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

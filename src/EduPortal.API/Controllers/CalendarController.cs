@@ -1,6 +1,7 @@
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Calendar;
 using EduPortal.Application.Interfaces;
+using EduPortal.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -16,11 +17,16 @@ namespace EduPortal.API.Controllers;
 public class CalendarController : ControllerBase
 {
     private readonly ICalendarService _calendarService;
+    private readonly IAdminCalendarService _adminCalendarService;
     private readonly ILogger<CalendarController> _logger;
 
-    public CalendarController(ICalendarService calendarService, ILogger<CalendarController> logger)
+    public CalendarController(
+        ICalendarService calendarService,
+        IAdminCalendarService adminCalendarService,
+        ILogger<CalendarController> logger)
     {
         _calendarService = calendarService;
+        _adminCalendarService = adminCalendarService;
         _logger = logger;
     }
 
@@ -232,5 +238,73 @@ public class CalendarController : ControllerBase
             _logger.LogError(ex, "Sınıf etkinlikleri getirilirken hata oluştu. ClassId: {ClassId}", classId);
             return StatusCode(500, ApiResponse<IEnumerable<CalendarEventDto>>.ErrorResponse("Etkinlikler getirilirken bir hata oluştu"));
         }
+    }
+
+    // ===============================================
+    // ADMIN CALENDAR EVENTS (for /api/calendar/events)
+    // ===============================================
+
+    /// <summary>
+    /// Admin takvim etkinliklerini tarih aralığına göre getir
+    /// </summary>
+    [HttpGet("events")]
+    [ProducesResponseType(typeof(ApiResponse<List<AdminCalendarEventDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<AdminCalendarEventDto>>>> GetAdminEventsByDateRange(
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate)
+    {
+        var result = await _adminCalendarService.GetByDateRangeAsync(startDate, endDate);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Admin takvim etkinliği detayını getir
+    /// </summary>
+    [HttpGet("events/{id}")]
+    [ProducesResponseType(typeof(ApiResponse<AdminCalendarEventDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AdminCalendarEventDto>>> GetAdminEventById(int id)
+    {
+        var result = await _adminCalendarService.GetByIdAsync(id);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Yeni admin takvim etkinliği oluştur
+    /// </summary>
+    [HttpPost("events")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<AdminCalendarEventDto>), StatusCodes.Status201Created)]
+    public async Task<ActionResult<ApiResponse<AdminCalendarEventDto>>> CreateAdminEvent([FromBody] AdminCalendarEventCreateDto dto)
+    {
+        var result = await _adminCalendarService.CreateAsync(dto);
+        if (result.Success)
+            return CreatedAtAction(nameof(GetAdminEventById), new { id = result.Data?.Id }, result);
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Admin takvim etkinliği güncelle
+    /// </summary>
+    [HttpPut("events/{id}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<AdminCalendarEventDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AdminCalendarEventDto>>> UpdateAdminEvent(int id, [FromBody] AdminCalendarEventUpdateDto dto)
+    {
+        var result = await _adminCalendarService.UpdateAsync(id, dto);
+        if (!result.Success)
+            return BadRequest(result);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Admin takvim etkinliği sil
+    /// </summary>
+    [HttpDelete("events/{id}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteAdminEvent(int id)
+    {
+        var result = await _adminCalendarService.DeleteAsync(id);
+        return Ok(result);
     }
 }
