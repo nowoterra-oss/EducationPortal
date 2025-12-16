@@ -99,8 +99,8 @@ public class TeacherService : ITeacherService
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Generate a default password
-            var defaultPassword = $"Teacher{DateTime.Now.Ticks}!";
+            // Varsayılan şifre olarak TC Kimlik Numarası kullanılır (yoksa email)
+            var defaultPassword = !string.IsNullOrEmpty(dto.IdentityNumber) ? dto.IdentityNumber : dto.Email;
             var result = await _userManager.CreateAsync(user, defaultPassword);
 
             if (!result.Succeeded)

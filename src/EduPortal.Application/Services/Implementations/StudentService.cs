@@ -153,8 +153,8 @@ public class StudentService : IStudentService
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Generate a default password (in production, this should be sent via email or set by user)
-            var defaultPassword = $"Student{studentNo}!";
+            // Varsayılan şifre olarak TC Kimlik Numarası kullanılır
+            var defaultPassword = dto.IdentityNumber;
             var result = await _userManager.CreateAsync(user, defaultPassword);
 
             if (!result.Succeeded)
