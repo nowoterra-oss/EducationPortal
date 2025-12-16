@@ -239,7 +239,7 @@ public class StudentsController : ControllerBase
     /// <response code="403">Forbidden - Insufficient permissions</response>
     /// <response code="404">Student not found</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Danışman,Öğrenci")]
+    [Authorize(Roles = "Admin,Danışman,Ogrenci")]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -250,7 +250,7 @@ public class StudentsController : ControllerBase
         try
         {
             // Öğrenci rolü için kısıtlama: sadece kendi kaydını güncelleyebilir
-            if (User.IsInRole("Öğrenci"))
+            if (User.IsInRole("Ogrenci"))
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(userId))
@@ -780,9 +780,10 @@ public class StudentsController : ControllerBase
     /// <param name="issueDate">Issue date (optional)</param>
     /// <param name="issuingOrganization">Issuing organization (optional)</param>
     [HttpPost("{studentId}/certificates")]
-    [Authorize(Roles = "Admin,Öğrenci")]
+    [Authorize(Roles = "Admin,Danışman,Ogrenci")]
     [ProducesResponseType(typeof(ApiResponse<StudentCertificateUploadResultDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<StudentCertificateUploadResultDto>), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<StudentCertificateUploadResultDto>>> UploadCertificate(
         int studentId,
         IFormFile file,
@@ -791,6 +792,19 @@ public class StudentsController : ControllerBase
         [FromForm] DateTime? issueDate = null,
         [FromForm] string? issuingOrganization = null)
     {
+        // Öğrenci sadece kendi sertifikasını yükleyebilir
+        if (User.IsInRole("Ogrenci"))
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Forbid();
+
+            var student = await _studentRepository.GetByUserIdAsync(userId);
+            if (student == null || student.Id != studentId)
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    ApiResponse<StudentCertificateUploadResultDto>.ErrorResponse("Sadece kendi sertifikanızı yükleyebilirsiniz."));
+        }
+
         var dto = new StudentCertificateCreateDto
         {
             Name = name,
@@ -817,13 +831,13 @@ public class StudentsController : ControllerBase
     /// Admin can delete any certificate. Students can only delete certificates they added themselves (IsAddedByAdmin = false).
     /// </remarks>
     [HttpDelete("{studentId}/certificates/{certificateId}")]
-    [Authorize(Roles = "Admin,Öğrenci")]
+    [Authorize(Roles = "Admin,Danışman,Ogrenci")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteCertificate(int studentId, int certificateId)
     {
         // If student role, check if they can delete this certificate
-        if (User.IsInRole("Öğrenci"))
+        if (User.IsInRole("Ogrenci"))
         {
             var certificate = await _certificateService.GetByIdAsync(studentId, certificateId);
             if (!certificate.Success)
