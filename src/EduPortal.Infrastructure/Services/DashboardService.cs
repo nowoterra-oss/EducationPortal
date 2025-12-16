@@ -426,4 +426,133 @@ public class DashboardService : IDashboardService
 
         return grades.Any() ? Math.Round(grades.Average(), 2) : 0;
     }
+
+    public async Task<ApiResponse<StudentDashboardDataDto>> GetStudentDashboardDataAsync(int studentId)
+    {
+        try
+        {
+            // Öğrenci kontrolü
+            var student = await _context.Students
+                .AsNoTracking()
+                .Include(s => s.User)
+                .FirstOrDefaultAsync(s => s.Id == studentId && !s.IsDeleted);
+
+            if (student == null)
+            {
+                return ApiResponse<StudentDashboardDataDto>.ErrorResponse("Öğrenci bulunamadı");
+            }
+
+            var result = new StudentDashboardDataDto
+            {
+                Student = new StudentBasicInfoDto
+                {
+                    Id = student.Id,
+                    FullName = $"{student.User.FirstName} {student.User.LastName}",
+                    ProfilePhotoUrl = student.ProfilePhotoUrl,
+                    StudentNo = student.StudentNo,
+                    Email = student.User.Email
+                }
+            };
+
+            // İstatistikler
+            var stats = new DashboardStatsDto();
+
+            // Bekleyen ödev sayısı
+            stats.PendingHomeworkCount = await _context.HomeworkAssignments
+                .AsNoTracking()
+                .CountAsync(h => h.StudentId == studentId &&
+                               !h.IsDeleted &&
+                               (h.Status == HomeworkAssignmentStatus.Atandi ||
+                                h.Status == HomeworkAssignmentStatus.Goruldu ||
+                                h.Status == HomeworkAssignmentStatus.DevamEdiyor));
+
+            // Yaklaşan sınav sayısı
+            var today = DateTime.Today;
+            var nextMonth = today.AddMonths(1);
+            stats.UpcomingExamCount = await _context.InternalExams
+                .AsNoTracking()
+                .CountAsync(e => !e.IsDeleted && e.ExamDate >= today && e.ExamDate <= nextMonth);
+
+            // Devam oranı
+            var totalAttendance = await _context.Attendances
+                .AsNoTracking()
+                .CountAsync(a => a.StudentId == studentId && !a.IsDeleted);
+
+            if (totalAttendance > 0)
+            {
+                var presentCount = await _context.Attendances
+                    .AsNoTracking()
+                    .CountAsync(a => a.StudentId == studentId &&
+                                    !a.IsDeleted &&
+                                    a.Status == AttendanceStatus.Geldi);
+                stats.AttendanceRate = Math.Round((decimal)presentCount / totalAttendance * 100, 2);
+            }
+            else
+            {
+                stats.AttendanceRate = 100; // Varsayılan
+            }
+
+            // Ortalama not
+            var grades = await _context.ExamResults
+                .AsNoTracking()
+                .Where(e => e.StudentId == studentId && !e.IsDeleted)
+                .Include(e => e.Exam)
+                .Select(e => e.Exam.MaxScore > 0 ? (e.Score / e.Exam.MaxScore) * 100 : 0)
+                .ToListAsync();
+
+            stats.AverageGrade = grades.Any() ? Math.Round(grades.Average(), 2) : 0;
+
+            result.Stats = stats;
+
+            // Son 4 ödev
+            result.RecentHomeworks = await _context.HomeworkAssignments
+                .AsNoTracking()
+                .Where(h => h.StudentId == studentId && !h.IsDeleted)
+                .OrderByDescending(h => h.DueDate)
+                .Take(4)
+                .Include(h => h.Homework)
+                    .ThenInclude(hw => hw.Course)
+                .Include(h => h.Teacher)
+                    .ThenInclude(t => t.User)
+                .Select(h => new RecentHomeworkDto
+                {
+                    Id = h.Id,
+                    Title = h.Homework != null ? h.Homework.Title : "Ödev",
+                    CourseName = h.Homework != null && h.Homework.Course != null ? h.Homework.Course.CourseName : null,
+                    TeacherName = h.Teacher != null && h.Teacher.User != null
+                        ? h.Teacher.User.FirstName + " " + h.Teacher.User.LastName
+                        : null,
+                    DueDate = h.DueDate,
+                    Status = h.Status == HomeworkAssignmentStatus.TeslimEdildi ||
+                             h.Status == HomeworkAssignmentStatus.Degerlendirildi
+                             ? "completed" : "pending",
+                    Priority = h.DueDate <= DateTime.Now.AddDays(2) ? "high" :
+                              h.DueDate <= DateTime.Now.AddDays(5) ? "medium" : "low"
+                })
+                .ToListAsync();
+
+            // Yaklaşan 3 sınav
+            result.UpcomingExams = await _context.InternalExams
+                .AsNoTracking()
+                .Where(e => !e.IsDeleted && e.ExamDate >= today)
+                .OrderBy(e => e.ExamDate)
+                .Take(3)
+                .Include(e => e.Course)
+                .Select(e => new UpcomingExamDto
+                {
+                    Id = e.Id,
+                    Title = e.Title,
+                    CourseName = e.Course != null ? e.Course.CourseName : null,
+                    ExamDate = e.ExamDate,
+                    ExamType = e.ExamType
+                })
+                .ToListAsync();
+
+            return ApiResponse<StudentDashboardDataDto>.SuccessResponse(result, "Dashboard verileri başarıyla getirildi");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<StudentDashboardDataDto>.ErrorResponse($"Hata: {ex.Message}");
+        }
+    }
 }

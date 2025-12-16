@@ -13,6 +13,7 @@ public interface IDashboardService
 
     // Student Dashboard
     Task<ApiResponse<StudentDashboardStatsDto>> GetStudentDashboardStatsAsync(int studentId);
+    Task<ApiResponse<StudentDashboardDataDto>> GetStudentDashboardDataAsync(int studentId);
 
     // Charts
     Task<ApiResponse<ChartDataDto>> GetEnrollmentChartAsync(DateTime startDate, DateTime endDate);
