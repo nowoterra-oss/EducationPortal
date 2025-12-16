@@ -35,6 +35,11 @@ public class StudentCertificate : BaseAuditableEntity
     [MaxLength(255)]
     public string? IssuingOrganization { get; set; }
 
+    /// <summary>
+    /// Indicates whether this certificate was added by an admin or counselor (true) or by the student themselves (false)
+    /// </summary>
+    public bool IsAddedByAdmin { get; set; }
+
     [ForeignKey(nameof(StudentId))]
     public virtual Student Student { get; set; } = null!;
 }

@@ -799,7 +799,10 @@ public class StudentsController : ControllerBase
             IssuingOrganization = issuingOrganization
         };
 
-        var result = await _certificateService.UploadAsync(studentId, file, dto);
+        // Determine if added by admin based on user role
+        var isAddedByAdmin = User.IsInRole("Admin") || User.IsInRole("Danışman");
+
+        var result = await _certificateService.UploadAsync(studentId, file, dto, isAddedByAdmin);
         if (result.Success)
             return CreatedAtAction(nameof(GetCertificates), new { studentId }, result);
         return BadRequest(result);
@@ -810,11 +813,28 @@ public class StudentsController : ControllerBase
     /// </summary>
     /// <param name="studentId">Student ID</param>
     /// <param name="certificateId">Certificate ID</param>
+    /// <remarks>
+    /// Admin can delete any certificate. Students can only delete certificates they added themselves (IsAddedByAdmin = false).
+    /// </remarks>
     [HttpDelete("{studentId}/certificates/{certificateId}")]
     [Authorize(Roles = "Admin,Öğrenci")]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteCertificate(int studentId, int certificateId)
     {
+        // If student role, check if they can delete this certificate
+        if (User.IsInRole("Öğrenci"))
+        {
+            var certificate = await _certificateService.GetByIdAsync(studentId, certificateId);
+            if (!certificate.Success)
+                return NotFound(ApiResponse<bool>.ErrorResponse("Sertifika bulunamadı."));
+
+            // Student can only delete certificates they added themselves
+            if (certificate.Data?.IsAddedByAdmin == true)
+                return StatusCode(StatusCodes.Status403Forbidden,
+                    ApiResponse<bool>.ErrorResponse("Admin tarafından eklenen sertifikaları silemezsiniz."));
+        }
+
         var result = await _certificateService.DeleteAsync(studentId, certificateId);
         return Ok(result);
     }

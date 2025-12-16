@@ -14,6 +14,7 @@ public class StudentCertificateDto
     public DateTime UploadDate { get; set; }
     public DateTime? IssueDate { get; set; }
     public string? IssuingOrganization { get; set; }
+    public bool IsAddedByAdmin { get; set; }
 }
 
 public class StudentCertificateCreateDto

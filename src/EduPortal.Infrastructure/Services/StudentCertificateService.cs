@@ -47,7 +47,8 @@ public class StudentCertificateService : IStudentCertificateService
                 FileSize = c.FileSize,
                 UploadDate = c.CreatedAt,
                 IssueDate = c.IssueDate,
-                IssuingOrganization = c.IssuingOrganization
+                IssuingOrganization = c.IssuingOrganization,
+                IsAddedByAdmin = c.IsAddedByAdmin
             })
             .ToListAsync();
 
@@ -62,7 +63,7 @@ public class StudentCertificateService : IStudentCertificateService
         if (certificate == null)
             return ApiResponse<StudentCertificateDto>.ErrorResponse("Sertifika bulunamadı.");
 
-        var dto = new StudentCertificateDto
+        var resultDto = new StudentCertificateDto
         {
             Id = certificate.Id,
             StudentId = certificate.StudentId,
@@ -73,13 +74,14 @@ public class StudentCertificateService : IStudentCertificateService
             FileSize = certificate.FileSize,
             UploadDate = certificate.CreatedAt,
             IssueDate = certificate.IssueDate,
-            IssuingOrganization = certificate.IssuingOrganization
+            IssuingOrganization = certificate.IssuingOrganization,
+            IsAddedByAdmin = certificate.IsAddedByAdmin
         };
 
-        return ApiResponse<StudentCertificateDto>.SuccessResponse(dto);
+        return ApiResponse<StudentCertificateDto>.SuccessResponse(resultDto);
     }
 
-    public async Task<ApiResponse<StudentCertificateUploadResultDto>> UploadAsync(int studentId, IFormFile file, StudentCertificateCreateDto dto)
+    public async Task<ApiResponse<StudentCertificateUploadResultDto>> UploadAsync(int studentId, IFormFile file, StudentCertificateCreateDto dto, bool isAddedByAdmin)
     {
         // Validate student exists
         var student = await _context.Students.FindAsync(studentId);
@@ -126,7 +128,8 @@ public class StudentCertificateService : IStudentCertificateService
             FileType = extension.TrimStart('.'),
             FileSize = file.Length,
             IssueDate = dto.IssueDate,
-            IssuingOrganization = dto.IssuingOrganization
+            IssuingOrganization = dto.IssuingOrganization,
+            IsAddedByAdmin = isAddedByAdmin
         };
 
         _context.StudentCertificates.Add(certificate);
