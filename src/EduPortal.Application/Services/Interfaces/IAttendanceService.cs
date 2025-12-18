@@ -13,4 +13,6 @@ public interface IAttendanceService
     Task<ApiResponse<List<AttendanceDto>>> GetStudentAttendanceAsync(int studentId, DateTime? startDate = null, DateTime? endDate = null);
     Task<ApiResponse<Dictionary<string, int>>> GetAttendanceSummaryAsync(int studentId);
     Task<ApiResponse<List<AttendanceDto>>> GetCourseAttendanceAsync(int courseId);
+    Task<ApiResponse<List<AttendanceDto>>> BulkCreateAsync(List<AttendanceCreateDto> dtos, int teacherId);
+    Task<ApiResponse<List<AttendanceDto>>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, int? courseId = null);
 }

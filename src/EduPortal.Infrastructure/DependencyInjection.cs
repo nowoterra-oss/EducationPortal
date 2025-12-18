@@ -88,6 +88,9 @@ public static class DependencyInjection
         // Student Certificate Service
         services.AddScoped<IStudentCertificateService, StudentCertificateService>();
 
+        // Course Resource Service
+        services.AddScoped<ICourseResourceService, CourseResourceService>();
+
         return services;
     }
 }

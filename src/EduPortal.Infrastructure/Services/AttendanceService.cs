@@ -331,6 +331,115 @@ public class AttendanceService : IAttendanceService
         }
     }
 
+    public async Task<ApiResponse<List<AttendanceDto>>> BulkCreateAsync(List<AttendanceCreateDto> dtos, int teacherId)
+    {
+        try
+        {
+            if (dtos == null || !dtos.Any())
+            {
+                return ApiResponse<List<AttendanceDto>>.ErrorResponse("En az bir yoklama kaydı gereklidir");
+            }
+
+            var createdAttendances = new List<Attendance>();
+
+            foreach (var dto in dtos)
+            {
+                // Check if student exists
+                var student = await _studentRepository.GetByIdAsync(dto.StudentId);
+                if (student == null)
+                {
+                    continue; // Skip non-existing students
+                }
+
+                // Check if attendance already exists for this student, course and date
+                var existingAttendance = await _context.Attendances
+                    .FirstOrDefaultAsync(a =>
+                        a.StudentId == dto.StudentId &&
+                        a.CourseId == dto.CourseId &&
+                        a.Date.Date == dto.Date.Date &&
+                        !a.IsDeleted);
+
+                if (existingAttendance != null)
+                {
+                    // Update existing attendance
+                    existingAttendance.Status = dto.Status;
+                    existingAttendance.Notes = dto.Notes;
+                    existingAttendance.UpdatedAt = DateTime.UtcNow;
+                    createdAttendances.Add(existingAttendance);
+                }
+                else
+                {
+                    // Create new attendance record
+                    var attendance = new Attendance
+                    {
+                        StudentId = dto.StudentId,
+                        CourseId = dto.CourseId,
+                        TeacherId = teacherId,
+                        Date = dto.Date,
+                        Status = dto.Status,
+                        Notes = dto.Notes,
+                        CreatedAt = DateTime.UtcNow,
+                        IsDeleted = false
+                    };
+
+                    await _context.Attendances.AddAsync(attendance);
+                    createdAttendances.Add(attendance);
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Reload with navigation properties
+            var attendanceIds = createdAttendances.Select(a => a.Id).ToList();
+            var reloadedAttendances = await _context.Attendances
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Course)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .Where(a => attendanceIds.Contains(a.Id))
+                .ToListAsync();
+
+            var attendanceDtos = reloadedAttendances.Select(MapToDto).ToList();
+            return ApiResponse<List<AttendanceDto>>.SuccessResponse(attendanceDtos, $"{attendanceDtos.Count} yoklama kaydı başarıyla oluşturuldu");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while bulk creating attendance records");
+            return ApiResponse<List<AttendanceDto>>.ErrorResponse($"Toplu yoklama kaydedilirken bir hata oluştu: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse<List<AttendanceDto>>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, int? courseId = null)
+    {
+        try
+        {
+            var query = _context.Attendances
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Course)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .Where(a => !a.IsDeleted && a.Date >= startDate && a.Date <= endDate)
+                .AsQueryable();
+
+            if (courseId.HasValue)
+            {
+                query = query.Where(a => a.CourseId == courseId.Value);
+            }
+
+            var attendances = await query.OrderByDescending(a => a.Date).ToListAsync();
+            var attendanceDtos = attendances.Select(MapToDto).ToList();
+
+            return ApiResponse<List<AttendanceDto>>.SuccessResponse(attendanceDtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while getting attendance by date range");
+            return ApiResponse<List<AttendanceDto>>.ErrorResponse($"Tarih aralığına göre yoklama kayıtları getirilirken bir hata oluştu: {ex.Message}");
+        }
+    }
+
     // Private helper method for manual mapping
     private static AttendanceDto MapToDto(Attendance attendance)
     {
