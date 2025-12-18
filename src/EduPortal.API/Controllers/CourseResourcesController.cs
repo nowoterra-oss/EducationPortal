@@ -17,15 +17,18 @@ public class CourseResourcesController : ControllerBase
 {
     private readonly ICourseResourceService _resourceService;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IWebHostEnvironment _environment;
     private readonly ILogger<CourseResourcesController> _logger;
 
     public CourseResourcesController(
         ICourseResourceService resourceService,
         IFileStorageService fileStorageService,
+        IWebHostEnvironment environment,
         ILogger<CourseResourcesController> logger)
     {
         _resourceService = resourceService;
         _fileStorageService = fileStorageService;
+        _environment = environment;
         _logger = logger;
     }
 
@@ -99,24 +102,42 @@ public class CourseResourcesController : ControllerBase
     [Authorize(Roles = "Admin,Ogretmen")]
     [ProducesResponseType(typeof(ApiResponse<CourseResourceDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<CourseResourceDto>), StatusCodes.Status400BadRequest)]
+    [RequestSizeLimit(50 * 1024 * 1024)] // 50MB limit
     public async Task<ActionResult<ApiResponse<CourseResourceDto>>> Create([FromForm] CourseResourceCreateFormDto formDto)
     {
         try
         {
-            string resourceUrl = formDto.ResourceUrl ?? string.Empty;
+            string? resourceUrl = formDto.ResourceUrl;
+            string? filePath = null;
+            string? fileName = null;
+            long? fileSize = null;
+            string? mimeType = null;
 
-            // Dosya yuklenmisse, once dosyayi yukle
+            // Dosya yuklenmisse
             if (formDto.File != null && formDto.File.Length > 0)
             {
-                var uploadResult = await _fileStorageService.UploadFileAsync(formDto.File, "course-resources", formDto.CourseId.ToString());
-                if (!uploadResult.Success)
+                // Uploads klasorunu olustur
+                var uploadsFolder = Path.Combine(_environment.WebRootPath ?? "wwwroot", "uploads", "resources");
+                Directory.CreateDirectory(uploadsFolder);
+
+                // Benzersiz dosya adi olustur
+                var uniqueFileName = $"{Guid.NewGuid()}_{formDto.File.FileName}";
+                var fullPath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                // Dosyayi kaydet
+                using (var stream = new FileStream(fullPath, FileMode.Create))
                 {
-                    return BadRequest(ApiResponse<CourseResourceDto>.ErrorResponse(uploadResult.Message ?? "Dosya yuklenemedi"));
+                    await formDto.File.CopyToAsync(stream);
                 }
-                resourceUrl = uploadResult.Data?.FileUrl ?? string.Empty;
+
+                filePath = uniqueFileName;
+                fileName = formDto.File.FileName;
+                fileSize = formDto.File.Length;
+                mimeType = formDto.File.ContentType;
             }
 
-            if (string.IsNullOrEmpty(resourceUrl))
+            // Ne dosya ne de URL varsa hata ver
+            if (string.IsNullOrEmpty(resourceUrl) && string.IsNullOrEmpty(filePath))
             {
                 return BadRequest(ApiResponse<CourseResourceDto>.ErrorResponse("Kaynak URL veya dosya belirtilmelidir"));
             }
@@ -131,7 +152,7 @@ public class CourseResourcesController : ControllerBase
                 IsVisible = formDto.IsVisible
             };
 
-            var result = await _resourceService.CreateAsync(formDto.CourseId, createDto);
+            var result = await _resourceService.CreateWithFileAsync(formDto.CourseId, createDto, filePath, fileName, fileSize, mimeType);
 
             if (result.Success)
             {
@@ -203,22 +224,23 @@ public class CourseResourcesController : ControllerBase
     }
 
     /// <summary>
-    /// Kaynak indirme bilgisi getir
+    /// Kaynak indirme bilgisi getir (DownloadUrl ve FileName doner)
     /// </summary>
     [HttpGet("{id}/download")]
-    [ProducesResponseType(typeof(ApiResponse<CourseResourceDto>), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ApiResponse<CourseResourceDto>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<CourseResourceDto>>> Download(int id)
+    [ProducesResponseType(typeof(ApiResponse<CourseResourceDownloadDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<CourseResourceDownloadDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<CourseResourceDownloadDto>>> Download(int id)
     {
         try
         {
-            var result = await _resourceService.GetForDownloadAsync(id);
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var result = await _resourceService.GetDownloadInfoAsync(id, baseUrl);
             return result.Success ? Ok(result) : NotFound(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error getting course resource for download {Id}", id);
-            return StatusCode(500, ApiResponse<CourseResourceDto>.ErrorResponse("Kaynak getirilirken hata olustu"));
+            return StatusCode(500, ApiResponse<CourseResourceDownloadDto>.ErrorResponse("Kaynak getirilirken hata olustu"));
         }
     }
 }

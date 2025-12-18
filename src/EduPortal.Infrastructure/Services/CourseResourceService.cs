@@ -243,6 +243,111 @@ public class CourseResourceService : ICourseResourceService
         }
     }
 
+    public async Task<ApiResponse<CourseResourceDto>> CreateWithFileAsync(int courseId, CreateCourseResourceDto dto, string? filePath, string? fileName, long? fileSize, string? mimeType)
+    {
+        try
+        {
+            // Verify course exists
+            var courseExists = await _context.Courses.AnyAsync(c => c.Id == courseId && !c.IsDeleted);
+            if (!courseExists)
+            {
+                return ApiResponse<CourseResourceDto>.ErrorResponse("Ders bulunamadi");
+            }
+
+            // Verify curriculum exists if provided
+            if (dto.CurriculumId.HasValue)
+            {
+                var curriculumExists = await _context.Curricula.AnyAsync(c => c.Id == dto.CurriculumId.Value && !c.IsDeleted);
+                if (!curriculumExists)
+                {
+                    return ApiResponse<CourseResourceDto>.ErrorResponse("Mufredat bulunamadi");
+                }
+            }
+
+            var resource = new CourseResource
+            {
+                CourseId = courseId,
+                CurriculumId = dto.CurriculumId,
+                Title = dto.Title,
+                ResourceType = dto.ResourceType,
+                ResourceUrl = dto.ResourceUrl ?? string.Empty,
+                Description = dto.Description,
+                FilePath = filePath,
+                FileName = fileName,
+                FileSize = fileSize,
+                MimeType = mimeType,
+                IsVisible = dto.IsVisible,
+                CreatedAt = DateTime.UtcNow,
+                IsDeleted = false
+            };
+
+            await _context.CourseResources.AddAsync(resource);
+            await _context.SaveChangesAsync();
+
+            // Reload with navigation properties
+            var createdResource = await _context.CourseResources
+                .Include(r => r.Course)
+                .Include(r => r.Curriculum)
+                .FirstOrDefaultAsync(r => r.Id == resource.Id);
+
+            return ApiResponse<CourseResourceDto>.SuccessResponse(MapToDto(createdResource!), "Kaynak basariyla olusturuldu");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating course resource with file for course {CourseId}", courseId);
+            return ApiResponse<CourseResourceDto>.ErrorResponse($"Kaynak olusturulurken hata olustu: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse<CourseResourceDownloadDto>> GetDownloadInfoAsync(int id, string baseUrl)
+    {
+        try
+        {
+            var resource = await _context.CourseResources
+                .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted && r.IsVisible);
+
+            if (resource == null)
+            {
+                return ApiResponse<CourseResourceDownloadDto>.ErrorResponse("Kaynak bulunamadi veya erisime kapali");
+            }
+
+            string downloadUrl;
+            string fileName;
+
+            // Dosya yolu varsa sunucudan indir
+            if (!string.IsNullOrEmpty(resource.FilePath))
+            {
+                downloadUrl = $"{baseUrl}/uploads/resources/{resource.FilePath}";
+                fileName = resource.FileName ?? resource.Title;
+            }
+            // Harici URL varsa onu kullan
+            else if (!string.IsNullOrEmpty(resource.ResourceUrl))
+            {
+                downloadUrl = resource.ResourceUrl;
+                fileName = resource.Title;
+            }
+            else
+            {
+                return ApiResponse<CourseResourceDownloadDto>.ErrorResponse("Bu kaynak icin indirilebilir dosya bulunamadi");
+            }
+
+            var downloadDto = new CourseResourceDownloadDto
+            {
+                DownloadUrl = downloadUrl,
+                FileName = fileName,
+                FileSize = resource.FileSize,
+                MimeType = resource.MimeType
+            };
+
+            return ApiResponse<CourseResourceDownloadDto>.SuccessResponse(downloadDto);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting download info for resource {Id}", id);
+            return ApiResponse<CourseResourceDownloadDto>.ErrorResponse($"Indirme bilgisi alinirken hata olustu: {ex.Message}");
+        }
+    }
+
     private static CourseResourceDto MapToDto(CourseResource resource)
     {
         return new CourseResourceDto
@@ -255,6 +360,10 @@ public class CourseResourceService : ICourseResourceService
             ResourceType = resource.ResourceType,
             ResourceUrl = resource.ResourceUrl,
             Description = resource.Description,
+            FilePath = resource.FilePath,
+            FileName = resource.FileName,
+            FileSize = resource.FileSize,
+            MimeType = resource.MimeType,
             IsVisible = resource.IsVisible,
             CreatedAt = resource.CreatedAt
         };

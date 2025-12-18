@@ -12,8 +12,20 @@ public class CourseResourceDto
     public string ResourceType { get; set; } = string.Empty;
     public string ResourceUrl { get; set; } = string.Empty;
     public string? Description { get; set; }
+    public string? FilePath { get; set; }
+    public string? FileName { get; set; }
+    public long? FileSize { get; set; }
+    public string? MimeType { get; set; }
     public bool IsVisible { get; set; }
     public DateTime CreatedAt { get; set; }
+}
+
+public class CourseResourceDownloadDto
+{
+    public string DownloadUrl { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
+    public long? FileSize { get; set; }
+    public string? MimeType { get; set; }
 }
 
 public class CreateCourseResourceDto
@@ -28,9 +40,8 @@ public class CreateCourseResourceDto
     [MaxLength(50, ErrorMessage = "Kaynak türü en fazla 50 karakter olabilir")]
     public string ResourceType { get; set; } = string.Empty; // "PDF", "Video", "Link"
 
-    [Required(ErrorMessage = "Kaynak URL belirtilmelidir")]
     [MaxLength(500, ErrorMessage = "Kaynak URL en fazla 500 karakter olabilir")]
-    public string ResourceUrl { get; set; } = string.Empty;
+    public string? ResourceUrl { get; set; }
 
     [MaxLength(1000, ErrorMessage = "Açıklama en fazla 1000 karakter olabilir")]
     public string? Description { get; set; }

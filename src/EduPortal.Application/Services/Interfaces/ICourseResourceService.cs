@@ -39,4 +39,14 @@ public interface ICourseResourceService
     /// Kaynagi indirilmek uzere getirir (dosya bilgisi)
     /// </summary>
     Task<ApiResponse<CourseResourceDto>> GetForDownloadAsync(int id);
+
+    /// <summary>
+    /// Dosya bilgileri ile kaynak olusturur
+    /// </summary>
+    Task<ApiResponse<CourseResourceDto>> CreateWithFileAsync(int courseId, CreateCourseResourceDto dto, string? filePath, string? fileName, long? fileSize, string? mimeType);
+
+    /// <summary>
+    /// Download bilgilerini getirir
+    /// </summary>
+    Task<ApiResponse<CourseResourceDownloadDto>> GetDownloadInfoAsync(int id, string baseUrl);
 }
