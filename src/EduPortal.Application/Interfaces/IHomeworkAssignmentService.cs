@@ -15,17 +15,26 @@ public interface IHomeworkAssignmentService
     // Ödev Listesi
     Task<ApiResponse<PagedResponse<HomeworkAssignmentDto>>> GetTeacherAssignmentsAsync(int teacherId, int pageNumber, int pageSize);
     Task<ApiResponse<PagedResponse<HomeworkAssignmentDto>>> GetStudentAssignmentsAsync(int studentId, int pageNumber, int pageSize);
-    Task<ApiResponse<List<HomeworkAssignmentDto>>> GetStudentAssignmentHistoryAsync(int studentId, int teacherId);
+    Task<ApiResponse<List<HomeworkAssignmentDto>>> GetStudentAssignmentHistoryAsync(int studentId, int? teacherId = null);
 
     // Ödev Görüntüleme Logu
     Task<ApiResponse<bool>> MarkAsViewedAsync(int assignmentId, int studentId, string? ipAddress, string? userAgent);
 
     // Ödev Kontrol (Teslim Edilenleri Görüntüle)
-    Task<ApiResponse<PagedResponse<HomeworkAssignmentDto>>> GetPendingReviewsAsync(int teacherId, int pageNumber, int pageSize);
+    /// <summary>
+    /// Kontrol bekleyen ödevleri getirir.
+    /// teacherId null ise tüm öğretmenlerin ödevleri döner (Admin için).
+    /// status null ise TeslimEdildi durumundakiler döner, "all" ise tüm aktif ödevler döner.
+    /// </summary>
+    Task<ApiResponse<PagedResponse<HomeworkAssignmentDto>>> GetPendingReviewsAsync(int? teacherId, int pageNumber, int pageSize, string? status = null);
     Task<ApiResponse<HomeworkAssignmentDto>> GetAssignmentDetailAsync(int assignmentId);
 
     // Ödev Değerlendirme
-    Task<ApiResponse<HomeworkAssignmentDto>> GradeAssignmentAsync(int teacherId, GradeHomeworkDto dto);
+    /// <summary>
+    /// Ödevi değerlendirir.
+    /// isAdmin true ise teacherId kontrolü yapılmaz (Admin tüm ödevleri değerlendirebilir).
+    /// </summary>
+    Task<ApiResponse<HomeworkAssignmentDto>> GradeAssignmentAsync(int? teacherId, GradeHomeworkDto dto, bool isAdmin = false);
 
     // Ödev Teslimi
     Task<ApiResponse<HomeworkAssignmentDto>> SubmitAssignmentAsync(int assignmentId, int studentId, SubmitHomeworkDto dto);

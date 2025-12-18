@@ -279,12 +279,20 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
         }
     }
 
-    public async Task<ApiResponse<List<HomeworkAssignmentDto>>> GetStudentAssignmentHistoryAsync(int studentId, int teacherId)
+    public async Task<ApiResponse<List<HomeworkAssignmentDto>>> GetStudentAssignmentHistoryAsync(int studentId, int? teacherId = null)
     {
         try
         {
-            var assignments = await _context.HomeworkAssignments
-                .Where(a => a.StudentId == studentId && a.TeacherId == teacherId && !a.IsDeleted)
+            var query = _context.HomeworkAssignments
+                .Where(a => a.StudentId == studentId && !a.IsDeleted);
+
+            // teacherId belirtilmişse filtrele, yoksa tüm öğretmenlerin ödevlerini getir
+            if (teacherId.HasValue)
+            {
+                query = query.Where(a => a.TeacherId == teacherId.Value);
+            }
+
+            var assignments = await query
                 .Include(a => a.Homework)
                 .Include(a => a.Student)
                     .ThenInclude(s => s.User)
@@ -342,14 +350,39 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
         }
     }
 
-    public async Task<ApiResponse<PagedResponse<HomeworkAssignmentDto>>> GetPendingReviewsAsync(int teacherId, int pageNumber, int pageSize)
+    public async Task<ApiResponse<PagedResponse<HomeworkAssignmentDto>>> GetPendingReviewsAsync(int? teacherId, int pageNumber, int pageSize, string? status = null)
     {
         try
         {
             var query = _context.HomeworkAssignments
-                .Where(a => a.TeacherId == teacherId &&
-                           a.Status == HomeworkAssignmentStatus.TeslimEdildi &&
-                           !a.IsDeleted)
+                .Where(a => !a.IsDeleted);
+
+            // teacherId belirtilmişse filtrele (öğretmen için), yoksa tüm öğretmenlerin ödevleri (admin için)
+            if (teacherId.HasValue)
+            {
+                query = query.Where(a => a.TeacherId == teacherId.Value);
+            }
+
+            // status parametresine göre filtrele
+            if (status == "all")
+            {
+                // Tüm aktif ödevler (Degerlendirildi hariç)
+                query = query.Where(a => a.Status != HomeworkAssignmentStatus.Degerlendirildi);
+            }
+            else if (status == "pending")
+            {
+                // Henüz teslim edilmemiş ödevler
+                query = query.Where(a => a.Status == HomeworkAssignmentStatus.Atandi ||
+                                        a.Status == HomeworkAssignmentStatus.Goruldu ||
+                                        a.Status == HomeworkAssignmentStatus.DevamEdiyor);
+            }
+            else
+            {
+                // Varsayılan: Sadece teslim edilmiş ve değerlendirilmeyi bekleyenler
+                query = query.Where(a => a.Status == HomeworkAssignmentStatus.TeslimEdildi);
+            }
+
+            var orderedQuery = query
                 .Include(a => a.Homework)
                 .Include(a => a.Student)
                     .ThenInclude(s => s.User)
@@ -357,8 +390,8 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
                     .ThenInclude(t => t.User)
                 .OrderBy(a => a.DueDate);
 
-            var totalCount = await query.CountAsync();
-            var items = await query
+            var totalCount = await orderedQuery.CountAsync();
+            var items = await orderedQuery
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -399,15 +432,30 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
         }
     }
 
-    public async Task<ApiResponse<HomeworkAssignmentDto>> GradeAssignmentAsync(int teacherId, GradeHomeworkDto dto)
+    public async Task<ApiResponse<HomeworkAssignmentDto>> GradeAssignmentAsync(int? teacherId, GradeHomeworkDto dto, bool isAdmin = false)
     {
         try
         {
-            var assignment = await _context.HomeworkAssignments
-                .Include(a => a.Student)
-                    .ThenInclude(s => s.User)
-                .Include(a => a.Homework)
-                .FirstOrDefaultAsync(a => a.Id == dto.AssignmentId && a.TeacherId == teacherId);
+            HomeworkAssignment? assignment;
+
+            if (isAdmin)
+            {
+                // Admin tüm ödevleri değerlendirebilir - teacherId kontrolü yapılmaz
+                assignment = await _context.HomeworkAssignments
+                    .Include(a => a.Student)
+                        .ThenInclude(s => s.User)
+                    .Include(a => a.Homework)
+                    .FirstOrDefaultAsync(a => a.Id == dto.AssignmentId && !a.IsDeleted);
+            }
+            else
+            {
+                // Öğretmen sadece kendi ödevlerini değerlendirebilir
+                assignment = await _context.HomeworkAssignments
+                    .Include(a => a.Student)
+                        .ThenInclude(s => s.User)
+                    .Include(a => a.Homework)
+                    .FirstOrDefaultAsync(a => a.Id == dto.AssignmentId && a.TeacherId == teacherId && !a.IsDeleted);
+            }
 
             if (assignment == null)
                 return ApiResponse<HomeworkAssignmentDto>.ErrorResponse("Ödev bulunamadı");

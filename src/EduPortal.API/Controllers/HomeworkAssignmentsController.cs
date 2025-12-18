@@ -94,11 +94,16 @@ public class HomeworkAssignmentsController : ControllerBase
     /// <summary>
     /// Öğrencinin ödev geçmişini getir
     /// </summary>
+    /// <remarks>
+    /// teacherId parametresi verilmezse tüm öğretmenlerin ödevleri döndürülür.
+    /// teacherId parametresi verilirse sadece o öğretmenin ödevleri döndürülür.
+    /// </remarks>
     [HttpGet("student/{studentId}/history")]
     public async Task<ActionResult<ApiResponse<List<HomeworkAssignmentDto>>>> GetStudentHistory(
-        int studentId, [FromQuery] int? teacherId)
+        int studentId, [FromQuery] int? teacherId = null)
     {
-        var result = await _service.GetStudentAssignmentHistoryAsync(studentId, teacherId ?? GetCurrentTeacherId());
+        // teacherId verilmezse null geçir, tüm öğretmenlerin ödevleri döner
+        var result = await _service.GetStudentAssignmentHistoryAsync(studentId, teacherId);
         return Ok(result);
     }
 
@@ -118,13 +123,28 @@ public class HomeworkAssignmentsController : ControllerBase
     /// <summary>
     /// Kontrol bekleyen ödevler
     /// </summary>
+    /// <remarks>
+    /// Admin için: teacherId parametresi verilmezse tüm öğretmenlerin ödevleri döner.
+    /// Öğretmen için: Kendi ödevleri döner.
+    /// status parametreleri: null (varsayılan-TeslimEdildi), "all" (tüm aktif), "pending" (henüz teslim edilmemiş)
+    /// </remarks>
     [HttpGet("pending-reviews")]
     [Authorize(Roles = "Admin,Ogretmen")]
     public async Task<ActionResult<ApiResponse<PagedResponse<HomeworkAssignmentDto>>>> GetPendingReviews(
-        [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        [FromQuery] int? teacherId = null,
+        [FromQuery] string? status = null,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var teacherId = GetCurrentTeacherId();
-        var result = await _service.GetPendingReviewsAsync(teacherId, pageNumber, pageSize);
+        // Admin ise ve teacherId verilmemişse null geçir (tüm öğretmenlerin ödevleri)
+        // Öğretmen ise kendi teacherId'sini kullan
+        int? effectiveTeacherId = teacherId;
+        if (!User.IsInRole("Admin") && !teacherId.HasValue)
+        {
+            effectiveTeacherId = GetCurrentTeacherId();
+        }
+
+        var result = await _service.GetPendingReviewsAsync(effectiveTeacherId, pageNumber, pageSize, status);
         return Ok(result);
     }
 
@@ -141,14 +161,19 @@ public class HomeworkAssignmentsController : ControllerBase
     /// <summary>
     /// Ödev değerlendir
     /// </summary>
+    /// <remarks>
+    /// Admin tüm ödevleri değerlendirebilir.
+    /// Öğretmen sadece kendi ödevlerini değerlendirebilir.
+    /// </remarks>
     [HttpPut("{id}/grade")]
     [Authorize(Roles = "Admin,Ogretmen")]
     public async Task<ActionResult<ApiResponse<HomeworkAssignmentDto>>> GradeAssignment(
         int id, [FromBody] GradeHomeworkDto dto)
     {
         dto.AssignmentId = id;
-        var teacherId = GetCurrentTeacherId();
-        var result = await _service.GradeAssignmentAsync(teacherId, dto);
+        var isAdmin = User.IsInRole("Admin");
+        int? teacherId = isAdmin ? null : GetCurrentTeacherId();
+        var result = await _service.GradeAssignmentAsync(teacherId, dto, isAdmin);
         return Ok(result);
     }
 
