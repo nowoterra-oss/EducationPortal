@@ -18,7 +18,9 @@
       "Bash(dotnet build:*)",
       "Bash(dotnet ef database update:*)",
       "Bash(git checkout:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(dotnet run:*)",
+      "Bash(timeout /t 10 /nobreak)"
     ]
   }
 }

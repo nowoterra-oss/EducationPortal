@@ -62,13 +62,14 @@ builder.Services.AddApplication();
 builder.Services.AddHostedService<EduPortal.Infrastructure.BackgroundJobs.HomeworkReminderJob>();
 
 // Add Identity
+// TC Kimlik Numarası varsayılan şifre olarak kullanıldığı için şifre gereksinimleri gevşetildi
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
-    options.Password.RequireDigit = true;
-    options.Password.RequiredLength = 8;
-    options.Password.RequireNonAlphanumeric = true;
-    options.Password.RequireUppercase = true;
-    options.Password.RequireLowercase = true;
+    options.Password.RequireDigit = false;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireLowercase = false;
     options.User.RequireUniqueEmail = true;
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()

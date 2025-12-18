@@ -69,7 +69,8 @@ public class HomeworkAssignmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<HomeworkAssignmentDto>>> CreateAssignment(
         [FromBody] CreateHomeworkAssignmentDto dto)
     {
-        var teacherId = GetCurrentTeacherId();
+        // DTO'dan gelen TeacherId varsa onu kullan, yoksa token'dan al
+        var teacherId = dto.TeacherId ?? GetCurrentTeacherId();
         var result = await _service.CreateAssignmentAsync(teacherId, dto);
         return result.Success
             ? CreatedAtAction(nameof(GetAssignmentDetail), new { id = result.Data?.Id }, result)
@@ -84,7 +85,8 @@ public class HomeworkAssignmentsController : ControllerBase
     public async Task<ActionResult<ApiResponse<List<HomeworkAssignmentDto>>>> CreateBulkAssignments(
         [FromBody] BulkCreateHomeworkAssignmentDto dto)
     {
-        var teacherId = GetCurrentTeacherId();
+        // DTO'dan gelen TeacherId varsa onu kullan, yoksa token'dan al
+        var teacherId = dto.TeacherId ?? GetCurrentTeacherId();
         var result = await _service.CreateBulkAssignmentsAsync(teacherId, dto);
         return Ok(result);
     }

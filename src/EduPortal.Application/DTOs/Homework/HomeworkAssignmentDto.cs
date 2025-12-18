@@ -53,6 +53,11 @@ public class CreateHomeworkAssignmentDto
     [Required(ErrorMessage = "Öğrenci seçilmelidir")]
     public int StudentId { get; set; }
 
+    /// <summary>
+    /// Ödevi atayan öğretmen ID. Belirtilmezse token'dan alınır.
+    /// </summary>
+    public int? TeacherId { get; set; }
+
     [Required(ErrorMessage = "Başlık boş olamaz")]
     [MaxLength(200, ErrorMessage = "Başlık en fazla 200 karakter olabilir")]
     public string Title { get; set; } = string.Empty;
@@ -80,6 +85,11 @@ public class BulkCreateHomeworkAssignmentDto
     [Required(ErrorMessage = "En az bir öğrenci seçilmelidir")]
     [MinLength(1, ErrorMessage = "En az bir öğrenci seçilmelidir")]
     public List<int> StudentIds { get; set; } = new();
+
+    /// <summary>
+    /// Ödevi atayan öğretmen ID. Belirtilmezse token'dan alınır.
+    /// </summary>
+    public int? TeacherId { get; set; }
 
     [Required(ErrorMessage = "Başlık boş olamaz")]
     [MaxLength(200, ErrorMessage = "Başlık en fazla 200 karakter olabilir")]
