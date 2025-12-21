@@ -243,6 +243,49 @@ public class CourseResourcesController : ControllerBase
             return StatusCode(500, ApiResponse<CourseResourceDownloadDto>.ErrorResponse("Kaynak getirilirken hata olustu"));
         }
     }
+
+    /// <summary>
+    /// Dosyayi binary stream olarak indir
+    /// </summary>
+    [HttpGet("{id}/file")]
+    [HttpGet("{id}/download-file")]
+    [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DownloadFile(int id)
+    {
+        try
+        {
+            var resource = await _resourceService.GetByIdAsync(id);
+            if (!resource.Success || resource.Data == null)
+            {
+                return NotFound(new { success = false, message = "Kaynak bulunamadi" });
+            }
+
+            if (string.IsNullOrEmpty(resource.Data.FilePath))
+            {
+                return NotFound(new { success = false, message = "Bu kaynaga ait dosya yok" });
+            }
+
+            var uploadsFolder = Path.Combine(_environment.WebRootPath ?? "wwwroot", "uploads", "resources");
+            var filePath = Path.Combine(uploadsFolder, resource.Data.FilePath);
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                return NotFound(new { success = false, message = "Dosya bulunamadi" });
+            }
+
+            var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+            var contentType = resource.Data.MimeType ?? "application/octet-stream";
+            var fileName = resource.Data.FileName ?? Path.GetFileName(resource.Data.FilePath);
+
+            return File(stream, contentType, fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error downloading file for resource {Id}", id);
+            return StatusCode(500, new { success = false, message = "Dosya indirilirken hata olustu" });
+        }
+    }
 }
 
 /// <summary>

@@ -349,6 +349,31 @@ public class AttendanceController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Öğretmenin bugünkü yoklama özetini getirir
+    /// </summary>
+    /// <param name="teacherId">Öğretmen ID</param>
+    /// <returns>Ders bazında gruplandırılmış yoklama özeti</returns>
+    /// <response code="200">Özet başarıyla getirildi</response>
+    /// <response code="401">Unauthorized</response>
+    [HttpGet("today-summary/{teacherId}")]
+    [Authorize(Roles = "Admin,Ogretmen")]
+    [ProducesResponseType(typeof(ApiResponse<List<TodayAttendanceSummaryDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ApiResponse<List<TodayAttendanceSummaryDto>>>> GetTodaySummary(int teacherId)
+    {
+        try
+        {
+            var result = await _attendanceService.GetTodaySummaryAsync(teacherId);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while getting today's attendance summary for teacher: {TeacherId}", teacherId);
+            return StatusCode(500, ApiResponse<List<TodayAttendanceSummaryDto>>.ErrorResponse("Bugünkü yoklama özeti getirilirken bir hata oluştu"));
+        }
+    }
+
     private int GetCurrentTeacherId()
     {
         var teacherIdClaim = User.FindFirst("TeacherId")?.Value;

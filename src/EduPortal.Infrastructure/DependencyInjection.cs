@@ -91,6 +91,9 @@ public static class DependencyInjection
         // Course Resource Service
         services.AddScoped<ICourseResourceService, CourseResourceService>();
 
+        // Student Extended Info Service (Foreign Languages, Hobbies, Activities, Readiness Exams)
+        services.AddScoped<IStudentExtendedInfoService, StudentExtendedInfoService>();
+
         return services;
     }
 }

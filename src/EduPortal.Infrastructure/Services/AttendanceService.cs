@@ -440,6 +440,79 @@ public class AttendanceService : IAttendanceService
         }
     }
 
+    public async Task<ApiResponse<List<TodayAttendanceSummaryDto>>> GetTodaySummaryAsync(int teacherId)
+    {
+        try
+        {
+            var today = DateTime.UtcNow.Date;
+
+            // Bugünkü yoklama kayıtlarını getir
+            var attendances = await _context.Attendances
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Course)
+                .Where(a => !a.IsDeleted &&
+                            a.TeacherId == teacherId &&
+                            a.Date.Date == today)
+                .ToListAsync();
+
+            // Ders bazında grupla
+            var groupedByCoursepId = attendances
+                .GroupBy(a => a.CourseId)
+                .ToList();
+
+            var summaryList = new List<TodayAttendanceSummaryDto>();
+
+            foreach (var courseGroup in groupedByCoursepId)
+            {
+                var courseId = courseGroup.Key;
+                var courseName = courseGroup.First().Course?.CourseName ?? string.Empty;
+
+                // Öğrenci listesi
+                var students = courseGroup.Select(a => new StudentAttendanceSummaryDto
+                {
+                    StudentId = a.StudentId,
+                    StudentName = a.Student?.User != null
+                        ? $"{a.Student.User.FirstName} {a.Student.User.LastName}"
+                        : string.Empty,
+                    Status = a.Status,
+                    Performance = 0, // TODO: Performance hesaplaması eklenebilir
+                    Notes = a.Notes
+                }).ToList();
+
+                // Bugün bu ders için oluşturulan ödev varsa getir
+                var homework = await _context.Homeworks
+                    .Where(h => !h.IsDeleted &&
+                                h.CourseId == courseId &&
+                                h.TeacherId == teacherId &&
+                                h.CreatedAt.Date == today)
+                    .Select(h => new HomeworkSummaryDto
+                    {
+                        Id = h.Id,
+                        Title = h.Title,
+                        DueDate = h.DueDate,
+                        StudentCount = students.Count
+                    })
+                    .FirstOrDefaultAsync();
+
+                summaryList.Add(new TodayAttendanceSummaryDto
+                {
+                    CourseId = courseId,
+                    CourseName = courseName,
+                    Students = students,
+                    Homework = homework
+                });
+            }
+
+            return ApiResponse<List<TodayAttendanceSummaryDto>>.SuccessResponse(summaryList);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while getting today's attendance summary for teacher: {TeacherId}", teacherId);
+            return ApiResponse<List<TodayAttendanceSummaryDto>>.ErrorResponse($"Bugünkü yoklama özeti getirilirken bir hata oluştu: {ex.Message}");
+        }
+    }
+
     // Private helper method for manual mapping
     private static AttendanceDto MapToDto(Attendance attendance)
     {

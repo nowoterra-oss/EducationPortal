@@ -20,17 +20,20 @@ public class StudentsController : ControllerBase
 {
     private readonly IStudentService _studentService;
     private readonly IStudentCertificateService _certificateService;
+    private readonly IStudentExtendedInfoService _extendedInfoService;
     private readonly IStudentRepository _studentRepository;
     private readonly ILogger<StudentsController> _logger;
 
     public StudentsController(
         IStudentService studentService,
         IStudentCertificateService certificateService,
+        IStudentExtendedInfoService extendedInfoService,
         IStudentRepository studentRepository,
         ILogger<StudentsController> logger)
     {
         _studentService = studentService;
         _certificateService = certificateService;
+        _extendedInfoService = extendedInfoService;
         _studentRepository = studentRepository;
         _logger = logger;
     }
@@ -869,5 +872,205 @@ public class StudentsController : ControllerBase
             return NotFound(ApiResponse<bool>.ErrorResponse("Sertifika dosyası bulunamadı."));
 
         return File(fileBytes, contentType, fileName);
+    }
+
+    // ===============================================
+    // FOREIGN LANGUAGES
+    // ===============================================
+
+    /// <summary>
+    /// Get student foreign languages
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <returns>List of foreign languages</returns>
+    [HttpGet("{studentId}/foreign-languages")]
+    [ProducesResponseType(typeof(ApiResponse<List<ForeignLanguageDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<ForeignLanguageDto>>>> GetForeignLanguages(int studentId)
+    {
+        var result = await _extendedInfoService.GetForeignLanguagesAsync(studentId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Add a foreign language
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="dto">Foreign language data</param>
+    [HttpPost("{studentId}/foreign-languages")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [ProducesResponseType(typeof(ApiResponse<ForeignLanguageDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ForeignLanguageDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<ForeignLanguageDto>>> AddForeignLanguage(
+        int studentId,
+        [FromBody] ForeignLanguageCreateDto dto)
+    {
+        var result = await _extendedInfoService.AddForeignLanguageAsync(studentId, dto);
+        if (result.Success)
+            return CreatedAtAction(nameof(GetForeignLanguages), new { studentId }, result);
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Delete a foreign language
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="id">Foreign language ID</param>
+    [HttpDelete("{studentId}/foreign-languages/{id}")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteForeignLanguage(int studentId, int id)
+    {
+        var result = await _extendedInfoService.DeleteForeignLanguageAsync(studentId, id);
+        return Ok(result);
+    }
+
+    // ===============================================
+    // HOBBIES
+    // ===============================================
+
+    /// <summary>
+    /// Get student hobbies
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <returns>List of hobbies</returns>
+    [HttpGet("{studentId}/hobbies")]
+    [ProducesResponseType(typeof(ApiResponse<List<HobbyDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<HobbyDto>>>> GetHobbies(int studentId)
+    {
+        var result = await _extendedInfoService.GetHobbiesAsync(studentId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Add a hobby
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="dto">Hobby data</param>
+    [HttpPost("{studentId}/hobbies")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<HobbyDto>>> AddHobby(
+        int studentId,
+        [FromBody] HobbyCreateDto dto)
+    {
+        var result = await _extendedInfoService.AddHobbyAsync(studentId, dto);
+        if (result.Success)
+            return CreatedAtAction(nameof(GetHobbies), new { studentId }, result);
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Delete a hobby
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="id">Hobby ID</param>
+    [HttpDelete("{studentId}/hobbies/{id}")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteHobby(int studentId, int id)
+    {
+        var result = await _extendedInfoService.DeleteHobbyAsync(studentId, id);
+        return Ok(result);
+    }
+
+    // ===============================================
+    // ACTIVITIES
+    // ===============================================
+
+    /// <summary>
+    /// Get student activities
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <returns>List of activities</returns>
+    [HttpGet("{studentId}/activities")]
+    [ProducesResponseType(typeof(ApiResponse<List<ActivityDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<ActivityDto>>>> GetActivities(int studentId)
+    {
+        var result = await _extendedInfoService.GetActivitiesAsync(studentId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Add an activity
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="dto">Activity data</param>
+    [HttpPost("{studentId}/activities")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<ActivityDto>>> AddActivity(
+        int studentId,
+        [FromBody] ActivityCreateDto dto)
+    {
+        var result = await _extendedInfoService.AddActivityAsync(studentId, dto);
+        if (result.Success)
+            return CreatedAtAction(nameof(GetActivities), new { studentId }, result);
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Delete an activity
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="id">Activity ID</param>
+    [HttpDelete("{studentId}/activities/{id}")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteActivity(int studentId, int id)
+    {
+        var result = await _extendedInfoService.DeleteActivityAsync(studentId, id);
+        return Ok(result);
+    }
+
+    // ===============================================
+    // READINESS EXAMS
+    // ===============================================
+
+    /// <summary>
+    /// Get student readiness exams
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <returns>List of readiness exams</returns>
+    [HttpGet("{studentId}/readiness-exams")]
+    [ProducesResponseType(typeof(ApiResponse<List<ReadinessExamDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<ReadinessExamDto>>>> GetReadinessExams(int studentId)
+    {
+        var result = await _extendedInfoService.GetReadinessExamsAsync(studentId);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Add a readiness exam
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="dto">Readiness exam data</param>
+    [HttpPost("{studentId}/readiness-exams")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [ProducesResponseType(typeof(ApiResponse<ReadinessExamDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ReadinessExamDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<ReadinessExamDto>>> AddReadinessExam(
+        int studentId,
+        [FromBody] ReadinessExamCreateDto dto)
+    {
+        var result = await _extendedInfoService.AddReadinessExamAsync(studentId, dto);
+        if (result.Success)
+            return CreatedAtAction(nameof(GetReadinessExams), new { studentId }, result);
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Delete a readiness exam
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="id">Readiness exam ID</param>
+    [HttpDelete("{studentId}/readiness-exams/{id}")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeleteReadinessExam(int studentId, int id)
+    {
+        var result = await _extendedInfoService.DeleteReadinessExamAsync(studentId, id);
+        return Ok(result);
     }
 }

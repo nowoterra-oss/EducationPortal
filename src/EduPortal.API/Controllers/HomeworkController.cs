@@ -1,8 +1,10 @@
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Homework;
+using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EduPortal.API.Controllers;
 
@@ -16,11 +18,16 @@ namespace EduPortal.API.Controllers;
 public class HomeworkController : ControllerBase
 {
     private readonly IHomeworkService _homeworkService;
+    private readonly ITeacherRepository _teacherRepository;
     private readonly ILogger<HomeworkController> _logger;
 
-    public HomeworkController(IHomeworkService homeworkService, ILogger<HomeworkController> logger)
+    public HomeworkController(
+        IHomeworkService homeworkService,
+        ITeacherRepository teacherRepository,
+        ILogger<HomeworkController> logger)
     {
         _homeworkService = homeworkService;
+        _teacherRepository = teacherRepository;
         _logger = logger;
     }
 
@@ -93,7 +100,7 @@ public class HomeworkController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpPost]
-    [Authorize(Roles = "Öğretmen,Admin")]
+    [Authorize(Roles = "Admin,Ogretmen")]
     [ProducesResponseType(typeof(ApiResponse<HomeworkDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -102,14 +109,23 @@ public class HomeworkController : ControllerBase
     {
         try
         {
-            // Get teacher ID from claims
-            var teacherIdClaim = User.FindFirst("teacherId");
-            if (teacherIdClaim == null || !int.TryParse(teacherIdClaim.Value, out int teacherId))
+            // Get user ID from JWT claims
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("Kullanıcı bilgisi bulunamadı"));
+            }
+
+            // Find teacher by user ID
+            var teacher = await _teacherRepository.GetByUserIdAsync(userId);
+            if (teacher == null)
             {
                 return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("Öğretmen bilgisi bulunamadı"));
             }
 
-            var result = await _homeworkService.CreateAsync(homeworkCreateDto, teacherId);
+            var result = await _homeworkService.CreateAsync(homeworkCreateDto, teacher.Id);
 
             if (result.Success)
             {
@@ -356,7 +372,7 @@ public class HomeworkController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Homework not found</response>
     [HttpGet("{id}/submissions")]
-    [Authorize(Roles = "Admin,Öğretmen,Danışman")]
+    [Authorize(Roles = "Admin,Ogretmen,Danisman")]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<HomeworkSubmissionDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<HomeworkSubmissionDto>>), StatusCodes.Status404NotFound)]
@@ -394,7 +410,7 @@ public class HomeworkController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Homework not found</response>
     [HttpPost("{id}/submit")]
-    [Authorize(Roles = "Öğrenci")]
+    [Authorize(Roles = "Admin,Ogrenci")]
     [ProducesResponseType(typeof(ApiResponse<HomeworkSubmissionDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkSubmissionDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -432,7 +448,7 @@ public class HomeworkController : ControllerBase
     /// <response code="403">Forbidden - Insufficient permissions</response>
     /// <response code="404">Submission not found</response>
     [HttpPut("submissions/{submissionId}/grade")]
-    [Authorize(Roles = "Öğretmen,Admin")]
+    [Authorize(Roles = "Admin,Ogretmen")]
     [ProducesResponseType(typeof(ApiResponse<HomeworkSubmissionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkSubmissionDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

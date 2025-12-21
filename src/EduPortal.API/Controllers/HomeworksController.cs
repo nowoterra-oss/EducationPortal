@@ -1,5 +1,6 @@
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Homework;
+using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -17,11 +18,16 @@ namespace EduPortal.API.Controllers;
 public class HomeworksController : ControllerBase
 {
     private readonly IHomeworkService _homeworkService;
+    private readonly ITeacherRepository _teacherRepository;
     private readonly ILogger<HomeworksController> _logger;
 
-    public HomeworksController(IHomeworkService homeworkService, ILogger<HomeworksController> logger)
+    public HomeworksController(
+        IHomeworkService homeworkService,
+        ITeacherRepository teacherRepository,
+        ILogger<HomeworksController> logger)
     {
         _homeworkService = homeworkService;
+        _teacherRepository = teacherRepository;
         _logger = logger;
     }
 
@@ -47,7 +53,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while getting all homeworks");
-            return StatusCode(500, ApiResponse<PagedResponse<HomeworkDto>>.ErrorResponse("Ödevler getirilirken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<PagedResponse<HomeworkDto>>.ErrorResponse("ï¿½devler getirilirken bir hata olu_tu"));
         }
     }
 
@@ -70,7 +76,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while getting homework by ID: {HomeworkId}", id);
-            return StatusCode(500, ApiResponse<HomeworkDto>.ErrorResponse("Ödev getirilirken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<HomeworkDto>.ErrorResponse("ï¿½dev getirilirken bir hata olu_tu"));
         }
     }
 
@@ -92,7 +98,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while getting homeworks for course: {CourseId}", courseId);
-            return StatusCode(500, ApiResponse<List<HomeworkDto>>.ErrorResponse("Ders ödevleri getirilirken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<List<HomeworkDto>>.ErrorResponse("Ders ï¿½devleri getirilirken bir hata olu_tu"));
         }
     }
 
@@ -114,7 +120,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while getting homeworks for student: {StudentId}", studentId);
-            return StatusCode(500, ApiResponse<List<HomeworkDto>>.ErrorResponse("Örenci ödevleri getirilirken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<List<HomeworkDto>>.ErrorResponse("ï¿½renci ï¿½devleri getirilirken bir hata olu_tu"));
         }
     }
 
@@ -133,17 +139,26 @@ public class HomeworksController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("Geçersiz veri"));
+                return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("Geï¿½ersiz veri"));
             }
 
-            // Get teacher ID from authenticated user claims
-            var teacherIdClaim = User.FindFirst("teacherId");
-            if (teacherIdClaim == null || !int.TryParse(teacherIdClaim.Value, out int teacherId))
+            // Get user ID from JWT claims
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                        ?? User.FindFirst("sub")?.Value;
+
+            if (string.IsNullOrEmpty(userId))
             {
-                return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("Öretmen bilgisi bulunamad1"));
+                return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("KullanÄ±cÄ± bilgisi bulunamadÄ±"));
             }
 
-            var result = await _homeworkService.CreateAsync(dto, teacherId);
+            // Find teacher by user ID
+            var teacher = await _teacherRepository.GetByUserIdAsync(userId);
+            if (teacher == null)
+            {
+                return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("ï¿½retmen bilgisi bulunamad1"));
+            }
+
+            var result = await _homeworkService.CreateAsync(dto, teacher.Id);
 
             if (result.Success)
             {
@@ -155,7 +170,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while creating homework");
-            return StatusCode(500, ApiResponse<HomeworkDto>.ErrorResponse("Ödev olu_turulurken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<HomeworkDto>.ErrorResponse("ï¿½dev olu_turulurken bir hata olu_tu"));
         }
     }
 
@@ -175,7 +190,7 @@ public class HomeworksController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("Geçersiz veri"));
+                return BadRequest(ApiResponse<HomeworkDto>.ErrorResponse("Geï¿½ersiz veri"));
             }
 
             if (id != dto.Id)
@@ -189,7 +204,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while updating homework: {HomeworkId}", id);
-            return StatusCode(500, ApiResponse<HomeworkDto>.ErrorResponse("Ödev güncellenirken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<HomeworkDto>.ErrorResponse("ï¿½dev gï¿½ncellenirken bir hata olu_tu"));
         }
     }
 
@@ -212,7 +227,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while deleting homework: {HomeworkId}", id);
-            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Ödev silinirken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("ï¿½dev silinirken bir hata olu_tu"));
         }
     }
 
@@ -258,7 +273,7 @@ public class HomeworksController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ApiResponse<HomeworkSubmissionDto>.ErrorResponse("Geçersiz veri"));
+                return BadRequest(ApiResponse<HomeworkSubmissionDto>.ErrorResponse("Geï¿½ersiz veri"));
             }
 
             var result = await _homeworkService.SubmitHomeworkAsync(dto);
@@ -267,7 +282,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while submitting homework");
-            return StatusCode(500, ApiResponse<HomeworkSubmissionDto>.ErrorResponse("Ödev teslim edilirken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<HomeworkSubmissionDto>.ErrorResponse("ï¿½dev teslim edilirken bir hata olu_tu"));
         }
     }
 
@@ -286,7 +301,7 @@ public class HomeworksController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ApiResponse<HomeworkSubmissionDto>.ErrorResponse("Geçersiz veri"));
+                return BadRequest(ApiResponse<HomeworkSubmissionDto>.ErrorResponse("Geï¿½ersiz veri"));
             }
 
             var result = await _homeworkService.GradeSubmissionAsync(dto);
@@ -295,7 +310,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while grading submission: {SubmissionId}", dto.SubmissionId);
-            return StatusCode(500, ApiResponse<HomeworkSubmissionDto>.ErrorResponse("Ödev notland1r1l1rken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<HomeworkSubmissionDto>.ErrorResponse("ï¿½dev notland1r1l1rken bir hata olu_tu"));
         }
     }
 
@@ -317,7 +332,7 @@ public class HomeworksController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error occurred while getting student submissions: {StudentId}", studentId);
-            return StatusCode(500, ApiResponse<List<HomeworkSubmissionDto>>.ErrorResponse("Örenci teslimleri getirilirken bir hata olu_tu"));
+            return StatusCode(500, ApiResponse<List<HomeworkSubmissionDto>>.ErrorResponse("ï¿½renci teslimleri getirilirken bir hata olu_tu"));
         }
     }
 }

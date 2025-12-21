@@ -118,6 +118,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     // Student Certificates
     public DbSet<StudentCertificate> StudentCertificates => Set<StudentCertificate>();
 
+    // Student Extended Info (Foreign Languages, Activities, Readiness Exams)
+    public DbSet<StudentForeignLanguage> StudentForeignLanguages => Set<StudentForeignLanguage>();
+    public DbSet<StudentActivity> StudentActivities => Set<StudentActivity>();
+    public DbSet<StudentReadinessExam> StudentReadinessExams => Set<StudentReadinessExam>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -1053,6 +1058,43 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(sc => sc.StudentId);
+        });
+
+        // ===============================================
+        // STUDENT EXTENDED INFO RELATIONSHIPS
+        // ===============================================
+
+        // StudentForeignLanguage relationships
+        builder.Entity<StudentForeignLanguage>(entity =>
+        {
+            entity.HasOne(fl => fl.Student)
+                .WithMany(s => s.ForeignLanguages)
+                .HasForeignKey(fl => fl.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(fl => fl.StudentId);
+        });
+
+        // StudentActivity relationships
+        builder.Entity<StudentActivity>(entity =>
+        {
+            entity.HasOne(a => a.Student)
+                .WithMany(s => s.Activities)
+                .HasForeignKey(a => a.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(a => a.StudentId);
+        });
+
+        // StudentReadinessExam relationships
+        builder.Entity<StudentReadinessExam>(entity =>
+        {
+            entity.HasOne(re => re.Student)
+                .WithMany(s => s.ReadinessExams)
+                .HasForeignKey(re => re.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(re => re.StudentId);
         });
 
         // Global query filter for soft delete

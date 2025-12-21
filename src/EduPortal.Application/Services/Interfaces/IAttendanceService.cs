@@ -15,4 +15,9 @@ public interface IAttendanceService
     Task<ApiResponse<List<AttendanceDto>>> GetCourseAttendanceAsync(int courseId);
     Task<ApiResponse<List<AttendanceDto>>> BulkCreateAsync(List<AttendanceCreateDto> dtos, int teacherId);
     Task<ApiResponse<List<AttendanceDto>>> GetByDateRangeAsync(DateTime startDate, DateTime endDate, int? courseId = null);
+
+    /// <summary>
+    /// Öğretmenin bugünkü yoklama özetini getirir (ders bazında gruplandırılmış)
+    /// </summary>
+    Task<ApiResponse<List<TodayAttendanceSummaryDto>>> GetTodaySummaryAsync(int teacherId);
 }
