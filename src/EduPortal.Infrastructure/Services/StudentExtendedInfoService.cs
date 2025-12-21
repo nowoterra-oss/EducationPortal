@@ -220,10 +220,13 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
                     Id = a.Id,
                     StudentId = a.StudentId,
                     Name = a.Name,
-                    Category = a.Category,
+                    Type = a.Type,
+                    Organization = a.Organization,
                     Description = a.Description,
                     StartDate = a.StartDate,
-                    EndDate = a.EndDate
+                    EndDate = a.EndDate,
+                    IsOngoing = a.IsOngoing,
+                    Achievements = a.Achievements
                 })
                 .ToListAsync();
 
@@ -248,10 +251,13 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
             {
                 StudentId = studentId,
                 Name = dto.Name,
-                Category = dto.Category,
+                Type = dto.Type,
+                Organization = dto.Organization,
                 Description = dto.Description,
                 StartDate = dto.StartDate,
-                EndDate = dto.EndDate
+                EndDate = dto.EndDate,
+                IsOngoing = dto.IsOngoing,
+                Achievements = dto.Achievements
             };
 
             _context.StudentActivities.Add(entity);
@@ -262,10 +268,13 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
                 Id = entity.Id,
                 StudentId = entity.StudentId,
                 Name = entity.Name,
-                Category = entity.Category,
+                Type = entity.Type,
+                Organization = entity.Organization,
                 Description = entity.Description,
                 StartDate = entity.StartDate,
-                EndDate = entity.EndDate
+                EndDate = entity.EndDate,
+                IsOngoing = entity.IsOngoing,
+                Achievements = entity.Achievements
             };
 
             return ApiResponse<ActivityDto>.SuccessResponse(result, "Aktivite eklendi");

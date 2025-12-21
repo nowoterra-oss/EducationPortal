@@ -20,10 +20,16 @@ public class StudentActivity : BaseEntity
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Aktivite kategorisi (Spor, Kultur, Sanat vb.)
+    /// Aktivite turu (Spor, Kultur, Sanat vb.)
     /// </summary>
     [MaxLength(100)]
-    public string? Category { get; set; }
+    public string? Type { get; set; }
+
+    /// <summary>
+    /// Organizasyon adi
+    /// </summary>
+    [MaxLength(200)]
+    public string? Organization { get; set; }
 
     /// <summary>
     /// Aciklama
@@ -40,6 +46,17 @@ public class StudentActivity : BaseEntity
     /// Bitis tarihi
     /// </summary>
     public DateTime? EndDate { get; set; }
+
+    /// <summary>
+    /// Devam ediyor mu?
+    /// </summary>
+    public bool IsOngoing { get; set; } = false;
+
+    /// <summary>
+    /// Kazanimlar/Basarilar
+    /// </summary>
+    [MaxLength(1000)]
+    public string? Achievements { get; set; }
 
     // Navigation Properties
     [ForeignKey(nameof(StudentId))]
