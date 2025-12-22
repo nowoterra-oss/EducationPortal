@@ -284,6 +284,28 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
+// Files klasörünü (staj, hobi, aktivite sertifikaları) static file olarak serve et
+var filesPath = Path.Combine(Directory.GetCurrentDirectory(), "files");
+if (!Directory.Exists(filesPath))
+{
+    Directory.CreateDirectory(filesPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(filesPath),
+    RequestPath = "/files",
+    OnPrepareResponse = ctx =>
+    {
+        // CORS headers
+        ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+        // Cross-Origin Resource Policy - tarayıcı cross-origin dosya yüklemesi için gerekli
+        ctx.Context.Response.Headers.Append("Cross-Origin-Resource-Policy", "cross-origin");
+        // Cache için header ekle (1 gün)
+        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=86400");
+    }
+});
+
 // 8. Rate Limiting
 app.UseIpRateLimiting();
 

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace EduPortal.Application.DTOs.Student;
@@ -14,6 +15,8 @@ public class ActivityDto
     public DateTime? EndDate { get; set; }
     public bool IsOngoing { get; set; } = false;
     public string? Achievements { get; set; }
+    public string? CertificateUrl { get; set; }
+    public string? CertificateFileName { get; set; }
 }
 
 public class ActivityCreateDto
@@ -37,4 +40,6 @@ public class ActivityCreateDto
 
     [MaxLength(1000, ErrorMessage = "Kazanimlar en fazla 1000 karakter olabilir")]
     public string? Achievements { get; set; }
+
+    public IFormFile? CertificateFile { get; set; }
 }

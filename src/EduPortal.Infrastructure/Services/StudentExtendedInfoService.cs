@@ -125,7 +125,11 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
                     LicenseLevel = h.LicenseLevel,
                     LicenseDocumentUrl = h.LicenseDocumentUrl,
                     Achievements = h.Achievements,
-                    StartDate = h.StartDate
+                    StartDate = h.StartDate,
+                    YearsOfExperience = h.YearsOfExperience,
+                    Description = h.Description,
+                    CertificateUrl = h.CertificateUrl,
+                    CertificateFileName = h.CertificateFileName
                 })
                 .ToListAsync();
 
@@ -138,7 +142,7 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
         }
     }
 
-    public async Task<ApiResponse<HobbyDto>> AddHobbyAsync(int studentId, HobbyCreateDto dto)
+    public async Task<ApiResponse<HobbyDto>> AddHobbyAsync(int studentId, HobbyCreateDto dto, string? certificateUrl = null, string? certificateFileName = null)
     {
         try
         {
@@ -155,7 +159,11 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
                 LicenseLevel = dto.LicenseLevel,
                 LicenseDocumentUrl = dto.LicenseDocumentUrl,
                 Achievements = dto.Achievements,
-                StartDate = dto.StartDate
+                StartDate = dto.StartDate,
+                YearsOfExperience = dto.YearsOfExperience,
+                Description = dto.Description,
+                CertificateUrl = certificateUrl,
+                CertificateFileName = certificateFileName
             };
 
             _context.StudentHobbies.Add(entity);
@@ -171,7 +179,11 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
                 LicenseLevel = entity.LicenseLevel,
                 LicenseDocumentUrl = entity.LicenseDocumentUrl,
                 Achievements = entity.Achievements,
-                StartDate = entity.StartDate
+                StartDate = entity.StartDate,
+                YearsOfExperience = entity.YearsOfExperience,
+                Description = entity.Description,
+                CertificateUrl = entity.CertificateUrl,
+                CertificateFileName = entity.CertificateFileName
             };
 
             return ApiResponse<HobbyDto>.SuccessResponse(result, "Hobi eklendi");
@@ -226,7 +238,9 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
                     StartDate = a.StartDate,
                     EndDate = a.EndDate,
                     IsOngoing = a.IsOngoing,
-                    Achievements = a.Achievements
+                    Achievements = a.Achievements,
+                    CertificateUrl = a.CertificateUrl,
+                    CertificateFileName = a.CertificateFileName
                 })
                 .ToListAsync();
 
@@ -239,7 +253,7 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
         }
     }
 
-    public async Task<ApiResponse<ActivityDto>> AddActivityAsync(int studentId, ActivityCreateDto dto)
+    public async Task<ApiResponse<ActivityDto>> AddActivityAsync(int studentId, ActivityCreateDto dto, string? certificateUrl = null, string? certificateFileName = null)
     {
         try
         {
@@ -257,7 +271,9 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
                 StartDate = dto.StartDate,
                 EndDate = dto.EndDate,
                 IsOngoing = dto.IsOngoing,
-                Achievements = dto.Achievements
+                Achievements = dto.Achievements,
+                CertificateUrl = certificateUrl,
+                CertificateFileName = certificateFileName
             };
 
             _context.StudentActivities.Add(entity);
@@ -274,7 +290,9 @@ public class StudentExtendedInfoService : IStudentExtendedInfoService
                 StartDate = entity.StartDate,
                 EndDate = entity.EndDate,
                 IsOngoing = entity.IsOngoing,
-                Achievements = entity.Achievements
+                Achievements = entity.Achievements,
+                CertificateUrl = entity.CertificateUrl,
+                CertificateFileName = entity.CertificateFileName
             };
 
             return ApiResponse<ActivityDto>.SuccessResponse(result, "Aktivite eklendi");

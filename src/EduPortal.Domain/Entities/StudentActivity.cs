@@ -58,6 +58,18 @@ public class StudentActivity : BaseEntity
     [MaxLength(1000)]
     public string? Achievements { get; set; }
 
+    /// <summary>
+    /// Sertifika URL
+    /// </summary>
+    [MaxLength(500)]
+    public string? CertificateUrl { get; set; }
+
+    /// <summary>
+    /// Sertifika dosya adi
+    /// </summary>
+    [MaxLength(255)]
+    public string? CertificateFileName { get; set; }
+
     // Navigation Properties
     [ForeignKey(nameof(StudentId))]
     public virtual Student Student { get; set; } = null!;

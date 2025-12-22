@@ -15,12 +15,12 @@ public interface IStudentExtendedInfoService
 
     // Hobbies
     Task<ApiResponse<List<HobbyDto>>> GetHobbiesAsync(int studentId);
-    Task<ApiResponse<HobbyDto>> AddHobbyAsync(int studentId, HobbyCreateDto dto);
+    Task<ApiResponse<HobbyDto>> AddHobbyAsync(int studentId, HobbyCreateDto dto, string? certificateUrl = null, string? certificateFileName = null);
     Task<ApiResponse<bool>> DeleteHobbyAsync(int studentId, int id);
 
     // Activities
     Task<ApiResponse<List<ActivityDto>>> GetActivitiesAsync(int studentId);
-    Task<ApiResponse<ActivityDto>> AddActivityAsync(int studentId, ActivityCreateDto dto);
+    Task<ApiResponse<ActivityDto>> AddActivityAsync(int studentId, ActivityCreateDto dto, string? certificateUrl = null, string? certificateFileName = null);
     Task<ApiResponse<bool>> DeleteActivityAsync(int studentId, int id);
 
     // Readiness Exams

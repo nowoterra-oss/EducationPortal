@@ -23,19 +23,52 @@ public class StudentsController : ControllerBase
     private readonly IStudentExtendedInfoService _extendedInfoService;
     private readonly IStudentRepository _studentRepository;
     private readonly ILogger<StudentsController> _logger;
+    private readonly IWebHostEnvironment _environment;
+
+    private static readonly string[] AllowedExtensions = { ".pdf", ".jpg", ".jpeg", ".png", ".doc", ".docx" };
+    private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
 
     public StudentsController(
         IStudentService studentService,
         IStudentCertificateService certificateService,
         IStudentExtendedInfoService extendedInfoService,
         IStudentRepository studentRepository,
-        ILogger<StudentsController> logger)
+        ILogger<StudentsController> logger,
+        IWebHostEnvironment environment)
     {
         _studentService = studentService;
         _certificateService = certificateService;
         _extendedInfoService = extendedInfoService;
         _studentRepository = studentRepository;
         _logger = logger;
+        _environment = environment;
+    }
+
+    private async Task<(string? url, string? fileName, string? error)> SaveCertificateFileAsync(IFormFile? file, int studentId, string folder)
+    {
+        if (file == null || file.Length == 0)
+            return (null, null, null);
+
+        if (file.Length > MaxFileSize)
+            return (null, null, "Dosya boyutu 10 MB'ı aşamaz");
+
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!AllowedExtensions.Contains(extension))
+            return (null, null, "Desteklenmeyen dosya formatı. Desteklenen formatlar: PDF, JPG, JPEG, PNG, DOC, DOCX");
+
+        var uploadsFolder = Path.Combine(_environment.ContentRootPath, "files", folder);
+        if (!Directory.Exists(uploadsFolder))
+            Directory.CreateDirectory(uploadsFolder);
+
+        var uniqueFileName = $"{studentId}_{Guid.NewGuid()}{extension}";
+        var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        return ($"/files/{folder}/{uniqueFileName}", file.FileName, null);
     }
 
     /// <summary>
@@ -942,19 +975,25 @@ public class StudentsController : ControllerBase
     }
 
     /// <summary>
-    /// Add a hobby
+    /// Add a hobby (JSON veya multipart/form-data)
     /// </summary>
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Hobby data</param>
     [HttpPost("{studentId}/hobbies")]
     [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [Consumes("multipart/form-data", "application/json")]
     [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<HobbyDto>>> AddHobby(
         int studentId,
-        [FromBody] HobbyCreateDto dto)
+        [FromForm] HobbyCreateDto dto)
     {
-        var result = await _extendedInfoService.AddHobbyAsync(studentId, dto);
+        // Dosya yükleme
+        var (certificateUrl, certificateFileName, error) = await SaveCertificateFileAsync(dto.CertificateFile, studentId, "hobbies");
+        if (error != null)
+            return BadRequest(ApiResponse<HobbyDto>.ErrorResponse(error));
+
+        var result = await _extendedInfoService.AddHobbyAsync(studentId, dto, certificateUrl, certificateFileName);
         if (result.Success)
             return CreatedAtAction(nameof(GetHobbies), new { studentId }, result);
         return BadRequest(result);
@@ -992,19 +1031,25 @@ public class StudentsController : ControllerBase
     }
 
     /// <summary>
-    /// Add an activity
+    /// Add an activity (JSON veya multipart/form-data)
     /// </summary>
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Activity data</param>
     [HttpPost("{studentId}/activities")]
     [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [Consumes("multipart/form-data", "application/json")]
     [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<ActivityDto>>> AddActivity(
         int studentId,
-        [FromBody] ActivityCreateDto dto)
+        [FromForm] ActivityCreateDto dto)
     {
-        var result = await _extendedInfoService.AddActivityAsync(studentId, dto);
+        // Dosya yükleme
+        var (certificateUrl, certificateFileName, error) = await SaveCertificateFileAsync(dto.CertificateFile, studentId, "activities");
+        if (error != null)
+            return BadRequest(ApiResponse<ActivityDto>.ErrorResponse(error));
+
+        var result = await _extendedInfoService.AddActivityAsync(studentId, dto, certificateUrl, certificateFileName);
         if (result.Success)
             return CreatedAtAction(nameof(GetActivities), new { studentId }, result);
         return BadRequest(result);

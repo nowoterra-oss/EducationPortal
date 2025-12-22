@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace EduPortal.Application.DTOs.Student;
@@ -13,6 +14,10 @@ public class HobbyDto
     public string? LicenseDocumentUrl { get; set; }
     public string? Achievements { get; set; }
     public DateTime? StartDate { get; set; }
+    public int? YearsOfExperience { get; set; }
+    public string? Description { get; set; }
+    public string? CertificateUrl { get; set; }
+    public string? CertificateFileName { get; set; }
 }
 
 public class HobbyCreateDto
@@ -37,4 +42,11 @@ public class HobbyCreateDto
     public string? Achievements { get; set; }
 
     public DateTime? StartDate { get; set; }
+
+    public int? YearsOfExperience { get; set; }
+
+    [MaxLength(2000, ErrorMessage = "Aciklama en fazla 2000 karakter olabilir")]
+    public string? Description { get; set; }
+
+    public IFormFile? CertificateFile { get; set; }
 }
