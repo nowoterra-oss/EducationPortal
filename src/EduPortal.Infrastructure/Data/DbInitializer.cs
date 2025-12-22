@@ -1,3 +1,4 @@
+using EduPortal.Domain.Constants;
 using EduPortal.Domain.Entities;
 using EduPortal.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
@@ -20,6 +21,7 @@ public static class DbInitializer
         // Seed data'ları sırayla çağır
         await SeedRolesAsync(roleManager);
         await SeedAdminUserAsync(userManager);
+        await SeedPermissionsAsync(context, roleManager);
 
         // Veritabanında veri varsa seed etme (ama test kullanıcılarını her zaman kontrol et)
         var hasExistingData = await context.Branches.AnyAsync();
@@ -1687,5 +1689,219 @@ public static class DbInitializer
         await context.EmailTemplates.AddRangeAsync(templates);
         await context.SaveChangesAsync();
         Console.WriteLine($"✓ {templates.Count} email templates created");
+    }
+
+    private static async Task SeedPermissionsAsync(ApplicationDbContext context, RoleManager<IdentityRole> roleManager)
+    {
+        // Check if permissions already exist
+        if (await context.Permissions.AnyAsync())
+        {
+            Console.WriteLine("✓ Permissions already seeded");
+            return;
+        }
+
+        // Create all permissions from constants
+        var permissions = Permissions.All.Select(kvp => new Permission
+        {
+            Code = kvp.Key,
+            Name = kvp.Value.Name,
+            Category = kvp.Value.Category,
+            Icon = kvp.Value.Icon,
+            DisplayOrder = kvp.Value.Order,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        }).ToList();
+
+        await context.Permissions.AddRangeAsync(permissions);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"✓ {permissions.Count} permissions created");
+
+        // Assign all permissions to Admin role
+        var adminRole = await roleManager.FindByNameAsync("Admin");
+        if (adminRole != null)
+        {
+            var rolePermissions = permissions.Select(p => new RolePermission
+            {
+                RoleId = adminRole.Id,
+                PermissionId = p.Id,
+                CreatedAt = DateTime.UtcNow
+            }).ToList();
+
+            await context.RolePermissions.AddRangeAsync(rolePermissions);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✓ All permissions assigned to Admin role");
+        }
+
+        // Assign default permissions to Kayitci (Registrar) role
+        var kayitciRole = await roleManager.FindByNameAsync("Kayitci");
+        if (kayitciRole != null)
+        {
+            var kayitciPermissionCodes = new[]
+            {
+                Permissions.StudentsView,
+                Permissions.StudentsCreate,
+                Permissions.StudentsEdit,
+                Permissions.TeachersView,
+                Permissions.CoursesView,
+                Permissions.SchedulingView,
+                Permissions.SchedulingCreate,
+                Permissions.SchedulingEdit,
+                Permissions.PaymentsView,
+                Permissions.PaymentsCreate,
+                Permissions.AttendanceView,
+                Permissions.AttendanceCreate,
+                Permissions.MessagesView,
+                Permissions.MessagesSend
+            };
+
+            var kayitciPermissions = permissions
+                .Where(p => kayitciPermissionCodes.Contains(p.Code))
+                .Select(p => new RolePermission
+                {
+                    RoleId = kayitciRole.Id,
+                    PermissionId = p.Id,
+                    CreatedAt = DateTime.UtcNow
+                })
+                .ToList();
+
+            await context.RolePermissions.AddRangeAsync(kayitciPermissions);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✓ Default permissions assigned to Kayitci role");
+        }
+
+        // Assign default permissions to Ogretmen (Teacher) role
+        var ogretmenRole = await roleManager.FindByNameAsync("Ogretmen");
+        if (ogretmenRole != null)
+        {
+            var ogretmenPermissionCodes = new[]
+            {
+                Permissions.StudentsView,
+                Permissions.CoursesView,
+                Permissions.SchedulingView,
+                Permissions.AssignmentsView,
+                Permissions.AssignmentsCreate,
+                Permissions.AssignmentsGrade,
+                Permissions.AttendanceView,
+                Permissions.AttendanceCreate,
+                Permissions.AttendanceEdit,
+                Permissions.ExamsView,
+                Permissions.ExamsCreate,
+                Permissions.ExamsGrade,
+                Permissions.MessagesView,
+                Permissions.MessagesSend,
+                Permissions.GroupLessonsView,
+                Permissions.GroupLessonsCreate,
+                Permissions.GroupLessonsEdit
+            };
+
+            var ogretmenPermissions = permissions
+                .Where(p => ogretmenPermissionCodes.Contains(p.Code))
+                .Select(p => new RolePermission
+                {
+                    RoleId = ogretmenRole.Id,
+                    PermissionId = p.Id,
+                    CreatedAt = DateTime.UtcNow
+                })
+                .ToList();
+
+            await context.RolePermissions.AddRangeAsync(ogretmenPermissions);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✓ Default permissions assigned to Ogretmen role");
+        }
+
+        // Assign default permissions to Danışman (Counselor) role
+        var danismanRole = await roleManager.FindByNameAsync("Danışman");
+        if (danismanRole != null)
+        {
+            var danismanPermissionCodes = new[]
+            {
+                Permissions.StudentsView,
+                Permissions.AgpView,
+                Permissions.AgpCreate,
+                Permissions.AgpEdit,
+                Permissions.CounselingView,
+                Permissions.CounselingCreate,
+                Permissions.CounselingEdit,
+                Permissions.MessagesView,
+                Permissions.MessagesSend,
+                Permissions.ReportsView
+            };
+
+            var danismanPermissions = permissions
+                .Where(p => danismanPermissionCodes.Contains(p.Code))
+                .Select(p => new RolePermission
+                {
+                    RoleId = danismanRole.Id,
+                    PermissionId = p.Id,
+                    CreatedAt = DateTime.UtcNow
+                })
+                .ToList();
+
+            await context.RolePermissions.AddRangeAsync(danismanPermissions);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✓ Default permissions assigned to Danışman role");
+        }
+
+        // Assign default permissions to Coach role
+        var coachRole = await roleManager.FindByNameAsync("Coach");
+        if (coachRole != null)
+        {
+            var coachPermissionCodes = new[]
+            {
+                Permissions.StudentsView,
+                Permissions.CoachingView,
+                Permissions.CoachingCreate,
+                Permissions.CoachingEdit,
+                Permissions.AgpView,
+                Permissions.MessagesView,
+                Permissions.MessagesSend,
+                Permissions.ReportsView
+            };
+
+            var coachPermissions = permissions
+                .Where(p => coachPermissionCodes.Contains(p.Code))
+                .Select(p => new RolePermission
+                {
+                    RoleId = coachRole.Id,
+                    PermissionId = p.Id,
+                    CreatedAt = DateTime.UtcNow
+                })
+                .ToList();
+
+            await context.RolePermissions.AddRangeAsync(coachPermissions);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✓ Default permissions assigned to Coach role");
+        }
+
+        // Assign default permissions to Muhasebe (Accounting) role
+        var muhasebeRole = await roleManager.FindByNameAsync("Muhasebe");
+        if (muhasebeRole != null)
+        {
+            var muhasebePermissionCodes = new[]
+            {
+                Permissions.StudentsView,
+                Permissions.PaymentsView,
+                Permissions.PaymentsCreate,
+                Permissions.PaymentsProcess,
+                Permissions.PaymentsRefund,
+                Permissions.ReportsView,
+                Permissions.ReportsExport,
+                Permissions.PackagesView
+            };
+
+            var muhasebePermissions = permissions
+                .Where(p => muhasebePermissionCodes.Contains(p.Code))
+                .Select(p => new RolePermission
+                {
+                    RoleId = muhasebeRole.Id,
+                    PermissionId = p.Id,
+                    CreatedAt = DateTime.UtcNow
+                })
+                .ToList();
+
+            await context.RolePermissions.AddRangeAsync(muhasebePermissions);
+            await context.SaveChangesAsync();
+            Console.WriteLine($"✓ Default permissions assigned to Muhasebe role");
+        }
     }
 }

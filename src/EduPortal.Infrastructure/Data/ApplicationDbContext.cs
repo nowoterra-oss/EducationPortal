@@ -124,6 +124,11 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<StudentActivity> StudentActivities => Set<StudentActivity>();
     public DbSet<StudentReadinessExam> StudentReadinessExams => Set<StudentReadinessExam>();
 
+    // Permission System
+    public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -1105,6 +1110,59 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(re => re.StudentId);
+        });
+
+        // ===============================================
+        // PERMISSION SYSTEM RELATIONSHIPS
+        // ===============================================
+
+        // Permission entity configuration
+        builder.Entity<Permission>(entity =>
+        {
+            entity.HasIndex(p => p.Code).IsUnique();
+            entity.Property(p => p.Code).HasMaxLength(100).IsRequired();
+            entity.Property(p => p.Name).HasMaxLength(200).IsRequired();
+            entity.Property(p => p.Category).HasMaxLength(100).IsRequired();
+            entity.Property(p => p.Icon).HasMaxLength(50);
+            entity.Property(p => p.Description).HasMaxLength(500);
+        });
+
+        // UserPermission relationships
+        builder.Entity<UserPermission>(entity =>
+        {
+            entity.HasOne(up => up.User)
+                .WithMany()
+                .HasForeignKey(up => up.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(up => up.Permission)
+                .WithMany(p => p.UserPermissions)
+                .HasForeignKey(up => up.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(up => up.GrantedByUser)
+                .WithMany()
+                .HasForeignKey(up => up.GrantedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(up => new { up.UserId, up.PermissionId }).IsUnique();
+            entity.Property(up => up.Notes).HasMaxLength(500);
+        });
+
+        // RolePermission relationships
+        builder.Entity<RolePermission>(entity =>
+        {
+            entity.HasOne(rp => rp.Role)
+                .WithMany()
+                .HasForeignKey(rp => rp.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(rp => rp.Permission)
+                .WithMany(p => p.RolePermissions)
+                .HasForeignKey(rp => rp.PermissionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(rp => new { rp.RoleId, rp.PermissionId }).IsUnique();
         });
 
         // Global query filter for soft delete

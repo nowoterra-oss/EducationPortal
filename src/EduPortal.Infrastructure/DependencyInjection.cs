@@ -94,6 +94,9 @@ public static class DependencyInjection
         // Student Extended Info Service (Foreign Languages, Hobbies, Activities, Readiness Exams)
         services.AddScoped<IStudentExtendedInfoService, StudentExtendedInfoService>();
 
+        // Permission Service
+        services.AddScoped<IPermissionService, PermissionService>();
+
         return services;
     }
 }
