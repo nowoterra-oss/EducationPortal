@@ -22,7 +22,8 @@
       "Bash(dotnet run:*)",
       "Bash(timeout /t 10 /nobreak)",
       "Bash(timeout /t 3 /nobreak)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git push:*)"
     ]
   }
 }
