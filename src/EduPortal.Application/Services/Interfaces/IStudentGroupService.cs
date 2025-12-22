@@ -25,4 +25,7 @@ public interface IStudentGroupService
 
     // Cakisma Kontrolu
     Task<ApiResponse<GroupLessonConflictCheckResult>> CheckGroupLessonConflictsAsync(CreateGroupLessonDto dto);
+
+    // Otomatik Deaktivasyon
+    Task<ApiResponse<int>> DeactivateExpiredGroupsAsync();
 }

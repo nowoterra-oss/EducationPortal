@@ -594,6 +594,64 @@ public class StudentGroupService : IStudentGroupService
     }
 
     // ===============================================
+    // OTOMATIK DEAKTIVASYON
+    // ===============================================
+
+    public async Task<ApiResponse<int>> DeactivateExpiredGroupsAsync()
+    {
+        try
+        {
+            var today = DateTime.UtcNow.Date;
+            var deactivatedCount = 0;
+
+            // Son ders tarihi gecmis aktif gruplari bul
+            var expiredGroups = await _context.StudentGroups
+                .Include(g => g.LessonSchedules)
+                .Where(g => !g.IsDeleted && g.IsActive)
+                .ToListAsync();
+
+            foreach (var group in expiredGroups)
+            {
+                // Grubun aktif dersleri var mi kontrol et
+                var hasActiveLessons = group.LessonSchedules.Any(ls =>
+                    !ls.IsDeleted &&
+                    ls.Status == LessonStatus.Scheduled &&
+                    (ls.EffectiveTo == null || ls.EffectiveTo >= today));
+
+                if (!hasActiveLessons && group.LessonSchedules.Any())
+                {
+                    // Tum dersleri bitmis - grubu pasife al
+                    var lastLessonDate = group.LessonSchedules
+                        .Where(ls => !ls.IsDeleted && ls.EffectiveTo.HasValue)
+                        .Max(ls => ls.EffectiveTo);
+
+                    if (lastLessonDate.HasValue && lastLessonDate.Value < today)
+                    {
+                        group.IsActive = false;
+                        group.UpdatedAt = DateTime.UtcNow;
+                        deactivatedCount++;
+                        _logger.LogInformation("Grup pasife alindi: {GroupId} - {GroupName}, Son ders tarihi: {LastDate}",
+                            group.Id, group.Name, lastLessonDate.Value);
+                    }
+                }
+            }
+
+            if (deactivatedCount > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            _logger.LogInformation("Otomatik grup deaktivasyonu tamamlandi. {Count} grup pasife alindi", deactivatedCount);
+            return ApiResponse<int>.SuccessResponse(deactivatedCount, $"{deactivatedCount} grup pasife alindi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deactivating expired groups");
+            return ApiResponse<int>.ErrorResponse("Gruplari pasife alirken hata olustu");
+        }
+    }
+
+    // ===============================================
     // HELPER METHODS
     // ===============================================
 

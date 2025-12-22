@@ -1,5 +1,7 @@
 using EduPortal.Application.Common;
+using EduPortal.Application.DTOs.StudentTeacherAssignment;
 using EduPortal.Application.DTOs.Teacher;
+using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,11 +18,16 @@ namespace EduPortal.API.Controllers;
 public class TeachersController : ControllerBase
 {
     private readonly ITeacherService _teacherService;
+    private readonly IStudentTeacherAssignmentService _assignmentService;
     private readonly ILogger<TeachersController> _logger;
 
-    public TeachersController(ITeacherService teacherService, ILogger<TeachersController> logger)
+    public TeachersController(
+        ITeacherService teacherService,
+        IStudentTeacherAssignmentService assignmentService,
+        ILogger<TeachersController> logger)
     {
         _teacherService = teacherService;
+        _assignmentService = assignmentService;
         _logger = logger;
     }
 
@@ -264,6 +271,41 @@ public class TeachersController : ControllerBase
         {
             _logger.LogError(ex, "Error occurred while getting courses for teacher: {TeacherId}", id);
             return StatusCode(500, ApiResponse<List<object>>.ErrorResponse("Öğretmen dersleri getirilirken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Get teacher's assigned students
+    /// </summary>
+    /// <param name="id">Teacher ID</param>
+    /// <returns>List of students assigned to this teacher</returns>
+    /// <response code="200">Assigned students retrieved successfully</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="404">Teacher not found</response>
+    [HttpGet("{id}/assigned-students")]
+    [ProducesResponseType(typeof(ApiResponse<List<StudentTeacherAssignmentDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<List<StudentTeacherAssignmentDto>>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<List<StudentTeacherAssignmentDto>>>> GetAssignedStudents(int id)
+    {
+        try
+        {
+            // Önce öğretmenin var olup olmadığını kontrol et
+            var teacher = await _teacherService.GetByIdAsync(id);
+            if (!teacher.Success)
+            {
+                return NotFound(ApiResponse<List<StudentTeacherAssignmentDto>>.ErrorResponse("Öğretmen bulunamadı"));
+            }
+
+            var assignments = await _assignmentService.GetByTeacherIdAsync(id);
+            var result = assignments.ToList();
+
+            return Ok(ApiResponse<List<StudentTeacherAssignmentDto>>.SuccessResponse(result, "Atanmış öğrenciler başarıyla getirildi"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while getting assigned students for teacher: {TeacherId}", id);
+            return StatusCode(500, ApiResponse<List<StudentTeacherAssignmentDto>>.ErrorResponse("Atanmış öğrenciler getirilirken bir hata oluştu"));
         }
     }
 }

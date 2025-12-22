@@ -61,6 +61,7 @@ builder.Services.AddApplication();
 
 // Add Background Jobs
 builder.Services.AddHostedService<EduPortal.Infrastructure.BackgroundJobs.HomeworkReminderJob>();
+builder.Services.AddHostedService<EduPortal.Infrastructure.BackgroundJobs.GroupDeactivationJob>();
 
 // Add Identity
 // TC Kimlik Numarası varsayılan şifre olarak kullanıldığı için şifre gereksinimleri gevşetildi
