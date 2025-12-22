@@ -99,6 +99,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<StudentSummerActivity> StudentSummerActivities => Set<StudentSummerActivity>();
     public DbSet<StudentInternship> StudentInternships => Set<StudentInternship>();
     public DbSet<StudentSocialProject> StudentSocialProjects => Set<StudentSocialProject>();
+    public DbSet<SimpleInternship> SimpleInternships => Set<SimpleInternship>();
 
     // Teacher Extended Form
     public DbSet<TeacherAddress> TeacherAddresses => Set<TeacherAddress>();
@@ -935,6 +936,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         {
             entity.HasOne(si => si.Student)
                 .WithMany(s => s.Internships)
+                .HasForeignKey(si => si.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // SimpleInternship relationships
+        builder.Entity<SimpleInternship>(entity =>
+        {
+            entity.HasOne(si => si.Student)
+                .WithMany(s => s.SimpleInternships)
                 .HasForeignKey(si => si.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });

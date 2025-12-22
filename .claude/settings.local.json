@@ -23,7 +23,10 @@
       "Bash(timeout /t 10 /nobreak)",
       "Bash(timeout /t 3 /nobreak)",
       "Bash(curl:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git branch:*)",
+      "Bash(git fetch:*)",
+      "Bash(dir:*)"
     ]
   }
 }
