@@ -975,16 +975,35 @@ public class StudentsController : ControllerBase
     }
 
     /// <summary>
-    /// Add a hobby (JSON veya multipart/form-data)
+    /// Add a hobby (JSON)
     /// </summary>
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Hobby data</param>
     [HttpPost("{studentId}/hobbies")]
     [Authorize(Roles = "Admin,Danisman,Ogrenci")]
-    [Consumes("multipart/form-data", "application/json")]
     [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<HobbyDto>>> AddHobby(
+        int studentId,
+        [FromBody] HobbyCreateDto dto)
+    {
+        var result = await _extendedInfoService.AddHobbyAsync(studentId, dto);
+        if (result.Success)
+            return CreatedAtAction(nameof(GetHobbies), new { studentId }, result);
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Add a hobby with file upload (multipart/form-data)
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="dto">Hobby data with file</param>
+    [HttpPost("{studentId}/hobbies/upload")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<HobbyDto>>> AddHobbyWithFile(
         int studentId,
         [FromForm] HobbyCreateDto dto)
     {
@@ -1031,16 +1050,35 @@ public class StudentsController : ControllerBase
     }
 
     /// <summary>
-    /// Add an activity (JSON veya multipart/form-data)
+    /// Add an activity (JSON)
     /// </summary>
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Activity data</param>
     [HttpPost("{studentId}/activities")]
     [Authorize(Roles = "Admin,Danisman,Ogrenci")]
-    [Consumes("multipart/form-data", "application/json")]
     [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<ActivityDto>>> AddActivity(
+        int studentId,
+        [FromBody] ActivityCreateDto dto)
+    {
+        var result = await _extendedInfoService.AddActivityAsync(studentId, dto);
+        if (result.Success)
+            return CreatedAtAction(nameof(GetActivities), new { studentId }, result);
+        return BadRequest(result);
+    }
+
+    /// <summary>
+    /// Add an activity with file upload (multipart/form-data)
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="dto">Activity data with file</param>
+    [HttpPost("{studentId}/activities/upload")]
+    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<ActivityDto>>> AddActivityWithFile(
         int studentId,
         [FromForm] ActivityCreateDto dto)
     {

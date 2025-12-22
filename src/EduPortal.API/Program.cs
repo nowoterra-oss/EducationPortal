@@ -15,6 +15,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Microsoft.Extensions.FileProviders;
+using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -153,8 +154,13 @@ builder.Services.AddCors(options =>
         });
 });
 
-// Add Controllers with FluentValidation
-builder.Services.AddControllers();
+// Add Controllers with FluentValidation and JSON options
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    });
 
 // Add FluentValidation
 builder.Services.AddFluentValidationAutoValidation();

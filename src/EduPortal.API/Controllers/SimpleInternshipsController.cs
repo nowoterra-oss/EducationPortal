@@ -64,14 +64,66 @@ public class SimpleInternshipsController : ControllerBase
     }
 
     /// <summary>
-    /// Yeni staj ekler (JSON veya multipart/form-data)
+    /// Yeni staj ekler (JSON)
     /// </summary>
     [HttpPost]
     [Authorize(Roles = "Admin,Kayitci,Ogretmen")]
-    [Consumes("multipart/form-data", "application/json")]
     [ProducesResponseType(typeof(ApiResponse<SimpleInternshipDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<SimpleInternshipDto>>> CreateInternship(
+        int studentId,
+        [FromBody] CreateSimpleInternshipDto dto)
+    {
+        var studentExists = await _context.Students.AnyAsync(s => s.Id == studentId && !s.IsDeleted);
+        if (!studentExists)
+        {
+            return NotFound(ApiResponse<SimpleInternshipDto>.ErrorResponse("Öğrenci bulunamadı"));
+        }
+
+        var internship = new SimpleInternship
+        {
+            StudentId = studentId,
+            CompanyName = dto.CompanyName,
+            Position = dto.Position,
+            Industry = dto.Industry,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate,
+            IsOngoing = dto.IsOngoing,
+            Description = dto.Description,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.SimpleInternships.Add(internship);
+        await _context.SaveChangesAsync();
+
+        var result = new SimpleInternshipDto
+        {
+            Id = internship.Id,
+            StudentId = internship.StudentId,
+            CompanyName = internship.CompanyName,
+            Position = internship.Position,
+            Industry = internship.Industry,
+            StartDate = internship.StartDate,
+            EndDate = internship.EndDate,
+            IsOngoing = internship.IsOngoing,
+            Description = internship.Description,
+            CertificateUrl = internship.CertificateUrl,
+            CertificateFileName = internship.CertificateFileName,
+            CreatedAt = internship.CreatedAt
+        };
+
+        return CreatedAtAction(nameof(GetInternships), new { studentId }, ApiResponse<SimpleInternshipDto>.SuccessResponse(result, "Staj başarıyla eklendi"));
+    }
+
+    /// <summary>
+    /// Yeni staj ekler dosya ile (multipart/form-data)
+    /// </summary>
+    [HttpPost("upload")]
+    [Authorize(Roles = "Admin,Kayitci,Ogretmen")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<SimpleInternshipDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<SimpleInternshipDto>>> CreateInternshipWithFile(
         int studentId,
         [FromForm] CreateSimpleInternshipDto dto)
     {
