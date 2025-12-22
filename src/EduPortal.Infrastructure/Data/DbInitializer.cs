@@ -21,10 +21,14 @@ public static class DbInitializer
         await SeedRolesAsync(roleManager);
         await SeedAdminUserAsync(userManager);
 
-        // Veritabanında veri varsa seed etme
-        if (await context.Branches.AnyAsync())
+        // Veritabanında veri varsa seed etme (ama test kullanıcılarını her zaman kontrol et)
+        var hasExistingData = await context.Branches.AnyAsync();
+
+        // Test kullanıcılarını her zaman kontrol et ve eksik olanları oluştur
+        if (hasExistingData)
         {
-            Console.WriteLine("Database already seeded. Skipping seed data.");
+            await SeedTestUsersAsync(userManager, context);
+            Console.WriteLine("Database already seeded. Only checked test users.");
             return;
         }
 
@@ -33,6 +37,7 @@ public static class DbInitializer
         await SeedAcademicTermsAsync(context);
         await SeedCoursesAsync(context);
         await SeedUsersAndEntitiesAsync(userManager, context);
+        await SeedTestUsersAsync(userManager, context);
         await SeedClassesAsync(context);
         await SeedSchedulingDataAsync(context);
         await SeedHomeworksAsync(context);
@@ -93,6 +98,645 @@ public static class DbInitializer
                 await userManager.AddToRoleAsync(adminUser, "Admin");
                 Console.WriteLine("✓ Admin user created");
             }
+        }
+    }
+
+    private static async Task SeedTestUsersAsync(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
+    {
+        var branch = await context.Branches.FirstOrDefaultAsync();
+        Student? testStudentEntity = null;
+        Teacher? testTeacherEntity = null;
+
+        // Test Student User
+        var studentEmail = "student@eduportal.com";
+        var existingStudent = await userManager.FindByEmailAsync(studentEmail);
+        // Eski email ile de kontrol et
+        if (existingStudent == null)
+        {
+            existingStudent = await userManager.FindByEmailAsync("student@test.com");
+        }
+        if (existingStudent == null)
+        {
+            var studentUser = new ApplicationUser
+            {
+                UserName = studentEmail,
+                Email = studentEmail,
+                FirstName = "Test",
+                LastName = "Öğrenci",
+                PhoneNumber = "05351234567",
+                EmailConfirmed = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddMonths(-6)
+            };
+
+            var result = await userManager.CreateAsync(studentUser, "Student@123");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(studentUser, "Ogrenci");
+
+                if (branch != null)
+                {
+                    testStudentEntity = new Student
+                    {
+                        UserId = studentUser.Id,
+                        StudentNo = $"STD{DateTime.Now.Year}TEST",
+                        IdentityType = IdentityType.TCKimlik,
+                        IdentityNumber = "12345678901",
+                        Nationality = "TR",
+                        SchoolName = "Kadıköy Anadolu Lisesi",
+                        CurrentGrade = 11,
+                        Gender = Gender.Erkek,
+                        DateOfBirth = new DateTime(2008, 3, 15),
+                        Address = "Caferağa Mah. Moda Cad. No:45 Kadıköy/İstanbul",
+                        EnrollmentDate = DateTime.UtcNow.AddMonths(-6),
+                        BranchId = branch.Id,
+                        LGSPercentile = 92.5m,
+                        IsBilsem = true,
+                        BilsemField = "Matematik",
+                        LanguageLevel = "B2",
+                        TargetMajor = "Bilgisayar Mühendisliği",
+                        TargetCountry = "ABD",
+                        ReferenceSource = "Tanıdık tavsiyesi",
+                        InterviewResult = InterviewResult.KesınKayit,
+                        InterviewsJson = "[{\"number\":1,\"notes\":\"Öğrenci motivasyonu yüksek, akademik hedefleri net.\",\"evaluation\":\"Olumlu\",\"date\":\"2024-06-15T14:00:00Z\"},{\"number\":2,\"notes\":\"SAT hazırlık planı yapıldı, TOEFL hedefi belirlendi.\",\"evaluation\":\"Olumlu\",\"date\":\"2024-07-20T10:30:00Z\"}]"
+                    };
+                    await context.Students.AddAsync(testStudentEntity);
+                    await context.SaveChangesAsync();
+
+                    // Öğrenci hobilerini ekle
+                    var hobbies = new List<StudentHobby>
+                    {
+                        new StudentHobby { StudentId = testStudentEntity.Id, Category = "Spor", Name = "Satranç", Achievements = "Okul takımı kaptanı" },
+                        new StudentHobby { StudentId = testStudentEntity.Id, Category = "Diger", Name = "Kodlama", Achievements = "Python ve JavaScript ile projeler" },
+                        new StudentHobby { StudentId = testStudentEntity.Id, Category = "Spor", Name = "Basketbol", Achievements = "Hafta sonları okul takımıyla antrenman" }
+                    };
+                    await context.StudentHobbies.AddRangeAsync(hobbies);
+                    await context.SaveChangesAsync();
+                }
+                Console.WriteLine("✓ Test student user created with enriched data: student@eduportal.com / Student@123");
+            }
+        }
+        else
+        {
+            // Kullanıcı var, entity'yi kontrol et ve güncelle
+            testStudentEntity = await context.Students.FirstOrDefaultAsync(s => s.UserId == existingStudent.Id);
+            if (testStudentEntity == null && branch != null)
+            {
+                testStudentEntity = new Student
+                {
+                    UserId = existingStudent.Id,
+                    StudentNo = $"STD{DateTime.Now.Year}TEST",
+                    IdentityType = IdentityType.TCKimlik,
+                    IdentityNumber = "12345678901",
+                    Nationality = "TR",
+                    SchoolName = "Kadıköy Anadolu Lisesi",
+                    CurrentGrade = 11,
+                    Gender = Gender.Erkek,
+                    DateOfBirth = new DateTime(2008, 3, 15),
+                    Address = "Caferağa Mah. Moda Cad. No:45 Kadıköy/İstanbul",
+                    EnrollmentDate = DateTime.UtcNow.AddMonths(-6),
+                    BranchId = branch.Id,
+                    LGSPercentile = 92.5m,
+                    IsBilsem = true,
+                    BilsemField = "Matematik",
+                    LanguageLevel = "B2",
+                    TargetMajor = "Bilgisayar Mühendisliği",
+                    TargetCountry = "ABD",
+                    ReferenceSource = "Tanıdık tavsiyesi",
+                    InterviewResult = InterviewResult.KesınKayit,
+                    InterviewsJson = "[{\"number\":1,\"notes\":\"Öğrenci motivasyonu yüksek, akademik hedefleri net.\",\"evaluation\":\"Olumlu\",\"date\":\"2024-06-15T14:00:00Z\"},{\"number\":2,\"notes\":\"SAT hazırlık planı yapıldı, TOEFL hedefi belirlendi.\",\"evaluation\":\"Olumlu\",\"date\":\"2024-07-20T10:30:00Z\"}]"
+                };
+                await context.Students.AddAsync(testStudentEntity);
+                await context.SaveChangesAsync();
+                Console.WriteLine("✓ Student entity created for existing test user with enriched data");
+            }
+            else if (testStudentEntity != null)
+            {
+                // Mevcut entity'yi güncelle (eksik alanları doldur)
+                var needsUpdate = false;
+                if (string.IsNullOrEmpty(testStudentEntity.IdentityNumber))
+                {
+                    testStudentEntity.IdentityNumber = "12345678901";
+                    testStudentEntity.IdentityType = IdentityType.TCKimlik;
+                    testStudentEntity.Nationality = "TR";
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testStudentEntity.Address))
+                {
+                    testStudentEntity.Address = "Caferağa Mah. Moda Cad. No:45 Kadıköy/İstanbul";
+                    needsUpdate = true;
+                }
+                if (testStudentEntity.SchoolName == "Test Lisesi")
+                {
+                    testStudentEntity.SchoolName = "Kadıköy Anadolu Lisesi";
+                    testStudentEntity.CurrentGrade = 11;
+                    needsUpdate = true;
+                }
+                if (!testStudentEntity.LGSPercentile.HasValue || testStudentEntity.LGSPercentile < 90)
+                {
+                    testStudentEntity.LGSPercentile = 92.5m;
+                    needsUpdate = true;
+                }
+                if (!testStudentEntity.IsBilsem)
+                {
+                    testStudentEntity.IsBilsem = true;
+                    testStudentEntity.BilsemField = "Matematik";
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testStudentEntity.LanguageLevel))
+                {
+                    testStudentEntity.LanguageLevel = "B2";
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testStudentEntity.TargetMajor))
+                {
+                    testStudentEntity.TargetMajor = "Bilgisayar Mühendisliği";
+                    testStudentEntity.TargetCountry = "ABD";
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testStudentEntity.ReferenceSource))
+                {
+                    testStudentEntity.ReferenceSource = "Tanıdık tavsiyesi";
+                    needsUpdate = true;
+                }
+                if (!testStudentEntity.InterviewResult.HasValue)
+                {
+                    testStudentEntity.InterviewResult = InterviewResult.KesınKayit;
+                    testStudentEntity.InterviewsJson = "[{\"number\":1,\"notes\":\"Öğrenci motivasyonu yüksek, akademik hedefleri net.\",\"evaluation\":\"Olumlu\",\"date\":\"2024-06-15T14:00:00Z\"},{\"number\":2,\"notes\":\"SAT hazırlık planı yapıldı, TOEFL hedefi belirlendi.\",\"evaluation\":\"Olumlu\",\"date\":\"2024-07-20T10:30:00Z\"}]";
+                    needsUpdate = true;
+                }
+
+                if (needsUpdate)
+                {
+                    context.Students.Update(testStudentEntity);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("✓ Test student entity updated with enriched data");
+                }
+
+                // User bilgilerini güncelle
+                // İsmi "Test Öğrenci" olarak güncelle (arama için)
+                if (existingStudent.FirstName != "Test" || existingStudent.LastName != "Öğrenci" || !existingStudent.IsActive)
+                {
+                    existingStudent.FirstName = "Test";
+                    existingStudent.LastName = "Öğrenci";
+                    existingStudent.PhoneNumber = "05351234567";
+                    existingStudent.IsActive = true; // Öğrencinin aramada görünmesi için aktif olmalı
+                    await userManager.UpdateAsync(existingStudent);
+                    Console.WriteLine("✓ Test student user info updated");
+                }
+
+                // Hobiler ekle
+                var existingHobbies = await context.StudentHobbies.Where(h => h.StudentId == testStudentEntity.Id).CountAsync();
+                if (existingHobbies == 0)
+                {
+                    var hobbies = new List<StudentHobby>
+                    {
+                        new StudentHobby { StudentId = testStudentEntity.Id, Category = "Spor", Name = "Satranç", Achievements = "Okul takımı kaptanı" },
+                        new StudentHobby { StudentId = testStudentEntity.Id, Category = "Diger", Name = "Kodlama", Achievements = "Python ve JavaScript ile projeler" },
+                        new StudentHobby { StudentId = testStudentEntity.Id, Category = "Spor", Name = "Basketbol", Achievements = "Hafta sonları okul takımıyla antrenman" }
+                    };
+                    await context.StudentHobbies.AddRangeAsync(hobbies);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("✓ Test student hobbies added");
+                }
+            }
+        }
+
+        // Test Teacher User
+        var teacherEmail = "teacher@eduportal.com";
+        var existingTeacher = await userManager.FindByEmailAsync(teacherEmail);
+        // Eski email ile de kontrol et
+        if (existingTeacher == null)
+        {
+            existingTeacher = await userManager.FindByEmailAsync("teacher@test.com");
+        }
+        if (existingTeacher == null)
+        {
+            var teacherUser = new ApplicationUser
+            {
+                UserName = teacherEmail,
+                Email = teacherEmail,
+                FirstName = "Test",
+                LastName = "Öğretmen",
+                PhoneNumber = "05421234567",
+                EmailConfirmed = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddYears(-2)
+            };
+
+            var result = await userManager.CreateAsync(teacherUser, "Teacher@123");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(teacherUser, "Ogretmen");
+
+                if (branch != null)
+                {
+                    testTeacherEntity = new Teacher
+                    {
+                        UserId = teacherUser.Id,
+                        Specialization = "İngilizce",
+                        Experience = 8,
+                        IsActive = true,
+                        BranchId = branch.Id,
+                        IdentityType = IdentityType.TCKimlik,
+                        IdentityNumber = "98765432101",
+                        Nationality = "TR",
+                        Department = "Yabancı Diller",
+                        Biography = "8 yıllık İngilizce öğretmenliği deneyimi. Cambridge CELTA sertifikalı. SAT, TOEFL ve IELTS hazırlık konusunda uzman. Yüzlerce öğrencinin yurtdışı eğitim hayallerini gerçekleştirmelerine yardımcı oldu.",
+                        Education = "Boğaziçi Üniversitesi - İngiliz Dili ve Edebiyatı (Lisans), Yıldız Teknik Üniversitesi - İngilizce Öğretmenliği (Yüksek Lisans)",
+                        Certifications = "Cambridge CELTA, TOEFL iBT Instructor, IELTS Academic Trainer",
+                        OfficeLocation = "Kadıköy Şubesi - 2. Kat, Oda 205",
+                        OfficeHours = "Pazartesi-Cuma 09:00-18:00",
+                        HireDate = DateTime.UtcNow.AddYears(-2),
+                        ExperienceScore = 85
+                    };
+                    await context.Teachers.AddAsync(testTeacherEntity);
+                    await context.SaveChangesAsync();
+
+                    // Öğretmen sertifikalarını ekle
+                    var certificates = new List<TeacherCertificate>
+                    {
+                        new TeacherCertificate { TeacherId = testTeacherEntity.Id, Name = "Cambridge CELTA", Institution = "Cambridge Assessment English", IssueDate = new DateTime(2018, 6, 15) },
+                        new TeacherCertificate { TeacherId = testTeacherEntity.Id, Name = "TOEFL iBT Instructor", Institution = "ETS", IssueDate = new DateTime(2019, 3, 20) },
+                        new TeacherCertificate { TeacherId = testTeacherEntity.Id, Name = "IELTS Academic Trainer", Institution = "British Council", IssueDate = new DateTime(2020, 9, 10) }
+                    };
+                    await context.TeacherCertificates.AddRangeAsync(certificates);
+
+                    // Öğretmen referanslarını ekle
+                    var references = new List<TeacherReference>
+                    {
+                        new TeacherReference { TeacherId = testTeacherEntity.Id, FullName = "Prof. Dr. Mehmet Öztürk", Title = "Bölüm Başkanı", Organization = "Boğaziçi Üniversitesi", PhoneNumber = "05321234567", Email = "mehmet.ozturk@boun.edu.tr" },
+                        new TeacherReference { TeacherId = testTeacherEntity.Id, FullName = "Sarah Williams", Title = "Academic Director", Organization = "British Council Istanbul", PhoneNumber = "05331234567", Email = "sarah.williams@britishcouncil.org" }
+                    };
+                    await context.TeacherReferences.AddRangeAsync(references);
+                    await context.SaveChangesAsync();
+                }
+                Console.WriteLine("✓ Test teacher user created with enriched data: teacher@eduportal.com / Teacher@123");
+            }
+        }
+        else
+        {
+            // Kullanıcı var, entity'yi kontrol et ve güncelle
+            testTeacherEntity = await context.Teachers.FirstOrDefaultAsync(t => t.UserId == existingTeacher.Id);
+            if (testTeacherEntity == null && branch != null)
+            {
+                testTeacherEntity = new Teacher
+                {
+                    UserId = existingTeacher.Id,
+                    Specialization = "İngilizce",
+                    Experience = 8,
+                    IsActive = true,
+                    BranchId = branch.Id,
+                    IdentityType = IdentityType.TCKimlik,
+                    IdentityNumber = "98765432101",
+                    Nationality = "TR",
+                    Department = "Yabancı Diller",
+                    Biography = "8 yıllık İngilizce öğretmenliği deneyimi. Cambridge CELTA sertifikalı. SAT, TOEFL ve IELTS hazırlık konusunda uzman.",
+                    Education = "Boğaziçi Üniversitesi - İngiliz Dili ve Edebiyatı (Lisans), Yıldız Teknik Üniversitesi - İngilizce Öğretmenliği (Yüksek Lisans)",
+                    Certifications = "Cambridge CELTA, TOEFL iBT Instructor, IELTS Academic Trainer",
+                    OfficeLocation = "Kadıköy Şubesi - 2. Kat, Oda 205",
+                    OfficeHours = "Pazartesi-Cuma 09:00-18:00",
+                    HireDate = DateTime.UtcNow.AddYears(-2),
+                    ExperienceScore = 85
+                };
+                await context.Teachers.AddAsync(testTeacherEntity);
+                await context.SaveChangesAsync();
+                Console.WriteLine("✓ Teacher entity created for existing test user with enriched data");
+            }
+            else if (testTeacherEntity != null)
+            {
+                // Mevcut entity'yi güncelle
+                var needsUpdate = false;
+                if (testTeacherEntity.Specialization != "İngilizce")
+                {
+                    testTeacherEntity.Specialization = "İngilizce";
+                    needsUpdate = true;
+                }
+                if (testTeacherEntity.Experience < 8)
+                {
+                    testTeacherEntity.Experience = 8;
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testTeacherEntity.IdentityNumber))
+                {
+                    testTeacherEntity.IdentityType = IdentityType.TCKimlik;
+                    testTeacherEntity.IdentityNumber = "98765432101";
+                    testTeacherEntity.Nationality = "TR";
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testTeacherEntity.Department))
+                {
+                    testTeacherEntity.Department = "Yabancı Diller";
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testTeacherEntity.Biography))
+                {
+                    testTeacherEntity.Biography = "8 yıllık İngilizce öğretmenliği deneyimi. Cambridge CELTA sertifikalı. SAT, TOEFL ve IELTS hazırlık konusunda uzman. Yüzlerce öğrencinin yurtdışı eğitim hayallerini gerçekleştirmelerine yardımcı oldu.";
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testTeacherEntity.Education))
+                {
+                    testTeacherEntity.Education = "Boğaziçi Üniversitesi - İngiliz Dili ve Edebiyatı (Lisans), Yıldız Teknik Üniversitesi - İngilizce Öğretmenliği (Yüksek Lisans)";
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testTeacherEntity.Certifications))
+                {
+                    testTeacherEntity.Certifications = "Cambridge CELTA, TOEFL iBT Instructor, IELTS Academic Trainer";
+                    needsUpdate = true;
+                }
+                if (string.IsNullOrEmpty(testTeacherEntity.OfficeLocation))
+                {
+                    testTeacherEntity.OfficeLocation = "Kadıköy Şubesi - 2. Kat, Oda 205";
+                    testTeacherEntity.OfficeHours = "Pazartesi-Cuma 09:00-18:00";
+                    needsUpdate = true;
+                }
+                if (!testTeacherEntity.HireDate.HasValue)
+                {
+                    testTeacherEntity.HireDate = DateTime.UtcNow.AddYears(-2);
+                    needsUpdate = true;
+                }
+                if (!testTeacherEntity.ExperienceScore.HasValue)
+                {
+                    testTeacherEntity.ExperienceScore = 85;
+                    needsUpdate = true;
+                }
+
+                if (needsUpdate)
+                {
+                    context.Teachers.Update(testTeacherEntity);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("✓ Test teacher entity updated with enriched data");
+                }
+
+                // İsmi "Test Öğretmen" olarak güncelle (arama için)
+                if (existingTeacher.FirstName != "Test" || existingTeacher.LastName != "Öğretmen")
+                {
+                    existingTeacher.FirstName = "Test";
+                    existingTeacher.LastName = "Öğretmen";
+                    existingTeacher.PhoneNumber = "05421234567";
+                    await userManager.UpdateAsync(existingTeacher);
+                    Console.WriteLine("✓ Test teacher user info updated");
+                }
+
+                // Sertifikalar ekle
+                var existingCerts = await context.TeacherCertificates.Where(c => c.TeacherId == testTeacherEntity.Id).CountAsync();
+                if (existingCerts == 0)
+                {
+                    var certificates = new List<TeacherCertificate>
+                    {
+                        new TeacherCertificate { TeacherId = testTeacherEntity.Id, Name = "Cambridge CELTA", Institution = "Cambridge Assessment English", IssueDate = new DateTime(2018, 6, 15) },
+                        new TeacherCertificate { TeacherId = testTeacherEntity.Id, Name = "TOEFL iBT Instructor", Institution = "ETS", IssueDate = new DateTime(2019, 3, 20) },
+                        new TeacherCertificate { TeacherId = testTeacherEntity.Id, Name = "IELTS Academic Trainer", Institution = "British Council", IssueDate = new DateTime(2020, 9, 10) }
+                    };
+                    await context.TeacherCertificates.AddRangeAsync(certificates);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("✓ Test teacher certificates added");
+                }
+
+                // Referanslar ekle
+                var existingRefs = await context.TeacherReferences.Where(r => r.TeacherId == testTeacherEntity.Id).CountAsync();
+                if (existingRefs == 0)
+                {
+                    var references = new List<TeacherReference>
+                    {
+                        new TeacherReference { TeacherId = testTeacherEntity.Id, FullName = "Prof. Dr. Mehmet Öztürk", Title = "Bölüm Başkanı", Organization = "Boğaziçi Üniversitesi", PhoneNumber = "05321234567", Email = "mehmet.ozturk@boun.edu.tr" },
+                        new TeacherReference { TeacherId = testTeacherEntity.Id, FullName = "Sarah Williams", Title = "Academic Director", Organization = "British Council Istanbul", PhoneNumber = "05331234567", Email = "sarah.williams@britishcouncil.org" }
+                    };
+                    await context.TeacherReferences.AddRangeAsync(references);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine("✓ Test teacher references added");
+                }
+            }
+        }
+
+        // Test Parent User
+        var parentEmail = "parent@eduportal.com";
+        var existingParent = await userManager.FindByEmailAsync(parentEmail);
+        // Eski email ile de kontrol et
+        if (existingParent == null)
+        {
+            existingParent = await userManager.FindByEmailAsync("parent@test.com");
+        }
+        if (existingParent == null)
+        {
+            var parentUser = new ApplicationUser
+            {
+                UserName = parentEmail,
+                Email = parentEmail,
+                FirstName = "Test",
+                LastName = "Veli",
+                PhoneNumber = "05321234567",
+                EmailConfirmed = true,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow.AddMonths(-6)
+            };
+
+            var result = await userManager.CreateAsync(parentUser, "Parent@123");
+            if (result.Succeeded)
+            {
+                await userManager.AddToRoleAsync(parentUser, "Veli");
+
+                var parent = new Parent
+                {
+                    UserId = parentUser.Id,
+                    Occupation = "Yazılım Mühendisi",
+                    WorkPhone = "02161234567"
+                };
+                await context.Parents.AddAsync(parent);
+                await context.SaveChangesAsync();
+
+                // Test öğrenci ile ilişkilendir
+                if (testStudentEntity != null)
+                {
+                    var studentParent = new StudentParent
+                    {
+                        StudentId = testStudentEntity.Id,
+                        ParentId = parent.Id,
+                        Relationship = "Baba",
+                        IsPrimaryContact = true
+                    };
+                    await context.StudentParents.AddAsync(studentParent);
+                    await context.SaveChangesAsync();
+                }
+                Console.WriteLine("✓ Test parent user created: parent@eduportal.com / Parent@123");
+            }
+        }
+        else
+        {
+            // Kullanıcı var ama Parent entity yok mu kontrol et
+            var existingParentEntity = await context.Parents.FirstOrDefaultAsync(p => p.UserId == existingParent.Id);
+            if (existingParentEntity == null)
+            {
+                var parent = new Parent
+                {
+                    UserId = existingParent.Id,
+                    Occupation = "Yazılım Mühendisi",
+                    WorkPhone = "02161234567"
+                };
+                await context.Parents.AddAsync(parent);
+                await context.SaveChangesAsync();
+
+                // Test öğrenci ile ilişkilendir
+                var testStudent = await context.Students.FirstOrDefaultAsync(s => s.StudentNo == $"STD{DateTime.Now.Year}TEST");
+                if (testStudent != null)
+                {
+                    var existingRelation = await context.StudentParents.FirstOrDefaultAsync(sp => sp.StudentId == testStudent.Id && sp.ParentId == parent.Id);
+                    if (existingRelation == null)
+                    {
+                        var studentParent = new StudentParent
+                        {
+                            StudentId = testStudent.Id,
+                            ParentId = parent.Id,
+                            Relationship = "Baba",
+                            IsPrimaryContact = true
+                        };
+                        await context.StudentParents.AddAsync(studentParent);
+                        await context.SaveChangesAsync();
+                    }
+                }
+                Console.WriteLine("✓ Parent entity created for existing test user");
+            }
+
+            // İsmi "Test Veli" olarak güncelle (arama için)
+            if (existingParent.FirstName != "Test" || existingParent.LastName != "Veli")
+            {
+                existingParent.FirstName = "Test";
+                existingParent.LastName = "Veli";
+                existingParent.PhoneNumber = "05321234567";
+                await userManager.UpdateAsync(existingParent);
+                Console.WriteLine("✓ Test parent user info updated");
+            }
+        }
+
+        // Test öğrenci ve öğretmen arasında ders programı oluştur
+        if (testStudentEntity != null && testTeacherEntity != null)
+        {
+            await CreateTestLessonSchedulesAsync(context, testStudentEntity.Id, testTeacherEntity.Id);
+        }
+        else
+        {
+            // Entity'ler zaten varsa ID'lerini bul
+            var studentId = testStudentEntity?.Id ?? (await context.Students.FirstOrDefaultAsync(s => s.StudentNo == $"STD{DateTime.Now.Year}TEST"))?.Id;
+            var teacherId = testTeacherEntity?.Id ?? (await context.Teachers.FirstOrDefaultAsync(t => t.Specialization == "İngilizce" && t.User.Email == "teacher@eduportal.com"))?.Id;
+
+            if (studentId.HasValue && teacherId.HasValue)
+            {
+                await CreateTestLessonSchedulesAsync(context, studentId.Value, teacherId.Value);
+            }
+        }
+    }
+
+    private static async Task CreateTestLessonSchedulesAsync(ApplicationDbContext context, int studentId, int teacherId)
+    {
+        // Mevcut ders programını kontrol et
+        var existingSchedule = await context.LessonSchedules
+            .FirstOrDefaultAsync(ls => ls.StudentId == studentId && ls.TeacherId == teacherId);
+
+        if (existingSchedule != null)
+        {
+            Console.WriteLine("✓ Lesson schedules already exist for test student and teacher");
+            return;
+        }
+
+        // İngilizce dersini bul (TOEFL Hazırlık)
+        var englishCourse = await context.Courses.FirstOrDefaultAsync(c => c.CourseCode == "ENG-TOEFL");
+        if (englishCourse == null)
+        {
+            englishCourse = await context.Courses.FirstOrDefaultAsync(c => c.Subject == "İngilizce");
+        }
+
+        if (englishCourse == null)
+        {
+            Console.WriteLine("⚠ English course not found, skipping lesson schedule creation");
+            return;
+        }
+
+        // Sınıf bul
+        var classroom = await context.Classrooms.FirstOrDefaultAsync(c => c.IsAvailable);
+
+        // Haftalık ders programı oluştur (Pazartesi, Çarşamba, Cuma)
+        var schedules = new List<LessonSchedule>
+        {
+            new LessonSchedule
+            {
+                StudentId = studentId,
+                TeacherId = teacherId,
+                CourseId = englishCourse.Id,
+                DayOfWeek = DayOfWeek.Monday,
+                StartTime = new TimeSpan(17, 0, 0),
+                EndTime = new TimeSpan(18, 30, 0),
+                EffectiveFrom = DateTime.UtcNow.AddDays(-30),
+                Status = LessonStatus.Scheduled,
+                IsRecurring = true,
+                ClassroomId = classroom?.Id,
+                Notes = "TOEFL Reading & Listening"
+            },
+            new LessonSchedule
+            {
+                StudentId = studentId,
+                TeacherId = teacherId,
+                CourseId = englishCourse.Id,
+                DayOfWeek = DayOfWeek.Wednesday,
+                StartTime = new TimeSpan(17, 0, 0),
+                EndTime = new TimeSpan(18, 30, 0),
+                EffectiveFrom = DateTime.UtcNow.AddDays(-30),
+                Status = LessonStatus.Scheduled,
+                IsRecurring = true,
+                ClassroomId = classroom?.Id,
+                Notes = "TOEFL Speaking & Writing"
+            },
+            new LessonSchedule
+            {
+                StudentId = studentId,
+                TeacherId = teacherId,
+                CourseId = englishCourse.Id,
+                DayOfWeek = DayOfWeek.Friday,
+                StartTime = new TimeSpan(15, 0, 0),
+                EndTime = new TimeSpan(16, 30, 0),
+                EffectiveFrom = DateTime.UtcNow.AddDays(-30),
+                Status = LessonStatus.Scheduled,
+                IsRecurring = true,
+                ClassroomId = classroom?.Id,
+                Notes = "TOEFL Practice Test"
+            },
+            new LessonSchedule
+            {
+                StudentId = studentId,
+                TeacherId = teacherId,
+                CourseId = englishCourse.Id,
+                DayOfWeek = DayOfWeek.Saturday,
+                StartTime = new TimeSpan(10, 0, 0),
+                EndTime = new TimeSpan(12, 0, 0),
+                EffectiveFrom = DateTime.UtcNow.AddDays(-30),
+                Status = LessonStatus.Scheduled,
+                IsRecurring = true,
+                ClassroomId = classroom?.Id,
+                Notes = "TOEFL Mock Exam & Review"
+            }
+        };
+
+        await context.LessonSchedules.AddRangeAsync(schedules);
+        await context.SaveChangesAsync();
+        Console.WriteLine($"✓ {schedules.Count} lesson schedules created between test student and teacher");
+
+        // StudentTeacherAssignment oluştur
+        var existingAssignment = await context.StudentTeacherAssignments
+            .FirstOrDefaultAsync(sta => sta.StudentId == studentId && sta.TeacherId == teacherId && sta.CourseId == englishCourse.Id);
+
+        if (existingAssignment == null)
+        {
+            var assignment = new StudentTeacherAssignment
+            {
+                StudentId = studentId,
+                TeacherId = teacherId,
+                CourseId = englishCourse.Id,
+                StartDate = DateTime.UtcNow.AddDays(-30),
+                IsActive = true,
+                Notes = "TOEFL Hazırlık Programı - 3 aylık yoğun kurs"
+            };
+            await context.StudentTeacherAssignments.AddAsync(assignment);
+            await context.SaveChangesAsync();
+            Console.WriteLine("✓ StudentTeacherAssignment created for test student and teacher");
         }
     }
 
