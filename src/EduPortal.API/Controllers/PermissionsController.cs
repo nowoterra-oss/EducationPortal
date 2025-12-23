@@ -174,6 +174,81 @@ public class PermissionsController : ControllerBase
     }
 
     /// <summary>
+    /// Deny a specific permission to a user (overrides role-based permission)
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="permissionId">Permission ID to deny</param>
+    /// <param name="notes">Optional notes</param>
+    /// <returns>Success status</returns>
+    [HttpPost("user/{userId}/deny/{permissionId}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<bool>>> DenyPermission(string userId, int permissionId, [FromQuery] string? notes = null)
+    {
+        try
+        {
+            var deniedByUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(deniedByUserId))
+            {
+                return BadRequest(ApiResponse<bool>.ErrorResponse("Kullanıcı kimliği alınamadı"));
+            }
+
+            var result = await _permissionService.DenyPermissionToUserAsync(deniedByUserId, userId, permissionId, notes);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error denying permission {PermissionId} to user {UserId}", permissionId, userId);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Yetki engelleme sırasında bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Bulk update permissions for a user (grant and deny in single request)
+    /// </summary>
+    /// <param name="userId">User ID</param>
+    /// <param name="dto">Bulk permission update details</param>
+    /// <returns>Success status</returns>
+    /// <remarks>
+    /// Bu endpoint, tek bir istekte hem yetki verme hem de engelleme işlemlerini gerçekleştirir.
+    /// GrantedPermissionIds listesindeki yetkiler kullanıcıya verilir,
+    /// DeniedPermissionIds listesindeki yetkiler ise engellenir (role yetkilerini override eder).
+    /// Her iki listede de olmayan mevcut yetkiler kaldırılır (soft delete).
+    /// </remarks>
+    [HttpPost("user/{userId}/bulk-update")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<bool>>> BulkUpdatePermissions(string userId, [FromBody] BulkPermissionUpdateDto dto)
+    {
+        try
+        {
+            var updatedByUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(updatedByUserId))
+            {
+                return BadRequest(ApiResponse<bool>.ErrorResponse("Kullanıcı kimliği alınamadı"));
+            }
+
+            var result = await _permissionService.BulkUpdatePermissionsAsync(updatedByUserId, userId, dto);
+            if (result.Success)
+            {
+                return Ok(result);
+            }
+            return BadRequest(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error bulk updating permissions for user {UserId}", userId);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Toplu yetki güncelleme sırasında bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
     /// Get current user's effective permissions
     /// </summary>
     /// <returns>List of permission codes</returns>

@@ -1,8 +1,10 @@
+using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.StudentTeacherAssignment;
 using EduPortal.Application.DTOs.Teacher;
 using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
+using EduPortal.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -42,7 +44,7 @@ public class TeachersController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Danışman")]
+    [RequirePermission(Permissions.TeachersView, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<TeacherDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -106,7 +108,7 @@ public class TeachersController : ControllerBase
     /// <response code="200">Search completed successfully</response>
     /// <response code="401">Unauthorized</response>
     [HttpGet("search")]
-    [Authorize(Roles = "Admin,Danışman")]
+    [RequirePermission(Permissions.TeachersView, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<TeacherDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<PagedResponse<TeacherDto>>>> Search(

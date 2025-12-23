@@ -84,7 +84,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpGet]
-    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit)]
+    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<StudentDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -114,7 +114,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Student not found</response>
     [HttpGet("{id}")]
-    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit)]
+    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status404NotFound)]
@@ -149,7 +149,7 @@ public class StudentsController : ControllerBase
     /// <response code="200">Search completed successfully</response>
     /// <response code="401">Unauthorized</response>
     [HttpGet("search")]
-    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit)]
+    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<StudentDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<PagedResponse<StudentDto>>>> Search(
@@ -185,7 +185,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Student not found</response>
     [HttpGet("student-no/{studentNo}")]
-    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit)]
+    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status404NotFound)]

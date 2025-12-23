@@ -14,6 +14,7 @@ public interface IPermissionService
     // User Permissions
     Task<UserPermissionsResponseDto> GetUserPermissionsAsync(string userId);
     Task<ApiResponse<bool>> AssignPermissionsToUserAsync(string grantedByUserId, AssignPermissionDto dto);
+    Task<ApiResponse<bool>> DenyPermissionToUserAsync(string deniedByUserId, string userId, int permissionId, string? notes = null);
     Task<ApiResponse<bool>> RevokePermissionFromUserAsync(string userId, int permissionId);
     Task<ApiResponse<bool>> RevokeAllPermissionsFromUserAsync(string userId);
 
@@ -28,6 +29,7 @@ public interface IPermissionService
 
     // Bulk Operations
     Task<ApiResponse<bool>> CopyPermissionsFromUserAsync(CopyPermissionsDto dto);
+    Task<ApiResponse<bool>> BulkUpdatePermissionsAsync(string updatedByUserId, string userId, BulkPermissionUpdateDto dto);
 
     // Sync permissions from constants to database
     Task SyncPermissionsAsync();

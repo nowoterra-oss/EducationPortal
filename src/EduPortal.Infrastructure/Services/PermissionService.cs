@@ -105,11 +105,16 @@ public class PermissionService : IPermissionService
 
         var roles = await _userManager.GetRolesAsync(user);
 
-        // Direct permissions (assigned to user)
-        var directPermissions = await _context.UserPermissions
+        // Get all direct user permissions (both granted and denied)
+        var allDirectPermissions = await _context.UserPermissions
             .Include(up => up.Permission)
-            .Where(up => up.UserId == userId && up.IsGranted && !up.IsDeleted &&
+            .Where(up => up.UserId == userId && !up.IsDeleted &&
                         (up.ExpiresAt == null || up.ExpiresAt > DateTime.UtcNow))
+            .ToListAsync();
+
+        // Separate granted and denied permissions
+        var directPermissions = allDirectPermissions
+            .Where(up => up.IsGranted)
             .Select(up => new PermissionDto
             {
                 Id = up.Permission.Id,
@@ -121,7 +126,24 @@ public class PermissionService : IPermissionService
                 DisplayOrder = up.Permission.DisplayOrder,
                 IsActive = up.Permission.IsActive
             })
-            .ToListAsync();
+            .ToList();
+
+        var deniedPermissions = allDirectPermissions
+            .Where(up => !up.IsGranted)
+            .Select(up => new PermissionDto
+            {
+                Id = up.Permission.Id,
+                Code = up.Permission.Code,
+                Name = up.Permission.Name,
+                Description = up.Permission.Description,
+                Category = up.Permission.Category,
+                Icon = up.Permission.Icon,
+                DisplayOrder = up.Permission.DisplayOrder,
+                IsActive = up.Permission.IsActive
+            })
+            .ToList();
+
+        var deniedCodes = deniedPermissions.Select(p => p.Code).ToHashSet();
 
         // Role-based permissions
         var roleIds = await _context.Roles
@@ -146,10 +168,11 @@ public class PermissionService : IPermissionService
             .Distinct()
             .ToListAsync();
 
-        // Effective permissions (combined, unique codes)
+        // Effective permissions: (direct granted + role permissions) - denied
         var effectivePermissions = directPermissions
             .Select(p => p.Code)
             .Union(rolePermissions.Select(p => p.Code))
+            .Except(deniedCodes)
             .Distinct()
             .ToList();
 
@@ -161,6 +184,7 @@ public class PermissionService : IPermissionService
             FullName = $"{user.FirstName} {user.LastName}",
             Roles = roles.ToList(),
             DirectPermissions = directPermissions,
+            DeniedPermissions = deniedPermissions,
             RolePermissions = rolePermissions,
             EffectivePermissions = effectivePermissions
         };
@@ -176,41 +200,55 @@ public class PermissionService : IPermissionService
                 return ApiResponse<bool>.ErrorResponse("Kullanıcı bulunamadı");
             }
 
-            var existingPermissions = await _context.UserPermissions
-                .Where(up => up.UserId == dto.UserId && !up.IsDeleted)
+            // Get ALL existing permissions for this user (including soft-deleted ones)
+            var allExistingPermissions = await _context.UserPermissions
+                .Where(up => up.UserId == dto.UserId)
                 .ToListAsync();
 
-            foreach (var permissionId in dto.PermissionIds)
-            {
-                var permission = await _context.Permissions.FindAsync(permissionId);
-                if (permission == null) continue;
+            var newPermissionIds = dto.PermissionIds.ToHashSet();
 
-                var existing = existingPermissions.FirstOrDefault(ep => ep.PermissionId == permissionId);
-                if (existing != null)
+            // Process each existing permission
+            foreach (var existing in allExistingPermissions)
+            {
+                if (newPermissionIds.Contains(existing.PermissionId))
                 {
-                    // Update existing
+                    // This permission should be active - reactivate if soft-deleted
+                    existing.IsDeleted = false;
                     existing.IsGranted = true;
                     existing.ExpiresAt = dto.ExpiresAt;
                     existing.Notes = dto.Notes;
                     existing.GrantedByUserId = grantedByUserId;
                     existing.GrantedAt = DateTime.UtcNow;
                     existing.UpdatedAt = DateTime.UtcNow;
+
+                    // Remove from set so we don't create a duplicate
+                    newPermissionIds.Remove(existing.PermissionId);
                 }
-                else
+                else if (!existing.IsDeleted)
                 {
-                    // Create new
-                    var userPermission = new UserPermission
-                    {
-                        UserId = dto.UserId,
-                        PermissionId = permissionId,
-                        IsGranted = true,
-                        ExpiresAt = dto.ExpiresAt,
-                        GrantedByUserId = grantedByUserId,
-                        GrantedAt = DateTime.UtcNow,
-                        Notes = dto.Notes
-                    };
-                    await _context.UserPermissions.AddAsync(userPermission);
+                    // This permission is not in the new list - soft delete it
+                    existing.IsDeleted = true;
+                    existing.UpdatedAt = DateTime.UtcNow;
                 }
+            }
+
+            // Add new permissions that don't exist yet
+            foreach (var permissionId in newPermissionIds)
+            {
+                var permission = await _context.Permissions.FindAsync(permissionId);
+                if (permission == null) continue;
+
+                var userPermission = new UserPermission
+                {
+                    UserId = dto.UserId,
+                    PermissionId = permissionId,
+                    IsGranted = true,
+                    ExpiresAt = dto.ExpiresAt,
+                    GrantedByUserId = grantedByUserId,
+                    GrantedAt = DateTime.UtcNow,
+                    Notes = dto.Notes
+                };
+                await _context.UserPermissions.AddAsync(userPermission);
             }
 
             await _context.SaveChangesAsync();
@@ -219,6 +257,60 @@ public class PermissionService : IPermissionService
         catch (Exception ex)
         {
             return ApiResponse<bool>.ErrorResponse($"Yetki atama hatası: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse<bool>> DenyPermissionToUserAsync(string deniedByUserId, string userId, int permissionId, string? notes = null)
+    {
+        try
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return ApiResponse<bool>.ErrorResponse("Kullanıcı bulunamadı");
+            }
+
+            var permission = await _context.Permissions.FindAsync(permissionId);
+            if (permission == null)
+            {
+                return ApiResponse<bool>.ErrorResponse("Yetki bulunamadı");
+            }
+
+            // Check if permission record already exists (including soft-deleted)
+            var existingPermission = await _context.UserPermissions
+                .FirstOrDefaultAsync(up => up.UserId == userId && up.PermissionId == permissionId);
+
+            if (existingPermission != null)
+            {
+                // Update existing record to denied
+                existingPermission.IsGranted = false;
+                existingPermission.IsDeleted = false;
+                existingPermission.GrantedByUserId = deniedByUserId;
+                existingPermission.GrantedAt = DateTime.UtcNow;
+                existingPermission.UpdatedAt = DateTime.UtcNow;
+                existingPermission.Notes = notes ?? "Yetki engellendi";
+            }
+            else
+            {
+                // Create new denied permission record
+                var userPermission = new UserPermission
+                {
+                    UserId = userId,
+                    PermissionId = permissionId,
+                    IsGranted = false, // DENIED
+                    GrantedByUserId = deniedByUserId,
+                    GrantedAt = DateTime.UtcNow,
+                    Notes = notes ?? "Yetki engellendi"
+                };
+                await _context.UserPermissions.AddAsync(userPermission);
+            }
+
+            await _context.SaveChangesAsync();
+            return ApiResponse<bool>.SuccessResponse(true, "Yetki başarıyla engellendi");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<bool>.ErrorResponse($"Yetki engelleme hatası: {ex.Message}");
         }
     }
 
@@ -369,18 +461,21 @@ public class PermissionService : IPermissionService
         var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
         if (isAdmin) return true;
 
-        // Check direct user permissions
-        var hasDirectPermission = await _context.UserPermissions
+        // Check direct user permissions first (they override role permissions)
+        var directPermission = await _context.UserPermissions
             .Include(up => up.Permission)
-            .AnyAsync(up => up.UserId == userId &&
+            .FirstOrDefaultAsync(up => up.UserId == userId &&
                            up.Permission.Code == permissionCode &&
-                           up.IsGranted &&
                            !up.IsDeleted &&
                            (up.ExpiresAt == null || up.ExpiresAt > DateTime.UtcNow));
 
-        if (hasDirectPermission) return true;
+        // If direct permission exists, it overrides role permissions
+        if (directPermission != null)
+        {
+            return directPermission.IsGranted; // true = granted, false = denied
+        }
 
-        // Check role-based permissions
+        // No direct permission found, check role-based permissions
         var roles = await _userManager.GetRolesAsync(user);
         var roleIds = await _context.Roles
             .Where(r => roles.Contains(r.Name!))
@@ -411,15 +506,24 @@ public class PermissionService : IPermissionService
                 .ToListAsync();
         }
 
-        // Direct permissions
-        var directPermissions = await _context.UserPermissions
+        // Get all direct user permissions (both granted and denied)
+        var directUserPermissions = await _context.UserPermissions
             .Include(up => up.Permission)
             .Where(up => up.UserId == userId &&
-                        up.IsGranted &&
                         !up.IsDeleted &&
                         (up.ExpiresAt == null || up.ExpiresAt > DateTime.UtcNow))
-            .Select(up => up.Permission.Code)
             .ToListAsync();
+
+        // Separate granted and denied permissions
+        var grantedDirectPermissions = directUserPermissions
+            .Where(up => up.IsGranted)
+            .Select(up => up.Permission.Code)
+            .ToHashSet();
+
+        var deniedPermissions = directUserPermissions
+            .Where(up => !up.IsGranted)
+            .Select(up => up.Permission.Code)
+            .ToHashSet();
 
         // Role-based permissions
         var roles = await _userManager.GetRolesAsync(user);
@@ -434,7 +538,14 @@ public class PermissionService : IPermissionService
             .Select(rp => rp.Permission.Code)
             .ToListAsync();
 
-        return directPermissions.Union(rolePermissions).Distinct().ToList();
+        // Combine: (direct granted + role permissions) - denied permissions
+        var effectivePermissions = grantedDirectPermissions
+            .Union(rolePermissions)
+            .Except(deniedPermissions)
+            .Distinct()
+            .ToList();
+
+        return effectivePermissions;
     }
 
     #endregion
@@ -486,6 +597,109 @@ public class PermissionService : IPermissionService
         catch (Exception ex)
         {
             return ApiResponse<bool>.ErrorResponse($"Yetki kopyalama hatası: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse<bool>> BulkUpdatePermissionsAsync(string updatedByUserId, string userId, BulkPermissionUpdateDto dto)
+    {
+        try
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return ApiResponse<bool>.ErrorResponse("Kullanıcı bulunamadı");
+            }
+
+            // Get ALL existing permissions for this user (including soft-deleted ones)
+            var allExistingPermissions = await _context.UserPermissions
+                .Where(up => up.UserId == userId)
+                .ToListAsync();
+
+            var grantedIds = dto.GrantedPermissionIds.ToHashSet();
+            var deniedIds = dto.DeniedPermissionIds.ToHashSet();
+
+            // Validate that no permission is both granted and denied
+            var conflictIds = grantedIds.Intersect(deniedIds).ToList();
+            if (conflictIds.Any())
+            {
+                return ApiResponse<bool>.ErrorResponse($"Aynı yetki hem verilemez hem engellenemez. Çakışan ID'ler: {string.Join(", ", conflictIds)}");
+            }
+
+            // Process each existing permission
+            foreach (var existing in allExistingPermissions)
+            {
+                if (grantedIds.Contains(existing.PermissionId))
+                {
+                    // Grant this permission
+                    existing.IsDeleted = false;
+                    existing.IsGranted = true;
+                    existing.GrantedByUserId = updatedByUserId;
+                    existing.GrantedAt = DateTime.UtcNow;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    existing.Notes = dto.Notes ?? "Toplu güncelleme - Yetki verildi";
+                    grantedIds.Remove(existing.PermissionId);
+                }
+                else if (deniedIds.Contains(existing.PermissionId))
+                {
+                    // Deny this permission
+                    existing.IsDeleted = false;
+                    existing.IsGranted = false;
+                    existing.GrantedByUserId = updatedByUserId;
+                    existing.GrantedAt = DateTime.UtcNow;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                    existing.Notes = dto.Notes ?? "Toplu güncelleme - Yetki engellendi";
+                    deniedIds.Remove(existing.PermissionId);
+                }
+                else if (!existing.IsDeleted)
+                {
+                    // This permission is not in either list - soft delete it
+                    existing.IsDeleted = true;
+                    existing.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            // Add new granted permissions that don't exist yet
+            foreach (var permissionId in grantedIds)
+            {
+                var permission = await _context.Permissions.FindAsync(permissionId);
+                if (permission == null) continue;
+
+                var userPermission = new UserPermission
+                {
+                    UserId = userId,
+                    PermissionId = permissionId,
+                    IsGranted = true,
+                    GrantedByUserId = updatedByUserId,
+                    GrantedAt = DateTime.UtcNow,
+                    Notes = dto.Notes ?? "Toplu güncelleme - Yetki verildi"
+                };
+                await _context.UserPermissions.AddAsync(userPermission);
+            }
+
+            // Add new denied permissions that don't exist yet
+            foreach (var permissionId in deniedIds)
+            {
+                var permission = await _context.Permissions.FindAsync(permissionId);
+                if (permission == null) continue;
+
+                var userPermission = new UserPermission
+                {
+                    UserId = userId,
+                    PermissionId = permissionId,
+                    IsGranted = false,
+                    GrantedByUserId = updatedByUserId,
+                    GrantedAt = DateTime.UtcNow,
+                    Notes = dto.Notes ?? "Toplu güncelleme - Yetki engellendi"
+                };
+                await _context.UserPermissions.AddAsync(userPermission);
+            }
+
+            await _context.SaveChangesAsync();
+            return ApiResponse<bool>.SuccessResponse(true, "Yetkiler başarıyla güncellendi");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse<bool>.ErrorResponse($"Toplu yetki güncelleme hatası: {ex.Message}");
         }
     }
 
