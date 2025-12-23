@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Scheduling;
@@ -18,11 +19,19 @@ public class SchedulingController : ControllerBase
 {
     private readonly ISchedulingService _schedulingService;
     private readonly IStudentGroupService _studentGroupService;
+    private readonly ITeacherRepository _teacherRepository;
+    private readonly IPermissionService _permissionService;
 
-    public SchedulingController(ISchedulingService schedulingService, IStudentGroupService studentGroupService)
+    public SchedulingController(
+        ISchedulingService schedulingService,
+        IStudentGroupService studentGroupService,
+        ITeacherRepository teacherRepository,
+        IPermissionService permissionService)
     {
         _schedulingService = schedulingService;
         _studentGroupService = studentGroupService;
+        _teacherRepository = teacherRepository;
+        _permissionService = permissionService;
     }
 
     // ===============================================
@@ -98,11 +107,18 @@ public class SchedulingController : ControllerBase
     /// <summary>
     /// Öğretmenin haftalık takvimini getir
     /// </summary>
+    /// <remarks>
+    /// Öğretmen kendi takvimini yetki olmadan görüntüleyebilir.
+    /// Başka öğretmenin takvimini görüntülemek için scheduling.view yetkisi gereklidir.
+    /// </remarks>
     [HttpGet("teacher/{teacherId}/calendar")]
-    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<WeeklyCalendarDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<WeeklyCalendarDto>>> GetTeacherCalendar(int teacherId, [FromQuery] DateTime? weekStartDate = null)
     {
+        var authResult = await CheckTeacherAccessAsync(teacherId);
+        if (authResult != null) return authResult;
+
         var result = await _schedulingService.GetTeacherWeeklyCalendarAsync(teacherId, weekStartDate);
         return Ok(result);
     }
@@ -110,11 +126,18 @@ public class SchedulingController : ControllerBase
     /// <summary>
     /// Öğretmenin müsaitlik bilgilerini getir
     /// </summary>
+    /// <remarks>
+    /// Öğretmen kendi müsaitlik bilgilerini yetki olmadan görüntüleyebilir.
+    /// Başka öğretmenin müsaitlik bilgilerini görüntülemek için scheduling.view yetkisi gereklidir.
+    /// </remarks>
     [HttpGet("teacher/{teacherId}/availability")]
-    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<List<TeacherAvailabilityDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<List<TeacherAvailabilityDto>>>> GetTeacherAvailability(int teacherId)
     {
+        var authResult = await CheckTeacherAccessAsync(teacherId);
+        if (authResult != null) return authResult;
+
         var result = await _schedulingService.GetTeacherAvailabilityAsync(teacherId);
         return Ok(result);
     }
@@ -148,11 +171,18 @@ public class SchedulingController : ControllerBase
     /// <summary>
     /// Öğretmenin ders programını getir
     /// </summary>
+    /// <remarks>
+    /// Öğretmen kendi ders programını yetki olmadan görüntüleyebilir.
+    /// Başka öğretmenin ders programını görüntülemek için scheduling.view yetkisi gereklidir.
+    /// </remarks>
     [HttpGet("teacher/{teacherId}/lessons")]
-    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<List<LessonScheduleDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<List<LessonScheduleDto>>>> GetTeacherLessons(int teacherId)
     {
+        var authResult = await CheckTeacherAccessAsync(teacherId);
+        if (authResult != null) return authResult;
+
         var result = await _schedulingService.GetTeacherLessonsAsync(teacherId);
         return Ok(result);
     }
@@ -160,11 +190,18 @@ public class SchedulingController : ControllerBase
     /// <summary>
     /// Öğretmenin grup derslerini getir
     /// </summary>
+    /// <remarks>
+    /// Öğretmen kendi grup derslerini yetki olmadan görüntüleyebilir.
+    /// Başka öğretmenin grup derslerini görüntülemek için scheduling.view yetkisi gereklidir.
+    /// </remarks>
     [HttpGet("teacher/{teacherId}/group-lessons")]
-    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<List<GroupLessonScheduleDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<List<GroupLessonScheduleDto>>>> GetTeacherGroupLessons(int teacherId)
     {
+        var authResult = await CheckTeacherAccessAsync(teacherId);
+        if (authResult != null) return authResult;
+
         var result = await _studentGroupService.GetTeacherGroupLessonsAsync(teacherId);
         return Ok(result);
     }
@@ -218,5 +255,53 @@ public class SchedulingController : ControllerBase
     {
         var result = await _schedulingService.CancelLessonAsync(lessonId, cancelAll, cancelDate);
         return Ok(result);
+    }
+
+    // ===============================================
+    // HELPER METHODS
+    // ===============================================
+
+    /// <summary>
+    /// Öğretmen erişim kontrolü yapar.
+    /// Öğretmen kendi verilerine erişebilir, başkasının verilerine erişmek için scheduling.view yetkisi gereklidir.
+    /// </summary>
+    /// <param name="teacherId">Erişilmek istenen öğretmen ID</param>
+    /// <returns>Erişim reddedildiyse ActionResult, aksi halde null</returns>
+    private async Task<ActionResult?> CheckTeacherAccessAsync(int teacherId)
+    {
+        var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            return Forbid();
+        }
+
+        // Admin her zaman erişebilir
+        if (User.IsInRole("Admin"))
+        {
+            return null;
+        }
+
+        // Öğretmeni bul
+        var teacher = await _teacherRepository.GetByIdAsync(teacherId);
+        if (teacher == null)
+        {
+            return NotFound(ApiResponse<object>.ErrorResponse("Öğretmen bulunamadı"));
+        }
+
+        // Kendi takvimi mi kontrol et
+        bool isOwnSchedule = teacher.UserId == currentUserId;
+        if (isOwnSchedule)
+        {
+            return null; // Kendi takvimi - yetki gerekmez
+        }
+
+        // Başka öğretmenin takvimi - scheduling.view yetkisi gerekli
+        var hasPermission = await _permissionService.HasPermissionAsync(currentUserId, Permissions.SchedulingView);
+        if (!hasPermission)
+        {
+            return Forbid();
+        }
+
+        return null;
     }
 }
