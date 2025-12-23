@@ -1,6 +1,8 @@
+using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Announcement;
 using EduPortal.Application.Interfaces;
+using EduPortal.Domain.Constants;
 using EduPortal.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +32,7 @@ public class AnnouncementsController : ControllerBase
     /// Tüm duyuruları listele
     /// </summary>
     [HttpGet]
+    [RequirePermission(Permissions.AnnouncementsView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<AnnouncementDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResponse<AnnouncementDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -53,6 +56,7 @@ public class AnnouncementsController : ControllerBase
     /// ID ile duyuru detayı getir
     /// </summary>
     [HttpGet("{id}")]
+    [RequirePermission(Permissions.AnnouncementsView)]
     [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<AnnouncementDto>>> GetById(int id)
@@ -76,6 +80,7 @@ public class AnnouncementsController : ControllerBase
     /// Aktif duyuruları listele
     /// </summary>
     [HttpGet("active")]
+    [RequirePermission(Permissions.AnnouncementsView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<AnnouncementDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResponse<AnnouncementDto>>>> GetActive(
         [FromQuery] int pageNumber = 1,
@@ -98,6 +103,7 @@ public class AnnouncementsController : ControllerBase
     /// Sabitlenmiş duyuruları listele
     /// </summary>
     [HttpGet("pinned")]
+    [RequirePermission(Permissions.AnnouncementsView)]
     [ProducesResponseType(typeof(ApiResponse<List<AnnouncementDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<AnnouncementDto>>>> GetPinned()
     {
@@ -117,7 +123,7 @@ public class AnnouncementsController : ControllerBase
     /// Yeni duyuru oluştur (Admin only)
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.AnnouncementsCreate)]
     [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<AnnouncementDto>>> Create([FromBody] CreateAnnouncementDto dto)
@@ -143,7 +149,7 @@ public class AnnouncementsController : ControllerBase
     /// Duyuru bilgilerini güncelle (Admin only)
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.AnnouncementsEdit)]
     [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<AnnouncementDto>>> Update(int id, [FromBody] UpdateAnnouncementDto dto)
@@ -171,7 +177,7 @@ public class AnnouncementsController : ControllerBase
     /// Duyuruyu sabitle (Admin only)
     /// </summary>
     [HttpPatch("{id}/pin")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.AnnouncementsEdit)]
     [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<AnnouncementDto>>> Pin(int id)
@@ -196,7 +202,7 @@ public class AnnouncementsController : ControllerBase
     /// Duyurunun sabitlemeyi kaldır (Admin only)
     /// </summary>
     [HttpPatch("{id}/unpin")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.AnnouncementsEdit)]
     [ProducesResponseType(typeof(ApiResponse<AnnouncementDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<AnnouncementDto>>> Unpin(int id)
@@ -221,7 +227,7 @@ public class AnnouncementsController : ControllerBase
     /// Duyuruyu sil (Admin only)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.AnnouncementsEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)

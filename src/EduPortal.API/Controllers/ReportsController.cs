@@ -1,4 +1,6 @@
+using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
+using EduPortal.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +27,7 @@ public class ReportsController : ControllerBase
     /// Get student progress report
     /// </summary>
     [HttpGet("student/{studentId}/progress")]
+    [RequirePermission(Permissions.ReportsView)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<object>>> GetStudentProgress(int studentId)
     {
@@ -36,6 +39,7 @@ public class ReportsController : ControllerBase
     /// Get student academic report
     /// </summary>
     [HttpGet("student/{studentId}/academic")]
+    [RequirePermission(Permissions.ReportsView)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<object>>> GetStudentAcademic(int studentId)
     {
@@ -47,6 +51,7 @@ public class ReportsController : ControllerBase
     /// Get student attendance report
     /// </summary>
     [HttpGet("student/{studentId}/attendance")]
+    [RequirePermission(Permissions.ReportsView)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<object>>> GetStudentAttendance(int studentId)
     {
@@ -58,7 +63,7 @@ public class ReportsController : ControllerBase
     /// Get course performance report
     /// </summary>
     [HttpGet("course/{courseId}/performance")]
-    [Authorize(Roles = "Admin,Öğretmen,Danışman")]
+    [RequirePermission(Permissions.ReportsView)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<object>>> GetCoursePerformance(int courseId)
     {
@@ -70,7 +75,7 @@ public class ReportsController : ControllerBase
     /// Get financial report
     /// </summary>
     [HttpGet("financial")]
-    [Authorize(Roles = "Admin,Muhasebe")]
+    [RequirePermission(Permissions.ReportsView)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<object>>> GetFinancial(
         [FromQuery] DateTime startDate,
@@ -84,7 +89,7 @@ public class ReportsController : ControllerBase
     /// Get teacher performance report
     /// </summary>
     [HttpGet("teacher/{teacherId}/performance")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.ReportsView)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<object>>> GetTeacherPerformance(int teacherId)
     {
@@ -96,7 +101,7 @@ public class ReportsController : ControllerBase
     /// Get enrollment report
     /// </summary>
     [HttpGet("enrollment")]
-    [Authorize(Roles = "Admin,Kayıtçı")]
+    [RequirePermission(Permissions.ReportsView)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<object>>> GetEnrollment(
         [FromQuery] DateTime startDate,
@@ -110,6 +115,7 @@ public class ReportsController : ControllerBase
     /// Export report to PDF
     /// </summary>
     [HttpPost("export/pdf")]
+    [RequirePermission(Permissions.ReportsExport)]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> ExportToPdf([FromBody] object reportRequest)
     {
@@ -121,6 +127,7 @@ public class ReportsController : ControllerBase
     /// Export report to Excel
     /// </summary>
     [HttpPost("export/excel")]
+    [RequirePermission(Permissions.ReportsExport)]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> ExportToExcel([FromBody] object reportRequest)
     {

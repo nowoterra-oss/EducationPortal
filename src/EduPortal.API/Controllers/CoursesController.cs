@@ -1,6 +1,8 @@
+using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Course;
 using EduPortal.Application.Interfaces;
+using EduPortal.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,6 +30,7 @@ public class CoursesController : ControllerBase
     /// Get all courses with pagination
     /// </summary>
     [HttpGet]
+    [RequirePermission(Permissions.CoursesView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<CourseDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResponse<CourseDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -50,6 +53,7 @@ public class CoursesController : ControllerBase
     /// Get course by ID
     /// </summary>
     [HttpGet("{id}")]
+    [RequirePermission(Permissions.CoursesView)]
     [ProducesResponseType(typeof(ApiResponse<CourseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<CourseDto>>> GetById(int id)
@@ -73,7 +77,7 @@ public class CoursesController : ControllerBase
     /// Create new course
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.CoursesCreate)]
     [ProducesResponseType(typeof(ApiResponse<CourseDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<CourseDto>>> Create([FromBody] CreateCourseDto dto)
@@ -98,7 +102,7 @@ public class CoursesController : ControllerBase
     /// Update course
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Öğretmen")]
+    [RequirePermission(Permissions.CoursesEdit)]
     [ProducesResponseType(typeof(ApiResponse<CourseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<CourseDto>>> Update(int id, [FromBody] UpdateCourseDto dto)
@@ -126,7 +130,7 @@ public class CoursesController : ControllerBase
     /// Delete course
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.CoursesDelete)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
@@ -150,6 +154,7 @@ public class CoursesController : ControllerBase
     /// Get course curriculum
     /// </summary>
     [HttpGet("{id}/curriculum")]
+    [RequirePermission(Permissions.CoursesView)]
     [ProducesResponseType(typeof(ApiResponse<List<CurriculumDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<CurriculumDto>>>> GetCurriculum(int id)
     {
@@ -173,7 +178,7 @@ public class CoursesController : ControllerBase
     /// Update course curriculum
     /// </summary>
     [HttpPut("{id}/curriculum")]
-    [Authorize(Roles = "Admin,Öğretmen")]
+    [RequirePermission(Permissions.CoursesEdit)]
     [ProducesResponseType(typeof(ApiResponse<List<CurriculumDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<List<CurriculumDto>>>> UpdateCurriculum(int id, [FromBody] UpdateCurriculumDto dto)
@@ -201,6 +206,7 @@ public class CoursesController : ControllerBase
     /// Get course resources
     /// </summary>
     [HttpGet("{id}/resources")]
+    [RequirePermission(Permissions.CoursesView)]
     [ProducesResponseType(typeof(ApiResponse<List<CourseResourceDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<CourseResourceDto>>>> GetResources(int id)
     {
@@ -224,7 +230,7 @@ public class CoursesController : ControllerBase
     /// Add course resource
     /// </summary>
     [HttpPost("{id}/resources")]
-    [Authorize(Roles = "Admin,Öğretmen")]
+    [RequirePermission(Permissions.CoursesEdit)]
     [ProducesResponseType(typeof(ApiResponse<CourseResourceDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<CourseResourceDto>>> AddResource(int id, [FromBody] CreateCourseResourceDto dto)
@@ -253,7 +259,7 @@ public class CoursesController : ControllerBase
     /// Delete course resource
     /// </summary>
     [HttpDelete("{id}/resources/{resourceId}")]
-    [Authorize(Roles = "Admin,Öğretmen")]
+    [RequirePermission(Permissions.CoursesEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteResource(int id, int resourceId)

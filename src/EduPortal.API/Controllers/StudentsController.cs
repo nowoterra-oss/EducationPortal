@@ -1,9 +1,11 @@
 using System.Security.Claims;
+using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Certificate;
 using EduPortal.Application.DTOs.Student;
 using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
+using EduPortal.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -82,7 +84,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpGet]
-    [Authorize(Roles = "Admin,Danışman,Öğretmen")]
+    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<StudentDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -112,6 +114,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Student not found</response>
     [HttpGet("{id}")]
+    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status404NotFound)]
@@ -146,7 +149,7 @@ public class StudentsController : ControllerBase
     /// <response code="200">Search completed successfully</response>
     /// <response code="401">Unauthorized</response>
     [HttpGet("search")]
-    [Authorize(Roles = "Admin,Danışman,Öğretmen")]
+    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<StudentDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<PagedResponse<StudentDto>>>> Search(
@@ -182,7 +185,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Student not found</response>
     [HttpGet("student-no/{studentNo}")]
-    [Authorize(Roles = "Admin,Danışman,Öğretmen")]
+    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status404NotFound)]
@@ -212,7 +215,7 @@ public class StudentsController : ControllerBase
     /// <returns>Sonraki öğrenci numarası</returns>
     /// <response code="200">Öğrenci numarası başarıyla alındı</response>
     [HttpGet("next-student-no")]
-    [Authorize(Roles = "Admin,Kayitci")]
+    [RequirePermission(Permissions.StudentsCreate)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<string>>> GetNextStudentNo()
     {
@@ -238,7 +241,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpPost]
-    [Authorize(Roles = "Admin,Kayitci")]
+    [RequirePermission(Permissions.StudentsCreate)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -275,7 +278,6 @@ public class StudentsController : ControllerBase
     /// <response code="403">Forbidden - Insufficient permissions</response>
     /// <response code="404">Student not found</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Danışman,Ogrenci")]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -285,14 +287,14 @@ public class StudentsController : ControllerBase
     {
         try
         {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(currentUserId))
+                return Forbid();
+
             // Öğrenci rolü için kısıtlama: sadece kendi kaydını güncelleyebilir
             if (User.IsInRole("Ogrenci"))
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
-                    return Forbid();
-
-                var student = await _studentRepository.GetByUserIdAsync(userId);
+                var student = await _studentRepository.GetByUserIdAsync(currentUserId);
                 if (student == null || student.Id != id)
                     return Forbid();
 
@@ -306,6 +308,15 @@ public class StudentsController : ControllerBase
             }
             else
             {
+                // Admin her zaman yetkili, diğerleri için students.edit yetkisi gerekli
+                if (!User.IsInRole("Admin"))
+                {
+                    var permissionService = HttpContext.RequestServices.GetRequiredService<IPermissionService>();
+                    if (!await permissionService.HasPermissionAsync(currentUserId, Permissions.StudentsEdit))
+                    {
+                        return Forbid();
+                    }
+                }
                 studentUpdateDto.Id = id;
             }
 
@@ -335,7 +346,7 @@ public class StudentsController : ControllerBase
     /// <response code="403">Forbidden - Insufficient permissions</response>
     /// <response code="404">Student not found</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.StudentsDelete)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

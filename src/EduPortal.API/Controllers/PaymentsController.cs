@@ -1,6 +1,8 @@
+using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Payment;
 using EduPortal.Application.Interfaces;
+using EduPortal.Domain.Constants;
 using EduPortal.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +31,7 @@ public class PaymentsController : ControllerBase
     /// Get all payments with pagination
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "Admin,Muhasebe")]
+    [RequirePermission(Permissions.PaymentsView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -57,6 +59,7 @@ public class PaymentsController : ControllerBase
     /// Get payment by ID
     /// </summary>
     [HttpGet("{id}")]
+    [RequirePermission(Permissions.PaymentsView)]
     [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<PaymentDto>>> GetById(int id)
@@ -82,7 +85,7 @@ public class PaymentsController : ControllerBase
     /// Create payment record
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin,Muhasebe")]
+    [RequirePermission(Permissions.PaymentsCreate)]
     [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PaymentDto>>> Create([FromBody] PaymentCreateDto paymentDto)
@@ -109,7 +112,7 @@ public class PaymentsController : ControllerBase
     /// Update payment
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Muhasebe")]
+    [RequirePermission(Permissions.PaymentsProcess)]
     [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<PaymentDto>>> Update(int id, [FromBody] PaymentCreateDto paymentDto)
@@ -139,7 +142,7 @@ public class PaymentsController : ControllerBase
     /// Delete payment
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.PaymentsProcess)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
@@ -165,6 +168,7 @@ public class PaymentsController : ControllerBase
     /// Get student payments
     /// </summary>
     [HttpGet("student/{studentId}")]
+    [RequirePermission(Permissions.PaymentsView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetByStudent(
         int studentId,
@@ -193,7 +197,7 @@ public class PaymentsController : ControllerBase
     /// Get payments by status
     /// </summary>
     [HttpGet("status/{status}")]
-    [Authorize(Roles = "Admin,Muhasebe")]
+    [RequirePermission(Permissions.PaymentsView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetByStatus(
@@ -229,7 +233,7 @@ public class PaymentsController : ControllerBase
     /// Get pending payments
     /// </summary>
     [HttpGet("pending")]
-    [Authorize(Roles = "Admin,Muhasebe")]
+    [RequirePermission(Permissions.PaymentsView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetPending(
         [FromQuery] int pageNumber = 1,
@@ -257,7 +261,7 @@ public class PaymentsController : ControllerBase
     /// Get overdue payments
     /// </summary>
     [HttpGet("overdue")]
-    [Authorize(Roles = "Admin,Muhasebe")]
+    [RequirePermission(Permissions.PaymentsView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<PaymentSummaryDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResponse<PaymentSummaryDto>>>> GetOverdue(
         [FromQuery] int pageNumber = 1,
@@ -285,7 +289,7 @@ public class PaymentsController : ControllerBase
     /// Process payment
     /// </summary>
     [HttpPost("{id}/process")]
-    [Authorize(Roles = "Admin,Muhasebe")]
+    [RequirePermission(Permissions.PaymentsProcess)]
     [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PaymentDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PaymentDto>>> ProcessPayment(int id)
@@ -314,6 +318,7 @@ public class PaymentsController : ControllerBase
     /// Download payment receipt
     /// </summary>
     [HttpGet("{id}/receipt")]
+    [RequirePermission(Permissions.PaymentsView)]
     [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DownloadReceipt(int id)
@@ -339,7 +344,7 @@ public class PaymentsController : ControllerBase
     /// Get payment statistics
     /// </summary>
     [HttpGet("statistics")]
-    [Authorize(Roles = "Admin,Muhasebe")]
+    [RequirePermission(Permissions.PaymentsView)]
     [ProducesResponseType(typeof(ApiResponse<PaymentStatisticsDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PaymentStatisticsDto>>> GetStatistics()
     {

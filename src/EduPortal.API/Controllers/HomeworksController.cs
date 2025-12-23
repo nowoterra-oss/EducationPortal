@@ -1,7 +1,9 @@
+using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Homework;
 using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
+using EduPortal.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -38,7 +40,7 @@ public class HomeworksController : ControllerBase
     /// <param name="pageSize">Page size (default: 10)</param>
     /// <returns>Paginated list of homeworks</returns>
     [HttpGet]
-    [Authorize(Roles = "Admin,Ogretmen,Ogrenci")]
+    [RequirePermission(Permissions.AssignmentsView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<HomeworkDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<PagedResponse<HomeworkDto>>>> GetAll(
@@ -63,7 +65,7 @@ public class HomeworksController : ControllerBase
     /// <param name="id">Homework ID</param>
     /// <returns>Homework details</returns>
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Ogretmen,Ogrenci")]
+    [RequirePermission(Permissions.AssignmentsView)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<HomeworkDto>>> GetById(int id)
@@ -86,7 +88,7 @@ public class HomeworksController : ControllerBase
     /// <param name="courseId">Course ID</param>
     /// <returns>List of homeworks for the course</returns>
     [HttpGet("course/{courseId}")]
-    [Authorize(Roles = "Admin,Ogretmen,Ogrenci")]
+    [RequirePermission(Permissions.AssignmentsView)]
     [ProducesResponseType(typeof(ApiResponse<List<HomeworkDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<HomeworkDto>>>> GetByCourse(int courseId)
     {
@@ -108,7 +110,7 @@ public class HomeworksController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <returns>List of homeworks for the student</returns>
     [HttpGet("student/{studentId}")]
-    [Authorize(Roles = "Admin,Ogretmen,Ogrenci")]
+    [RequirePermission(Permissions.AssignmentsView)]
     [ProducesResponseType(typeof(ApiResponse<List<HomeworkDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<HomeworkDto>>>> GetByStudent(int studentId)
     {
@@ -130,7 +132,7 @@ public class HomeworksController : ControllerBase
     /// <param name="dto">Homework creation data</param>
     /// <returns>Created homework</returns>
     [HttpPost]
-    [Authorize(Roles = "Admin,Ogretmen")]
+    [RequirePermission(Permissions.AssignmentsCreate)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<HomeworkDto>>> Create([FromBody] HomeworkCreateDto dto)
@@ -181,7 +183,7 @@ public class HomeworksController : ControllerBase
     /// <param name="dto">Homework update data</param>
     /// <returns>Updated homework</returns>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Ogretmen")]
+    [RequirePermission(Permissions.AssignmentsCreate)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<HomeworkDto>>> Update(int id, [FromBody] HomeworkUpdateDto dto)
@@ -214,7 +216,7 @@ public class HomeworksController : ControllerBase
     /// <param name="id">Homework ID</param>
     /// <returns>Success status</returns>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin,Ogretmen")]
+    [RequirePermission(Permissions.AssignmentsCreate)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
@@ -239,7 +241,7 @@ public class HomeworksController : ControllerBase
     /// <param name="pageSize">Page size (default: 10)</param>
     /// <returns>Paginated list of submissions</returns>
     [HttpGet("{homeworkId}/submissions")]
-    [Authorize(Roles = "Admin,Ogretmen")]
+    [RequirePermission(Permissions.AssignmentsGrade)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<HomeworkSubmissionDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResponse<HomeworkSubmissionDto>>>> GetSubmissions(
         int homeworkId,
@@ -292,7 +294,7 @@ public class HomeworksController : ControllerBase
     /// <param name="dto">Grading data</param>
     /// <returns>Updated submission with grade</returns>
     [HttpPut("submissions/grade")]
-    [Authorize(Roles = "Admin,Ogretmen")]
+    [RequirePermission(Permissions.AssignmentsGrade)]
     [ProducesResponseType(typeof(ApiResponse<HomeworkSubmissionDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<HomeworkSubmissionDto>>> GradeSubmission([FromBody] GradeSubmissionDto dto)
@@ -320,7 +322,7 @@ public class HomeworksController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <returns>List of student submissions</returns>
     [HttpGet("student/{studentId}/submissions")]
-    [Authorize(Roles = "Admin,Ogretmen,Ogrenci")]
+    [RequirePermission(Permissions.AssignmentsView)]
     [ProducesResponseType(typeof(ApiResponse<List<HomeworkSubmissionDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<HomeworkSubmissionDto>>>> GetStudentSubmissions(int studentId)
     {

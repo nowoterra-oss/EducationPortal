@@ -1,8 +1,10 @@
+using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Scheduling;
 using EduPortal.Application.DTOs.StudentGroup;
 using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
+using EduPortal.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,6 +33,7 @@ public class SchedulingController : ControllerBase
     /// Öğrencinin haftalık takvimini getir
     /// </summary>
     [HttpGet("student/{studentId}/calendar")]
+    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<WeeklyCalendarDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<WeeklyCalendarDto>>> GetStudentCalendar(int studentId, [FromQuery] DateTime? weekStartDate = null)
     {
@@ -42,6 +45,7 @@ public class SchedulingController : ControllerBase
     /// Öğrencinin müsaitlik bilgilerini getir
     /// </summary>
     [HttpGet("student/{studentId}/availability")]
+    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<List<StudentAvailabilityDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<StudentAvailabilityDto>>>> GetStudentAvailability(int studentId)
     {
@@ -53,7 +57,7 @@ public class SchedulingController : ControllerBase
     /// Öğrenci müsaitlik ekle
     /// </summary>
     [HttpPost("student/availability")]
-    [Authorize(Roles = "Admin,Kayitci,Öğrenci")]
+    [RequirePermission(Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<StudentAvailabilityDto>), StatusCodes.Status201Created)]
     public async Task<ActionResult<ApiResponse<StudentAvailabilityDto>>> CreateStudentAvailability([FromBody] CreateStudentAvailabilityDto dto)
     {
@@ -67,7 +71,7 @@ public class SchedulingController : ControllerBase
     /// Öğrenci müsaitlik sil
     /// </summary>
     [HttpDelete("student/availability/{id}")]
-    [Authorize(Roles = "Admin,Kayitci,Öğrenci")]
+    [RequirePermission(Permissions.SchedulingEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteStudentAvailability(int id)
     {
@@ -79,6 +83,7 @@ public class SchedulingController : ControllerBase
     /// Öğrencinin ders programını getir
     /// </summary>
     [HttpGet("student/{studentId}/lessons")]
+    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<List<LessonScheduleDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<LessonScheduleDto>>>> GetStudentLessons(int studentId)
     {
@@ -94,6 +99,7 @@ public class SchedulingController : ControllerBase
     /// Öğretmenin haftalık takvimini getir
     /// </summary>
     [HttpGet("teacher/{teacherId}/calendar")]
+    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<WeeklyCalendarDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<WeeklyCalendarDto>>> GetTeacherCalendar(int teacherId, [FromQuery] DateTime? weekStartDate = null)
     {
@@ -105,6 +111,7 @@ public class SchedulingController : ControllerBase
     /// Öğretmenin müsaitlik bilgilerini getir
     /// </summary>
     [HttpGet("teacher/{teacherId}/availability")]
+    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<List<TeacherAvailabilityDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<TeacherAvailabilityDto>>>> GetTeacherAvailability(int teacherId)
     {
@@ -116,7 +123,7 @@ public class SchedulingController : ControllerBase
     /// Öğretmen müsaitlik ekle
     /// </summary>
     [HttpPost("teacher/availability")]
-    [Authorize(Roles = "Admin,Kayitci,Öğretmen")]
+    [RequirePermission(Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<TeacherAvailabilityDto>), StatusCodes.Status201Created)]
     public async Task<ActionResult<ApiResponse<TeacherAvailabilityDto>>> CreateTeacherAvailability([FromBody] CreateTeacherAvailabilityDto dto)
     {
@@ -130,7 +137,7 @@ public class SchedulingController : ControllerBase
     /// Öğretmen müsaitlik sil
     /// </summary>
     [HttpDelete("teacher/availability/{id}")]
-    [Authorize(Roles = "Admin,Kayitci,Öğretmen")]
+    [RequirePermission(Permissions.SchedulingEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteTeacherAvailability(int id)
     {
@@ -142,6 +149,7 @@ public class SchedulingController : ControllerBase
     /// Öğretmenin ders programını getir
     /// </summary>
     [HttpGet("teacher/{teacherId}/lessons")]
+    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<List<LessonScheduleDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<LessonScheduleDto>>>> GetTeacherLessons(int teacherId)
     {
@@ -153,6 +161,7 @@ public class SchedulingController : ControllerBase
     /// Öğretmenin grup derslerini getir
     /// </summary>
     [HttpGet("teacher/{teacherId}/group-lessons")]
+    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<List<GroupLessonScheduleDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<List<GroupLessonScheduleDto>>>> GetTeacherGroupLessons(int teacherId)
     {
@@ -168,6 +177,7 @@ public class SchedulingController : ControllerBase
     /// Öğrenci ve öğretmenin müsait zamanlarını bul
     /// </summary>
     [HttpGet("match")]
+    [RequirePermission(Permissions.SchedulingView)]
     [ProducesResponseType(typeof(ApiResponse<MatchingResultDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<MatchingResultDto>>> FindMatchingSlots(
         [FromQuery] int studentId,
@@ -182,7 +192,7 @@ public class SchedulingController : ControllerBase
     /// Yeni ders programı oluştur
     /// </summary>
     [HttpPost("lesson")]
-    [Authorize(Roles = "Admin,Kayitci")]
+    [RequirePermission(Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<LessonScheduleDto>), StatusCodes.Status201Created)]
     public async Task<ActionResult<ApiResponse<LessonScheduleDto>>> CreateLesson([FromBody] CreateLessonScheduleDto dto)
     {
@@ -199,7 +209,7 @@ public class SchedulingController : ControllerBase
     /// <param name="cancelAll">true: Tüm tekrarları iptal et, false: Sadece belirtilen tarihi iptal et</param>
     /// <param name="cancelDate">İptal edilecek tarih (cancelAll=false ise zorunlu)</param>
     [HttpPatch("lesson/{lessonId}/cancel")]
-    [Authorize(Roles = "Admin,Kayitci")]
+    [RequirePermission(Permissions.SchedulingEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> CancelLesson(
         int lessonId,

@@ -1,6 +1,8 @@
+using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.AGP;
 using EduPortal.Application.Interfaces;
+using EduPortal.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,7 +30,7 @@ public class AGPController : ControllerBase
     /// Get all AGP records with pagination
     /// </summary>
     [HttpGet]
-    [Authorize(Roles = "Admin,Danışman")]
+    [RequirePermission(Permissions.AgpView)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<AGPDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<PagedResponse<AGPDto>>>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -57,6 +59,7 @@ public class AGPController : ControllerBase
     /// Get AGP by ID
     /// </summary>
     [HttpGet("{id}")]
+    [RequirePermission(Permissions.AgpView)]
     [ProducesResponseType(typeof(ApiResponse<AGPDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<AGPDto>>> GetById(int id)
@@ -81,7 +84,7 @@ public class AGPController : ControllerBase
     /// Create new AGP
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin,Danışman")]
+    [RequirePermission(Permissions.AgpCreate)]
     [ProducesResponseType(typeof(ApiResponse<AGPDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<AGPDto>>> Create([FromBody] CreateAGPDto createDto)
@@ -107,7 +110,7 @@ public class AGPController : ControllerBase
     /// Update AGP
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Danışman")]
+    [RequirePermission(Permissions.AgpEdit)]
     [ProducesResponseType(typeof(ApiResponse<AGPDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<AGPDto>>> Update(int id, [FromBody] UpdateAGPDto updateDto)
@@ -136,7 +139,7 @@ public class AGPController : ControllerBase
     /// Delete AGP
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.AgpEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> Delete(int id)
@@ -161,6 +164,7 @@ public class AGPController : ControllerBase
     /// Get student AGP
     /// </summary>
     [HttpGet("student/{studentId}")]
+    [RequirePermission(Permissions.AgpView)]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<AGPDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IEnumerable<AGPDto>>>> GetByStudent(int studentId)
     {
@@ -180,6 +184,7 @@ public class AGPController : ControllerBase
     /// Get AGP goals (milestones)
     /// </summary>
     [HttpGet("{id}/goals")]
+    [RequirePermission(Permissions.AgpView)]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<AGPGoalDto>>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<IEnumerable<AGPGoalDto>>>> GetGoals(int id)
     {
@@ -199,7 +204,7 @@ public class AGPController : ControllerBase
     /// Add goal to AGP
     /// </summary>
     [HttpPost("{id}/goals")]
-    [Authorize(Roles = "Admin,Danışman")]
+    [RequirePermission(Permissions.AgpCreate)]
     [ProducesResponseType(typeof(ApiResponse<AGPGoalDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<AGPGoalDto>>> AddGoal(int id, [FromBody] CreateAGPGoalDto goalDto)
@@ -229,7 +234,7 @@ public class AGPController : ControllerBase
     /// Update goal
     /// </summary>
     [HttpPut("{id}/goals/{goalId}")]
-    [Authorize(Roles = "Admin,Danışman")]
+    [RequirePermission(Permissions.AgpEdit)]
     [ProducesResponseType(typeof(ApiResponse<AGPGoalDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<AGPGoalDto>>> UpdateGoal(int id, int goalId, [FromBody] UpdateAGPGoalDto goalDto)
@@ -258,7 +263,7 @@ public class AGPController : ControllerBase
     /// Delete goal
     /// </summary>
     [HttpDelete("{id}/goals/{goalId}")]
-    [Authorize(Roles = "Admin,Danışman")]
+    [RequirePermission(Permissions.AgpEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteGoal(int id, int goalId)
@@ -283,6 +288,7 @@ public class AGPController : ControllerBase
     /// Get AGP progress
     /// </summary>
     [HttpGet("{id}/progress")]
+    [RequirePermission(Permissions.AgpView)]
     [ProducesResponseType(typeof(ApiResponse<AGPProgressDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<AGPProgressDto>>> GetProgress(int id)
