@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.AGP;
@@ -18,11 +19,16 @@ namespace EduPortal.API.Controllers;
 public class AGPController : ControllerBase
 {
     private readonly IAGPService _agpService;
+    private readonly IAdvisorAccessService _advisorAccessService;
     private readonly ILogger<AGPController> _logger;
 
-    public AGPController(IAGPService agpService, ILogger<AGPController> logger)
+    public AGPController(
+        IAGPService agpService,
+        IAdvisorAccessService advisorAccessService,
+        ILogger<AGPController> logger)
     {
         _agpService = agpService;
+        _advisorAccessService = advisorAccessService;
         _logger = logger;
     }
 
@@ -83,16 +89,32 @@ public class AGPController : ControllerBase
     /// <summary>
     /// Create new AGP
     /// </summary>
+    /// <remarks>
+    /// Danışmanlar sadece kendilerine atanmış öğrenciler için AGP oluşturabilir.
+    /// </remarks>
     [HttpPost]
     [RequirePermission(Permissions.AgpCreate)]
     [ProducesResponseType(typeof(ApiResponse<AGPDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<AGPDto>>> Create([FromBody] CreateAGPDto createDto)
     {
         try
         {
             if (!ModelState.IsValid)
                 return BadRequest(ApiResponse<AGPDto>.ErrorResponse("Geçersiz veri"));
+
+            // Danışman erişim kontrolü
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, createDto.StudentId);
+                if (!canAccess)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<AGPDto>.ErrorResponse("Bu öğrenci için AGP oluşturma yetkiniz bulunmamaktadır."));
+                }
+            }
 
             var agp = await _agpService.CreateAsync(createDto);
 
@@ -163,13 +185,29 @@ public class AGPController : ControllerBase
     /// <summary>
     /// Get student AGP
     /// </summary>
+    /// <remarks>
+    /// Danışmanlar sadece kendilerine atanmış öğrencilerin AGP kayıtlarını görüntüleyebilir.
+    /// </remarks>
     [HttpGet("student/{studentId}")]
     [RequirePermission(Permissions.AgpView)]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<AGPDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<IEnumerable<AGPDto>>>> GetByStudent(int studentId)
     {
         try
         {
+            // Danışman erişim kontrolü
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccess)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<IEnumerable<AGPDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
+            }
+
             var agps = await _agpService.GetByStudentAsync(studentId);
             return Ok(ApiResponse<IEnumerable<AGPDto>>.SuccessResponse(agps));
         }

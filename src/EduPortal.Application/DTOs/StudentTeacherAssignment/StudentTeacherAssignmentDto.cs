@@ -1,3 +1,5 @@
+using EduPortal.Domain.Enums;
+
 namespace EduPortal.Application.DTOs.StudentTeacherAssignment;
 
 public class StudentTeacherAssignmentDto
@@ -13,6 +15,8 @@ public class StudentTeacherAssignmentDto
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }
     public bool IsActive { get; set; }
+    public AssignmentType AssignmentType { get; set; }
+    public string AssignmentTypeName => AssignmentType == AssignmentType.Advisor ? "Danışman" : "Koç";
     public string? Notes { get; set; }
     public int DurationDays => EndDate.HasValue
         ? (EndDate.Value - StartDate).Days

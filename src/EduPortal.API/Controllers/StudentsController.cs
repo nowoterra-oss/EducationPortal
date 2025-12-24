@@ -24,6 +24,7 @@ public class StudentsController : ControllerBase
     private readonly IStudentCertificateService _certificateService;
     private readonly IStudentExtendedInfoService _extendedInfoService;
     private readonly IStudentRepository _studentRepository;
+    private readonly IAdvisorAccessService _advisorAccessService;
     private readonly ILogger<StudentsController> _logger;
     private readonly IWebHostEnvironment _environment;
 
@@ -35,6 +36,7 @@ public class StudentsController : ControllerBase
         IStudentCertificateService certificateService,
         IStudentExtendedInfoService extendedInfoService,
         IStudentRepository studentRepository,
+        IAdvisorAccessService advisorAccessService,
         ILogger<StudentsController> logger,
         IWebHostEnvironment environment)
     {
@@ -42,6 +44,7 @@ public class StudentsController : ControllerBase
         _certificateService = certificateService;
         _extendedInfoService = extendedInfoService;
         _studentRepository = studentRepository;
+        _advisorAccessService = advisorAccessService;
         _logger = logger;
         _environment = environment;
     }
@@ -110,18 +113,35 @@ public class StudentsController : ControllerBase
     /// </summary>
     /// <param name="id">Student ID</param>
     /// <returns>Student details</returns>
+    /// <remarks>
+    /// Danışmanlar sadece kendilerine atanmış öğrencilerin bilgilerini görüntüleyebilir.
+    /// </remarks>
     /// <response code="200">Student retrieved successfully</response>
     /// <response code="401">Unauthorized</response>
+    /// <response code="403">Forbidden - Advisor can only access assigned students</response>
     /// <response code="404">Student not found</response>
     [HttpGet("{id}")]
     [RequirePermission(Permissions.StudentsView, Permissions.UsersView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<StudentDto>>> GetById(int id)
     {
         try
         {
+            // Danışman erişim kontrolü
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, id);
+                if (!canAccess)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<StudentDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
+            }
+
             var result = await _studentService.GetByIdAsync(id);
 
             if (result.Success)

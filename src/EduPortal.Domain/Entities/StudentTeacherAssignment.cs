@@ -1,4 +1,5 @@
 using EduPortal.Domain.Common;
+using EduPortal.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -21,6 +22,11 @@ public class StudentTeacherAssignment : BaseEntity
     public DateTime? EndDate { get; set; }
 
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Atama türü: Danışman veya Koç
+    /// </summary>
+    public AssignmentType AssignmentType { get; set; } = AssignmentType.Advisor;
 
     [MaxLength(500)]
     public string? Notes { get; set; }

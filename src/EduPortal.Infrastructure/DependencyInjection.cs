@@ -97,6 +97,9 @@ public static class DependencyInjection
         // Permission Service
         services.AddScoped<IPermissionService, PermissionService>();
 
+        // Advisor Access Service (Danışman erişim kontrolü)
+        services.AddScoped<IAdvisorAccessService, AdvisorAccessService>();
+
         return services;
     }
 }
