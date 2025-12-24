@@ -11,8 +11,10 @@ public class CreateStudentTeacherAssignmentDto
     [Required]
     public int TeacherId { get; set; }
 
-    [Required]
-    public int CourseId { get; set; }
+    /// <summary>
+    /// Kurs ID - Danışman/Koç atamaları için opsiyonel
+    /// </summary>
+    public int? CourseId { get; set; }
 
     [Required]
     public DateTime StartDate { get; set; }

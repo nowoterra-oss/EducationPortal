@@ -10,7 +10,7 @@ public class StudentTeacherAssignmentDto
     public string? StudentNo { get; set; }
     public int TeacherId { get; set; }
     public string? TeacherName { get; set; }
-    public int CourseId { get; set; }
+    public int? CourseId { get; set; }
     public string? CourseName { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime? EndDate { get; set; }

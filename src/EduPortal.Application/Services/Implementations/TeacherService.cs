@@ -291,6 +291,52 @@ public class TeacherService : ITeacherService
                 }
             }
 
+            // Update Advisor Student Assignments (replace all advisor assignments)
+            if (dto.AdvisorStudentIds != null)
+            {
+                // Remove existing advisor assignments for this teacher
+                var existingAdvisorAssignments = _dbContext.Set<StudentTeacherAssignment>()
+                    .Where(a => a.TeacherId == teacher.Id && a.AssignmentType == AssignmentType.Advisor);
+                _dbContext.Set<StudentTeacherAssignment>().RemoveRange(existingAdvisorAssignments);
+
+                // Add new advisor assignments
+                foreach (var studentId in dto.AdvisorStudentIds)
+                {
+                    _dbContext.Set<StudentTeacherAssignment>().Add(new StudentTeacherAssignment
+                    {
+                        TeacherId = teacher.Id,
+                        StudentId = studentId,
+                        CourseId = null, // Danışman atamaları için kurs opsiyonel
+                        AssignmentType = AssignmentType.Advisor,
+                        StartDate = DateTime.UtcNow,
+                        IsActive = true
+                    });
+                }
+            }
+
+            // Update Coach Student Assignments (replace all coach assignments)
+            if (dto.CoachStudentIds != null)
+            {
+                // Remove existing coach assignments for this teacher
+                var existingCoachAssignments = _dbContext.Set<StudentTeacherAssignment>()
+                    .Where(a => a.TeacherId == teacher.Id && a.AssignmentType == AssignmentType.Coach);
+                _dbContext.Set<StudentTeacherAssignment>().RemoveRange(existingCoachAssignments);
+
+                // Add new coach assignments
+                foreach (var studentId in dto.CoachStudentIds)
+                {
+                    _dbContext.Set<StudentTeacherAssignment>().Add(new StudentTeacherAssignment
+                    {
+                        TeacherId = teacher.Id,
+                        StudentId = studentId,
+                        CourseId = null, // Koç atamaları için kurs opsiyonel
+                        AssignmentType = AssignmentType.Coach,
+                        StartDate = DateTime.UtcNow,
+                        IsActive = true
+                    });
+                }
+            }
+
             // Update user phone number if provided
             if (!string.IsNullOrEmpty(dto.PhoneNumber))
             {
