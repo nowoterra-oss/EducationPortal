@@ -84,7 +84,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpGet]
-    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
+    [RequirePermission(Permissions.StudentsView, Permissions.UsersView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<StudentDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -114,7 +114,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Student not found</response>
     [HttpGet("{id}")]
-    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
+    [RequirePermission(Permissions.StudentsView, Permissions.UsersView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status404NotFound)]
@@ -149,7 +149,7 @@ public class StudentsController : ControllerBase
     /// <response code="200">Search completed successfully</response>
     /// <response code="401">Unauthorized</response>
     [HttpGet("search")]
-    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
+    [RequirePermission(Permissions.StudentsView, Permissions.UsersView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<StudentDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<PagedResponse<StudentDto>>>> Search(
@@ -185,7 +185,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Student not found</response>
     [HttpGet("student-no/{studentNo}")]
-    [RequirePermission(Permissions.StudentsView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
+    [RequirePermission(Permissions.StudentsView, Permissions.UsersView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status404NotFound)]
@@ -241,7 +241,7 @@ public class StudentsController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpPost]
-    [RequirePermission(Permissions.StudentsCreate)]
+    [RequirePermission(Permissions.StudentsCreate, Permissions.UsersCreate)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -308,11 +308,13 @@ public class StudentsController : ControllerBase
             }
             else
             {
-                // Admin her zaman yetkili, diğerleri için students.edit yetkisi gerekli
+                // Admin her zaman yetkili, diğerleri için students.edit veya users.edit yetkisi gerekli
                 if (!User.IsInRole("Admin"))
                 {
                     var permissionService = HttpContext.RequestServices.GetRequiredService<IPermissionService>();
-                    if (!await permissionService.HasPermissionAsync(currentUserId, Permissions.StudentsEdit))
+                    var hasStudentsEdit = await permissionService.HasPermissionAsync(currentUserId, Permissions.StudentsEdit);
+                    var hasUsersEdit = await permissionService.HasPermissionAsync(currentUserId, Permissions.UsersEdit);
+                    if (!hasStudentsEdit && !hasUsersEdit)
                     {
                         return Forbid();
                     }
@@ -346,7 +348,7 @@ public class StudentsController : ControllerBase
     /// <response code="403">Forbidden - Insufficient permissions</response>
     /// <response code="404">Student not found</response>
     [HttpDelete("{id}")]
-    [RequirePermission(Permissions.StudentsDelete)]
+    [RequirePermission(Permissions.StudentsDelete, Permissions.UsersDelete)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

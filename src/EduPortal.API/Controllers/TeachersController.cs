@@ -44,7 +44,7 @@ public class TeachersController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpGet]
-    [RequirePermission(Permissions.TeachersView, Permissions.SchedulingView, Permissions.SchedulingCreate)]
+    [RequirePermission(Permissions.TeachersView, Permissions.UsersView, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<TeacherDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -108,7 +108,7 @@ public class TeachersController : ControllerBase
     /// <response code="200">Search completed successfully</response>
     /// <response code="401">Unauthorized</response>
     [HttpGet("search")]
-    [RequirePermission(Permissions.TeachersView, Permissions.SchedulingView, Permissions.SchedulingCreate)]
+    [RequirePermission(Permissions.TeachersView, Permissions.UsersView, Permissions.SchedulingView, Permissions.SchedulingCreate)]
     [ProducesResponseType(typeof(ApiResponse<PagedResponse<TeacherDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<ActionResult<ApiResponse<PagedResponse<TeacherDto>>>> Search(
@@ -145,7 +145,7 @@ public class TeachersController : ControllerBase
     /// <response code="401">Unauthorized</response>
     /// <response code="403">Forbidden - Insufficient permissions</response>
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.TeachersCreate, Permissions.UsersCreate)]
     [ProducesResponseType(typeof(ApiResponse<TeacherDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<TeacherDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -182,7 +182,7 @@ public class TeachersController : ControllerBase
     /// <response code="403">Forbidden - Insufficient permissions</response>
     /// <response code="404">Teacher not found</response>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.TeachersEdit, Permissions.UsersEdit)]
     [ProducesResponseType(typeof(ApiResponse<TeacherDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<TeacherDto>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -219,7 +219,7 @@ public class TeachersController : ControllerBase
     /// <response code="403">Forbidden - Insufficient permissions</response>
     /// <response code="404">Teacher not found</response>
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [RequirePermission(Permissions.TeachersDelete, Permissions.UsersDelete)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
