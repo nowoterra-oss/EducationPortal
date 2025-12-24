@@ -215,7 +215,7 @@ public class StudentsController : ControllerBase
     /// <returns>Sonraki öğrenci numarası</returns>
     /// <response code="200">Öğrenci numarası başarıyla alındı</response>
     [HttpGet("next-student-no")]
-    [RequirePermission(Permissions.StudentsCreate)]
+    [RequirePermission(Permissions.StudentsCreate, Permissions.UsersCreate)]
     [ProducesResponseType(typeof(ApiResponse<string>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<string>>> GetNextStudentNo()
     {
@@ -943,7 +943,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Foreign language data</param>
     [HttpPost("{studentId}/foreign-languages")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [ProducesResponseType(typeof(ApiResponse<ForeignLanguageDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<ForeignLanguageDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<ForeignLanguageDto>>> AddForeignLanguage(
@@ -962,7 +962,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="id">Foreign language ID</param>
     [HttpDelete("{studentId}/foreign-languages/{id}")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteForeignLanguage(int studentId, int id)
     {
@@ -993,7 +993,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Hobby data</param>
     [HttpPost("{studentId}/hobbies")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<HobbyDto>>> AddHobby(
@@ -1012,7 +1012,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Hobby data with file</param>
     [HttpPost("{studentId}/hobbies/upload")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<HobbyDto>), StatusCodes.Status400BadRequest)]
@@ -1037,7 +1037,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="id">Hobby ID</param>
     [HttpDelete("{studentId}/hobbies/{id}")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteHobby(int studentId, int id)
     {
@@ -1068,7 +1068,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Activity data</param>
     [HttpPost("{studentId}/activities")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<ActivityDto>>> AddActivity(
@@ -1087,7 +1087,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Activity data with file</param>
     [HttpPost("{studentId}/activities/upload")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<ActivityDto>), StatusCodes.Status400BadRequest)]
@@ -1112,7 +1112,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="id">Activity ID</param>
     [HttpDelete("{studentId}/activities/{id}")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteActivity(int studentId, int id)
     {
@@ -1143,7 +1143,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="dto">Readiness exam data</param>
     [HttpPost("{studentId}/readiness-exams")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [ProducesResponseType(typeof(ApiResponse<ReadinessExamDto>), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ApiResponse<ReadinessExamDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<ReadinessExamDto>>> AddReadinessExam(
@@ -1162,7 +1162,7 @@ public class StudentsController : ControllerBase
     /// <param name="studentId">Student ID</param>
     /// <param name="id">Readiness exam ID</param>
     [HttpDelete("{studentId}/readiness-exams/{id}")]
-    [Authorize(Roles = "Admin,Danisman,Ogrenci")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit)]
     [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
     public async Task<ActionResult<ApiResponse<bool>>> DeleteReadinessExam(int studentId, int id)
     {
