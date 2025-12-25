@@ -291,49 +291,47 @@ public class TeacherService : ITeacherService
                 }
             }
 
-            // Update Advisor Student Assignments (replace all advisor assignments)
-            if (dto.AdvisorStudentIds != null)
+            // Update Student Assignments (Advisor/Coach) - if any assignment list is provided, replace all
+            if (dto.AdvisorStudentIds != null || dto.CoachStudentIds != null)
             {
-                // Remove existing advisor assignments for this teacher
-                var existingAdvisorAssignments = _dbContext.Set<StudentTeacherAssignment>()
-                    .Where(a => a.TeacherId == teacher.Id && a.AssignmentType == AssignmentType.Advisor);
-                _dbContext.Set<StudentTeacherAssignment>().RemoveRange(existingAdvisorAssignments);
+                // 1. Remove ALL existing assignments for this teacher first
+                var existingAssignments = await _dbContext.Set<StudentTeacherAssignment>()
+                    .Where(a => a.TeacherId == teacher.Id)
+                    .ToListAsync();
+                _dbContext.Set<StudentTeacherAssignment>().RemoveRange(existingAssignments);
 
-                // Add new advisor assignments
-                foreach (var studentId in dto.AdvisorStudentIds)
+                // 2. Add new advisor assignments
+                if (dto.AdvisorStudentIds != null)
                 {
-                    _dbContext.Set<StudentTeacherAssignment>().Add(new StudentTeacherAssignment
+                    foreach (var studentId in dto.AdvisorStudentIds)
                     {
-                        TeacherId = teacher.Id,
-                        StudentId = studentId,
-                        CourseId = null, // Danışman atamaları için kurs opsiyonel
-                        AssignmentType = AssignmentType.Advisor,
-                        StartDate = DateTime.UtcNow,
-                        IsActive = true
-                    });
+                        _dbContext.Set<StudentTeacherAssignment>().Add(new StudentTeacherAssignment
+                        {
+                            TeacherId = teacher.Id,
+                            StudentId = studentId,
+                            CourseId = null,
+                            AssignmentType = AssignmentType.Advisor,
+                            StartDate = DateTime.UtcNow,
+                            IsActive = true
+                        });
+                    }
                 }
-            }
 
-            // Update Coach Student Assignments (replace all coach assignments)
-            if (dto.CoachStudentIds != null)
-            {
-                // Remove existing coach assignments for this teacher
-                var existingCoachAssignments = _dbContext.Set<StudentTeacherAssignment>()
-                    .Where(a => a.TeacherId == teacher.Id && a.AssignmentType == AssignmentType.Coach);
-                _dbContext.Set<StudentTeacherAssignment>().RemoveRange(existingCoachAssignments);
-
-                // Add new coach assignments
-                foreach (var studentId in dto.CoachStudentIds)
+                // 3. Add new coach assignments
+                if (dto.CoachStudentIds != null)
                 {
-                    _dbContext.Set<StudentTeacherAssignment>().Add(new StudentTeacherAssignment
+                    foreach (var studentId in dto.CoachStudentIds)
                     {
-                        TeacherId = teacher.Id,
-                        StudentId = studentId,
-                        CourseId = null, // Koç atamaları için kurs opsiyonel
-                        AssignmentType = AssignmentType.Coach,
-                        StartDate = DateTime.UtcNow,
-                        IsActive = true
-                    });
+                        _dbContext.Set<StudentTeacherAssignment>().Add(new StudentTeacherAssignment
+                        {
+                            TeacherId = teacher.Id,
+                            StudentId = studentId,
+                            CourseId = null,
+                            AssignmentType = AssignmentType.Coach,
+                            StartDate = DateTime.UtcNow,
+                            IsActive = true
+                        });
+                    }
                 }
             }
 
