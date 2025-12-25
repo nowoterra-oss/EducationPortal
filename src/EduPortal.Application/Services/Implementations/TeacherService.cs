@@ -68,6 +68,22 @@ public class TeacherService : ITeacherService
             }
 
             var dto = _mapper.Map<TeacherDto>(teacher);
+
+            // Load student assignments
+            var assignments = await _dbContext.Set<StudentTeacherAssignment>()
+                .Where(a => a.TeacherId == id && a.IsActive)
+                .ToListAsync();
+
+            dto.AdvisorStudentIds = assignments
+                .Where(a => a.AssignmentType == AssignmentType.Advisor)
+                .Select(a => a.StudentId)
+                .ToList();
+
+            dto.CoachStudentIds = assignments
+                .Where(a => a.AssignmentType == AssignmentType.Coach)
+                .Select(a => a.StudentId)
+                .ToList();
+
             return ApiResponse<TeacherDto>.SuccessResponse(dto);
         }
         catch (Exception ex)
