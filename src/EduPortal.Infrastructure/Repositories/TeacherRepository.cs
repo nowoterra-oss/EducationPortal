@@ -42,7 +42,7 @@ public class TeacherRepository : GenericRepository<Teacher>, ITeacherRepository
             .Include(t => t.User)
             .Include(t => t.Branch)
             .Include(t => t.Courses)
-            .Include(t => t.CoachProfile)
+            .Include(t => t.CounselorProfile)
             .FirstOrDefaultAsync(t => t.Id == teacherId, cancellationToken);
     }
 

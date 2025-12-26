@@ -9,6 +9,8 @@ public class Counselor : BaseEntity
     [Required]
     public string UserId { get; set; } = string.Empty;
 
+    public int? TeacherId { get; set; }
+
     [MaxLength(200)]
     public string? Specialization { get; set; }
 
@@ -17,6 +19,9 @@ public class Counselor : BaseEntity
     // Navigation Properties
     [ForeignKey(nameof(UserId))]
     public virtual ApplicationUser User { get; set; } = null!;
+
+    [ForeignKey(nameof(TeacherId))]
+    public virtual Teacher? Teacher { get; set; }
 
     public virtual ICollection<StudentCounselorAssignment> Students { get; set; } = new List<StudentCounselorAssignment>();
     public virtual ICollection<CounselingMeeting> CounselingMeetings { get; set; } = new List<CounselingMeeting>();

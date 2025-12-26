@@ -11,7 +11,7 @@ public class StudyAbroadProgram : BaseAuditableEntity
     public int StudentId { get; set; }
 
     [Required]
-    public int CoachId { get; set; }
+    public int CounselorId { get; set; }
 
     [Required]
     [MaxLength(100)]
@@ -50,8 +50,8 @@ public class StudyAbroadProgram : BaseAuditableEntity
     [ForeignKey(nameof(StudentId))]
     public virtual Student Student { get; set; } = null!;
 
-    [ForeignKey(nameof(CoachId))]
-    public virtual Coach Coach { get; set; } = null!;
+    [ForeignKey(nameof(CounselorId))]
+    public virtual Counselor Counselor { get; set; } = null!;
 
     public virtual ICollection<ApplicationDocument> Documents { get; set; } = new List<ApplicationDocument>();
     public virtual ICollection<VisaProcess> VisaProcesses { get; set; } = new List<VisaProcess>();

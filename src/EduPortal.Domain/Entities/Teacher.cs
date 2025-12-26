@@ -19,7 +19,9 @@ public class Teacher : BaseEntity
 
     public int? BranchId { get; set; }
 
-    public int? CoachId { get; set; }
+    public bool IsAlsoCounselor { get; set; } = false;
+
+    public int? CounselorId { get; set; }
 
     // Identity fields
     public IdentityType? IdentityType { get; set; }
@@ -64,8 +66,9 @@ public class Teacher : BaseEntity
     [ForeignKey(nameof(BranchId))]
     public virtual Branch? Branch { get; set; }
 
-    [ForeignKey(nameof(CoachId))]
-    public virtual Coach? CoachProfile { get; set; }
+    [ForeignKey(nameof(CounselorId))]
+    public virtual Counselor? CounselorProfile { get; set; }
+
     [ForeignKey(nameof(UserId))]
     public virtual ApplicationUser User { get; set; } = null!;
 

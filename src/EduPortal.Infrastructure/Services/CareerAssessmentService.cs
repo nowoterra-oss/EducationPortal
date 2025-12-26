@@ -19,7 +19,7 @@ public class CareerAssessmentService : ICareerAssessmentService
     {
         var assessments = await _context.CareerAssessments
             .Include(a => a.Student).ThenInclude(s => s.User)
-            .Include(a => a.Coach).ThenInclude(c => c.User)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
             .Where(a => !a.IsDeleted)
             .OrderByDescending(a => a.AssessmentDate)
             .ToListAsync();
@@ -31,7 +31,7 @@ public class CareerAssessmentService : ICareerAssessmentService
     {
         var assessments = await _context.CareerAssessments
             .Include(a => a.Student).ThenInclude(s => s.User)
-            .Include(a => a.Coach).ThenInclude(c => c.User)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
             .Where(a => a.StudentId == studentId && !a.IsDeleted)
             .OrderByDescending(a => a.AssessmentDate)
             .ToListAsync();
@@ -39,12 +39,12 @@ public class CareerAssessmentService : ICareerAssessmentService
         return assessments.Select(MapToDto);
     }
 
-    public async Task<IEnumerable<CareerAssessmentDto>> GetAssessmentsByCoachAsync(int coachId)
+    public async Task<IEnumerable<CareerAssessmentDto>> GetAssessmentsByCounselorAsync(int counselorId)
     {
         var assessments = await _context.CareerAssessments
             .Include(a => a.Student).ThenInclude(s => s.User)
-            .Include(a => a.Coach).ThenInclude(c => c.User)
-            .Where(a => a.CoachId == coachId && !a.IsDeleted)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
+            .Where(a => a.CounselorId == counselorId && !a.IsDeleted)
             .OrderByDescending(a => a.AssessmentDate)
             .ToListAsync();
 
@@ -55,7 +55,7 @@ public class CareerAssessmentService : ICareerAssessmentService
     {
         var assessments = await _context.CareerAssessments
             .Include(a => a.Student).ThenInclude(s => s.User)
-            .Include(a => a.Coach).ThenInclude(c => c.User)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
             .Where(a => !a.IsDeleted)
             .OrderByDescending(a => a.AssessmentDate)
             .ToListAsync();
@@ -64,7 +64,7 @@ public class CareerAssessmentService : ICareerAssessmentService
         {
             Id = a.Id,
             StudentName = $"{a.Student.User.FirstName} {a.Student.User.LastName}",
-            CoachName = $"{a.Coach.User.FirstName} {a.Coach.User.LastName}",
+            CounselorName = $"{a.Counselor.User.FirstName} {a.Counselor.User.LastName}",
             AssessmentDate = a.AssessmentDate,
             AssessmentType = a.AssessmentType,
             TopCareerSuggestions = a.RecommendedCareers?.Split(',').Select(s => s.Trim()).Take(3).ToList() ?? new List<string>()
@@ -75,7 +75,7 @@ public class CareerAssessmentService : ICareerAssessmentService
     {
         var assessment = await _context.CareerAssessments
             .Include(a => a.Student).ThenInclude(s => s.User)
-            .Include(a => a.Coach).ThenInclude(c => c.User)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
             .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
 
         return assessment != null ? MapToDto(assessment) : null;
@@ -86,7 +86,7 @@ public class CareerAssessmentService : ICareerAssessmentService
         var assessment = new CareerAssessment
         {
             StudentId = dto.StudentId,
-            CoachId = dto.CoachId,
+            CounselorId = dto.CounselorId,
             AssessmentDate = dto.AssessmentDate,
             AssessmentType = dto.AssessmentType,
             Results = dto.Results,
@@ -138,7 +138,7 @@ public class CareerAssessmentService : ICareerAssessmentService
     public async Task<CareerAssessmentStatisticsDto> GetStatisticsAsync()
     {
         var assessments = await _context.CareerAssessments
-            .Include(a => a.Coach).ThenInclude(c => c.User)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
             .Where(a => !a.IsDeleted)
             .ToListAsync();
 
@@ -167,8 +167,8 @@ public class CareerAssessmentService : ICareerAssessmentService
             .ToDictionary(g => g.Key, g => g.Count());
         stats.TopCareerFields = allFields;
 
-        stats.AssessmentsByCoach = assessments
-            .GroupBy(a => $"{a.Coach.User.FirstName} {a.Coach.User.LastName}")
+        stats.AssessmentsByCounselor = assessments
+            .GroupBy(a => $"{a.Counselor.User.FirstName} {a.Counselor.User.LastName}")
             .ToDictionary(g => g.Key, g => g.Count());
 
         return stats;
@@ -182,8 +182,8 @@ public class CareerAssessmentService : ICareerAssessmentService
             StudentId = assessment.StudentId,
             StudentName = $"{assessment.Student.User.FirstName} {assessment.Student.User.LastName}",
             StudentNo = assessment.Student.StudentNo,
-            CoachId = assessment.CoachId,
-            CoachName = $"{assessment.Coach.User.FirstName} {assessment.Coach.User.LastName}",
+            CounselorId = assessment.CounselorId,
+            CounselorName = $"{assessment.Counselor.User.FirstName} {assessment.Counselor.User.LastName}",
             AssessmentDate = assessment.AssessmentDate,
             AssessmentType = assessment.AssessmentType,
             Results = assessment.Results,

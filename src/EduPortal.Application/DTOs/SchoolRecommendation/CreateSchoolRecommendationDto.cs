@@ -8,7 +8,7 @@ public class CreateSchoolRecommendationDto
     public int StudentId { get; set; }
 
     [Required]
-    public int CoachId { get; set; }
+    public int CounselorId { get; set; }
 
     [Required]
     [MaxLength(200)]

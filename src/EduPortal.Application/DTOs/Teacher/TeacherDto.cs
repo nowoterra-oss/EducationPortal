@@ -15,7 +15,8 @@ public class TeacherDto
     public bool IsActive { get; set; }
     public int? BranchId { get; set; }
     public string? BranchName { get; set; }
-    public int? CoachId { get; set; }
+    public bool IsAlsoCounselor { get; set; }
+    public int? CounselorId { get; set; }
 
     // Identity fields
     public IdentityType? IdentityType { get; set; }
@@ -77,4 +78,12 @@ public class TeacherReferenceDto
     public string Organization { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
     public string? Email { get; set; }
+}
+
+public class TeacherSummaryDto
+{
+    public int Id { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public string? Specialization { get; set; }
 }

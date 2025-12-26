@@ -61,12 +61,12 @@ public class SchoolRecommendationsController : ControllerBase
     }
 
     /// <summary>
-    /// Get school recommendations by coach
+    /// Get school recommendations by counselor
     /// </summary>
-    [HttpGet("coach/{coachId}")]
-    public async Task<ActionResult<IEnumerable<SchoolRecommendationDto>>> GetByCoach(int coachId)
+    [HttpGet("counselor/{counselorId}")]
+    public async Task<ActionResult<IEnumerable<SchoolRecommendationDto>>> GetByCounselor(int counselorId)
     {
-        var recommendations = await _recommendationService.GetRecommendationsByCoachAsync(coachId);
+        var recommendations = await _recommendationService.GetRecommendationsByCounselorAsync(counselorId);
         return Ok(recommendations);
     }
 
@@ -84,7 +84,7 @@ public class SchoolRecommendationsController : ControllerBase
     /// Create new school recommendation
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<SchoolRecommendationDto>> Create([FromBody] CreateSchoolRecommendationDto dto)
     {
         try
@@ -102,7 +102,7 @@ public class SchoolRecommendationsController : ControllerBase
     /// Update school recommendation
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<SchoolRecommendationDto>> Update(int id, [FromBody] UpdateSchoolRecommendationDto dto)
     {
         try

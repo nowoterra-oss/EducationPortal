@@ -19,7 +19,7 @@ public class SportsAssessmentService : ISportsAssessmentService
     {
         var assessments = await _context.SportsAssessments
             .Include(a => a.Student).ThenInclude(s => s.User)
-            .Include(a => a.Coach).ThenInclude(c => c.User)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
             .Where(a => !a.IsDeleted)
             .OrderByDescending(a => a.AssessmentDate)
             .ToListAsync();
@@ -31,7 +31,7 @@ public class SportsAssessmentService : ISportsAssessmentService
     {
         var assessments = await _context.SportsAssessments
             .Include(a => a.Student).ThenInclude(s => s.User)
-            .Include(a => a.Coach).ThenInclude(c => c.User)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
             .Where(a => a.StudentId == studentId && !a.IsDeleted)
             .OrderByDescending(a => a.AssessmentDate)
             .ToListAsync();
@@ -39,12 +39,12 @@ public class SportsAssessmentService : ISportsAssessmentService
         return assessments.Select(MapToDto);
     }
 
-    public async Task<IEnumerable<SportsAssessmentDto>> GetAssessmentsByCoachAsync(int coachId)
+    public async Task<IEnumerable<SportsAssessmentDto>> GetAssessmentsByCounselorAsync(int counselorId)
     {
         var assessments = await _context.SportsAssessments
             .Include(a => a.Student).ThenInclude(s => s.User)
-            .Include(a => a.Coach).ThenInclude(c => c.User)
-            .Where(a => a.CoachId == coachId && !a.IsDeleted)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
+            .Where(a => a.CounselorId == counselorId && !a.IsDeleted)
             .OrderByDescending(a => a.AssessmentDate)
             .ToListAsync();
 
@@ -73,7 +73,7 @@ public class SportsAssessmentService : ISportsAssessmentService
     {
         var assessment = await _context.SportsAssessments
             .Include(a => a.Student).ThenInclude(s => s.User)
-            .Include(a => a.Coach).ThenInclude(c => c.User)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
             .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
 
         return assessment != null ? MapToDto(assessment) : null;
@@ -84,7 +84,7 @@ public class SportsAssessmentService : ISportsAssessmentService
         var assessment = new SportsAssessment
         {
             StudentId = dto.StudentId,
-            CoachId = dto.CoachId,
+            CounselorId = dto.CounselorId,
             AssessmentDate = dto.AssessmentDate,
             CurrentSport = dto.CurrentSport,
             YearsOfExperience = dto.YearsOfExperience,
@@ -146,7 +146,7 @@ public class SportsAssessmentService : ISportsAssessmentService
     public async Task<SportsAssessmentStatisticsDto> GetStatisticsAsync()
     {
         var assessments = await _context.SportsAssessments
-            .Include(a => a.Coach).ThenInclude(c => c.User)
+            .Include(a => a.Counselor).ThenInclude(c => c.User)
             .Where(a => !a.IsDeleted)
             .ToListAsync();
 
@@ -171,8 +171,8 @@ public class SportsAssessmentService : ISportsAssessmentService
             .GroupBy(a => a.SkillLevel!)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        stats.AssessmentsByCoach = assessments
-            .GroupBy(a => $"{a.Coach.User.FirstName} {a.Coach.User.LastName}")
+        stats.AssessmentsByCounselor = assessments
+            .GroupBy(a => $"{a.Counselor.User.FirstName} {a.Counselor.User.LastName}")
             .ToDictionary(g => g.Key, g => g.Count());
 
         return stats;
@@ -186,8 +186,8 @@ public class SportsAssessmentService : ISportsAssessmentService
             StudentId = assessment.StudentId,
             StudentName = $"{assessment.Student.User.FirstName} {assessment.Student.User.LastName}",
             StudentNo = assessment.Student.StudentNo,
-            CoachId = assessment.CoachId,
-            CoachName = $"{assessment.Coach.User.FirstName} {assessment.Coach.User.LastName}",
+            CounselorId = assessment.CounselorId,
+            CounselorName = $"{assessment.Counselor.User.FirstName} {assessment.Counselor.User.LastName}",
             AssessmentDate = assessment.AssessmentDate,
             CurrentSport = assessment.CurrentSport,
             YearsOfExperience = assessment.YearsOfExperience,

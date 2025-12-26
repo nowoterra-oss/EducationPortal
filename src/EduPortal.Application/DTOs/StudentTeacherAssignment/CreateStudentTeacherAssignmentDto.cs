@@ -12,7 +12,7 @@ public class CreateStudentTeacherAssignmentDto
     public int TeacherId { get; set; }
 
     /// <summary>
-    /// Kurs ID - Danışman/Koç atamaları için opsiyonel
+    /// Kurs ID - Danışman/Rehber atamaları için opsiyonel
     /// </summary>
     public int? CourseId { get; set; }
 
@@ -22,7 +22,7 @@ public class CreateStudentTeacherAssignmentDto
     public DateTime? EndDate { get; set; }
 
     /// <summary>
-    /// Atama türü: Advisor (Danışman) veya Coach (Koç)
+    /// Atama türü: Advisor (Danışman) veya Counselor (Rehber)
     /// </summary>
     public AssignmentType AssignmentType { get; set; } = AssignmentType.Advisor;
 

@@ -12,3 +12,9 @@ public class CreateCounselorDto
 
     public bool IsActive { get; set; } = true;
 }
+
+public class CreateCounselorFromTeacherDto
+{
+    [MaxLength(200)]
+    public string? Specialization { get; set; }
+}

@@ -122,8 +122,8 @@ public class BranchService : IBranchService
         stats.TotalTeachers = await _context.Teachers
             .CountAsync(t => t.BranchId == id && !t.IsDeleted);
 
-        stats.TotalCoaches = await _context.Coaches
-            .CountAsync(c => c.BranchId == id && !c.IsDeleted);
+        stats.TotalCounselors = await _context.Counselors
+            .CountAsync(c => !c.IsDeleted && c.IsActive);
 
         stats.TotalClasses = await _context.Classes
             .CountAsync(c => c.BranchId == id && !c.IsDeleted);
@@ -131,14 +131,12 @@ public class BranchService : IBranchService
         stats.TotalClassrooms = await _context.Classrooms
             .CountAsync(c => c.BranchId == id && !c.IsDeleted);
 
-        stats.ActiveCoachingPrograms = await _context.StudentCoachAssignments
-            .CountAsync(sca => sca.Coach.BranchId == id && sca.IsActive && !sca.IsDeleted);
+        stats.ActiveCounselingPrograms = await _context.StudentCounselorAssignments
+            .CountAsync(sca => sca.IsActive && !sca.IsDeleted);
 
-        stats.CompletedSessionsThisMonth = await _context.CoachingSessions
-            .CountAsync(cs => cs.BranchId == id &&
-                             cs.Status == SessionStatus.Completed &&
-                             cs.SessionDate >= firstDayOfMonth &&
-                             !cs.IsDeleted);
+        stats.CompletedMeetingsThisMonth = await _context.CounselingMeetings
+            .CountAsync(cm => cm.MeetingDate >= firstDayOfMonth &&
+                             !cm.IsDeleted);
 
         stats.CapacityUtilization = branch.Capacity > 0
             ? (decimal)stats.TotalStudents / branch.Capacity * 100
@@ -192,7 +190,7 @@ public class BranchService : IBranchService
     {
         var studentCount = _context.Students.Count(s => s.BranchId == branch.Id && !s.IsDeleted);
         var teacherCount = _context.Teachers.Count(t => t.BranchId == branch.Id && !t.IsDeleted);
-        var coachCount = _context.Coaches.Count(c => c.BranchId == branch.Id && !c.IsDeleted);
+        var counselorCount = _context.Counselors.Count(c => !c.IsDeleted && c.IsActive);
 
         return new BranchDto
         {
@@ -213,7 +211,7 @@ public class BranchService : IBranchService
             Notes = branch.Notes,
             CurrentStudentCount = studentCount,
             CurrentTeacherCount = teacherCount,
-            CurrentCoachCount = coachCount,
+            CurrentCounselorCount = counselorCount,
             CapacityUtilization = branch.Capacity > 0 ? (decimal)studentCount / branch.Capacity * 100 : 0,
             CreatedDate = branch.CreatedAt,
             LastModifiedDate = branch.UpdatedAt

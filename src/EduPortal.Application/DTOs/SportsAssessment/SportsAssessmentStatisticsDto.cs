@@ -8,5 +8,5 @@ public class SportsAssessmentStatisticsDto
 
     public Dictionary<string, int> AssessmentsBySport { get; set; } = new();
     public Dictionary<string, int> AssessmentsBySkillLevel { get; set; } = new();
-    public Dictionary<string, int> AssessmentsByCoach { get; set; } = new();
+    public Dictionary<string, int> AssessmentsByCounselor { get; set; } = new();
 }

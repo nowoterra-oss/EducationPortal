@@ -20,7 +20,7 @@ public class StudyAbroadService : IStudyAbroadService
     {
         var programs = await _context.StudyAbroadPrograms
             .Include(p => p.Student).ThenInclude(s => s.User)
-            .Include(p => p.Coach).ThenInclude(c => c.User)
+            .Include(p => p.Counselor).ThenInclude(c => c.User)
             .Include(p => p.Documents)
             .Include(p => p.VisaProcesses)
             .Include(p => p.Accommodations)
@@ -35,7 +35,7 @@ public class StudyAbroadService : IStudyAbroadService
     {
         var programs = await _context.StudyAbroadPrograms
             .Include(p => p.Student).ThenInclude(s => s.User)
-            .Include(p => p.Coach).ThenInclude(c => c.User)
+            .Include(p => p.Counselor).ThenInclude(c => c.User)
             .Include(p => p.Documents)
             .Include(p => p.VisaProcesses)
             .Include(p => p.Accommodations)
@@ -51,7 +51,7 @@ public class StudyAbroadService : IStudyAbroadService
     {
         var programs = await _context.StudyAbroadPrograms
             .Include(p => p.Student).ThenInclude(s => s.User)
-            .Include(p => p.Coach).ThenInclude(c => c.User)
+            .Include(p => p.Counselor).ThenInclude(c => c.User)
             .Include(p => p.Documents)
             .Include(p => p.VisaProcesses)
             .Include(p => p.Accommodations)
@@ -61,15 +61,15 @@ public class StudyAbroadService : IStudyAbroadService
         return programs.Select(MapToDto);
     }
 
-    public async Task<IEnumerable<StudyAbroadProgramDto>> GetProgramsByCoachAsync(int coachId)
+    public async Task<IEnumerable<StudyAbroadProgramDto>> GetProgramsByCounselorAsync(int counselorId)
     {
         var programs = await _context.StudyAbroadPrograms
             .Include(p => p.Student).ThenInclude(s => s.User)
-            .Include(p => p.Coach).ThenInclude(c => c.User)
+            .Include(p => p.Counselor).ThenInclude(c => c.User)
             .Include(p => p.Documents)
             .Include(p => p.VisaProcesses)
             .Include(p => p.Accommodations)
-            .Where(p => p.CoachId == coachId && !p.IsDeleted)
+            .Where(p => p.CounselorId == counselorId && !p.IsDeleted)
             .ToListAsync();
 
         return programs.Select(MapToDto);
@@ -99,7 +99,7 @@ public class StudyAbroadService : IStudyAbroadService
     {
         var program = await _context.StudyAbroadPrograms
             .Include(p => p.Student).ThenInclude(s => s.User)
-            .Include(p => p.Coach).ThenInclude(c => c.User)
+            .Include(p => p.Counselor).ThenInclude(c => c.User)
             .Include(p => p.Documents)
             .Include(p => p.VisaProcesses)
             .Include(p => p.Accommodations)
@@ -113,7 +113,7 @@ public class StudyAbroadService : IStudyAbroadService
         var program = new StudyAbroadProgram
         {
             StudentId = dto.StudentId,
-            CoachId = dto.CoachId,
+            CounselorId = dto.CounselorId,
             TargetCountry = dto.TargetCountry,
             TargetUniversity = dto.TargetUniversity,
             ProgramName = dto.ProgramName,
@@ -223,8 +223,8 @@ public class StudyAbroadService : IStudyAbroadService
             StudentId = program.StudentId,
             StudentName = $"{program.Student.User.FirstName} {program.Student.User.LastName}",
             StudentNo = program.Student.StudentNo,
-            CoachId = program.CoachId,
-            CoachName = $"{program.Coach.User.FirstName} {program.Coach.User.LastName}",
+            CounselorId = program.CounselorId,
+            CounselorName = $"{program.Counselor.User.FirstName} {program.Counselor.User.LastName}",
             TargetCountry = program.TargetCountry,
             TargetUniversity = program.TargetUniversity,
             ProgramName = program.ProgramName,

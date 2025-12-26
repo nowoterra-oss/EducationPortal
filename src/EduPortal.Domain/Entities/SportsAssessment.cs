@@ -10,7 +10,7 @@ public class SportsAssessment : BaseAuditableEntity
     public int StudentId { get; set; }
 
     [Required]
-    public int CoachId { get; set; }
+    public int CounselorId { get; set; }
 
     [Required]
     public DateTime AssessmentDate { get; set; }
@@ -51,6 +51,6 @@ public class SportsAssessment : BaseAuditableEntity
     [ForeignKey(nameof(StudentId))]
     public virtual Student Student { get; set; } = null!;
 
-    [ForeignKey(nameof(CoachId))]
-    public virtual Coach Coach { get; set; } = null!;
+    [ForeignKey(nameof(CounselorId))]
+    public virtual Counselor Counselor { get; set; } = null!;
 }

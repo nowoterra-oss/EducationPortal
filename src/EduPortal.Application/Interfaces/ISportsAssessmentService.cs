@@ -6,7 +6,7 @@ public interface ISportsAssessmentService
 {
     Task<IEnumerable<SportsAssessmentDto>> GetAllAssessmentsAsync();
     Task<IEnumerable<SportsAssessmentDto>> GetAssessmentsByStudentAsync(int studentId);
-    Task<IEnumerable<SportsAssessmentDto>> GetAssessmentsByCoachAsync(int coachId);
+    Task<IEnumerable<SportsAssessmentDto>> GetAssessmentsByCounselorAsync(int counselorId);
     Task<IEnumerable<SportsAssessmentSummaryDto>> GetAssessmentSummariesAsync();
     Task<SportsAssessmentDto?> GetAssessmentByIdAsync(int id);
     Task<SportsAssessmentDto> CreateAssessmentAsync(CreateSportsAssessmentDto dto);

@@ -21,7 +21,7 @@ public class BranchDto
     // Statistics
     public int CurrentStudentCount { get; set; }
     public int CurrentTeacherCount { get; set; }
-    public int CurrentCoachCount { get; set; }
+    public int CurrentCounselorCount { get; set; }
     public decimal CapacityUtilization { get; set; } // Percentage
 
     public DateTime CreatedDate { get; set; }

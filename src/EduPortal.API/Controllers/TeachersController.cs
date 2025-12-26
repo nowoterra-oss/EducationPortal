@@ -399,17 +399,17 @@ public class TeachersController : ControllerBase
     }
 
     /// <summary>
-    /// Giriş yapmış öğretmenin koçluk yaptığı öğrencileri döndürür
+    /// Giriş yapmış öğretmenin rehberlik yaptığı öğrencileri döndürür
     /// </summary>
-    /// <returns>Koçluk yapılan öğrenciler listesi</returns>
-    /// <response code="200">Koç öğrencileri başarıyla getirildi</response>
+    /// <returns>Rehberlik yapılan öğrenciler listesi</returns>
+    /// <response code="200">Rehber öğrencileri başarıyla getirildi</response>
     /// <response code="401">Unauthorized</response>
     /// <response code="404">Öğretmen bulunamadı</response>
-    [HttpGet("me/coach-students")]
+    [HttpGet("me/counselor-students")]
     [ProducesResponseType(typeof(ApiResponse<List<StudentTeacherAssignmentDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(ApiResponse<List<StudentTeacherAssignmentDto>>), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ApiResponse<List<StudentTeacherAssignmentDto>>>> GetCoachStudents()
+    public async Task<ActionResult<ApiResponse<List<StudentTeacherAssignmentDto>>>> GetCounselorStudents()
     {
         try
         {
@@ -426,16 +426,16 @@ public class TeachersController : ControllerBase
             }
 
             var assignments = await _assignmentService.GetByTeacherIdAsync(teacher.Id);
-            var coachStudents = assignments
-                .Where(a => a.AssignmentType == AssignmentType.Coach && a.IsActive)
+            var counselorStudents = assignments
+                .Where(a => a.AssignmentType == AssignmentType.Counselor && a.IsActive)
                 .ToList();
 
-            return Ok(ApiResponse<List<StudentTeacherAssignmentDto>>.SuccessResponse(coachStudents, "Koç öğrencileri başarıyla getirildi"));
+            return Ok(ApiResponse<List<StudentTeacherAssignmentDto>>.SuccessResponse(counselorStudents, "Rehber öğrencileri başarıyla getirildi"));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error occurred while getting coach students");
-            return StatusCode(500, ApiResponse<List<StudentTeacherAssignmentDto>>.ErrorResponse("Koç öğrencileri getirilirken bir hata oluştu"));
+            _logger.LogError(ex, "Error occurred while getting counselor students");
+            return StatusCode(500, ApiResponse<List<StudentTeacherAssignmentDto>>.ErrorResponse("Rehber öğrencileri getirilirken bir hata oluştu"));
         }
     }
 }

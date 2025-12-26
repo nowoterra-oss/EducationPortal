@@ -11,7 +11,7 @@ public enum AssignmentType
     Advisor = 0,
 
     /// <summary>
-    /// Koç - Öğrenci koçluğu
+    /// Rehber - Öğrenci rehberliği
     /// </summary>
-    Coach = 1
+    Counselor = 1
 }

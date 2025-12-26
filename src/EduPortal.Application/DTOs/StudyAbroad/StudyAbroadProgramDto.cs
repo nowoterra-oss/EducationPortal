@@ -6,8 +6,8 @@ public class StudyAbroadProgramDto
     public int StudentId { get; set; }
     public string StudentName { get; set; } = string.Empty;
     public string StudentNo { get; set; } = string.Empty;
-    public int CoachId { get; set; }
-    public string CoachName { get; set; } = string.Empty;
+    public int CounselorId { get; set; }
+    public string CounselorName { get; set; } = string.Empty;
     public string TargetCountry { get; set; } = string.Empty;
     public string TargetUniversity { get; set; } = string.Empty;
     public string ProgramName { get; set; } = string.Empty;

@@ -11,7 +11,7 @@ public class SchoolRecommendation : BaseAuditableEntity
     public int StudentId { get; set; }
 
     [Required]
-    public int CoachId { get; set; }
+    public int CounselorId { get; set; }
 
     [Required]
     [MaxLength(200)]
@@ -44,6 +44,6 @@ public class SchoolRecommendation : BaseAuditableEntity
     [ForeignKey(nameof(StudentId))]
     public virtual Student Student { get; set; } = null!;
 
-    [ForeignKey(nameof(CoachId))]
-    public virtual Coach Coach { get; set; } = null!;
+    [ForeignKey(nameof(CounselorId))]
+    public virtual Counselor Counselor { get; set; } = null!;
 }

@@ -20,7 +20,6 @@ public static class DependencyInjection
 
         // Register Infrastructure Services
         services.AddScoped<IBranchService, BranchService>();
-        services.AddScoped<ICoachService, CoachService>();
         services.AddScoped<IParentService, ParentService>();
         services.AddScoped<ICounselorService, CounselorService>();
         services.AddScoped<IClassService, ClassService>();
@@ -42,7 +41,6 @@ public static class DependencyInjection
         services.AddScoped<IScheduleService, ScheduleService>();
 
         // Register Application Services (using DbContext)
-        services.AddScoped<ICoachingSessionService, CoachingSessionService>();
         services.AddScoped<IStudyAbroadService, StudyAbroadService>();
         services.AddScoped<IApplicationDocumentService, ApplicationDocumentService>();
         services.AddScoped<IVisaProcessService, VisaProcessService>();

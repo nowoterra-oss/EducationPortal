@@ -12,19 +12,19 @@ public class BranchStatisticsDto
 
     // Staff Statistics
     public int TotalTeachers { get; set; }
-    public int TotalCoaches { get; set; }
+    public int TotalCounselors { get; set; }
 
     // Academic Statistics
     public int TotalClasses { get; set; }
     public int TotalClassrooms { get; set; }
 
-    // Coaching Statistics
-    public int ActiveCoachingPrograms { get; set; }
-    public int CompletedSessionsThisMonth { get; set; }
+    // Counseling Statistics
+    public int ActiveCounselingPrograms { get; set; }
+    public int CompletedMeetingsThisMonth { get; set; }
 
     // Financial Statistics (optional)
     public decimal MonthlyRevenue { get; set; }
-    public decimal CoachingRevenue { get; set; }
+    public decimal CounselingRevenue { get; set; }
 
     // Capacity
     public int Capacity { get; set; }

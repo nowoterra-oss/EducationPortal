@@ -18,7 +18,7 @@ public class StudyAbroadController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<IEnumerable<StudyAbroadProgramDto>>> GetAllPrograms()
     {
         var programs = await _studyAbroadService.GetAllProgramsAsync();
@@ -26,7 +26,7 @@ public class StudyAbroadController : ControllerBase
     }
 
     [HttpGet("active")]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<IEnumerable<StudyAbroadProgramDto>>> GetActivePrograms()
     {
         var programs = await _studyAbroadService.GetActiveProgramsAsync();
@@ -34,7 +34,7 @@ public class StudyAbroadController : ControllerBase
     }
 
     [HttpGet("summaries")]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<IEnumerable<ProgramSummaryDto>>> GetProgramSummaries()
     {
         var summaries = await _studyAbroadService.GetProgramSummariesAsync();
@@ -42,7 +42,7 @@ public class StudyAbroadController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "Admin,Coach,Danışman,Ogrenci")]
+    [Authorize(Roles = "Admin,Danışman,Ogrenci")]
     public async Task<ActionResult<StudyAbroadProgramDto>> GetProgramById(int id)
     {
         var program = await _studyAbroadService.GetProgramByIdAsync(id);
@@ -53,23 +53,23 @@ public class StudyAbroadController : ControllerBase
     }
 
     [HttpGet("student/{studentId}")]
-    [Authorize(Roles = "Admin,Coach,Danışman,Ogrenci")]
+    [Authorize(Roles = "Admin,Danışman,Ogrenci")]
     public async Task<ActionResult<IEnumerable<StudyAbroadProgramDto>>> GetProgramsByStudent(int studentId)
     {
         var programs = await _studyAbroadService.GetProgramsByStudentAsync(studentId);
         return Ok(programs);
     }
 
-    [HttpGet("coach/{coachId}")]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
-    public async Task<ActionResult<IEnumerable<StudyAbroadProgramDto>>> GetProgramsByCoach(int coachId)
+    [HttpGet("counselor/{counselorId}")]
+    [Authorize(Roles = "Admin,Danışman")]
+    public async Task<ActionResult<IEnumerable<StudyAbroadProgramDto>>> GetProgramsByCounselor(int counselorId)
     {
-        var programs = await _studyAbroadService.GetProgramsByCoachAsync(coachId);
+        var programs = await _studyAbroadService.GetProgramsByCounselorAsync(counselorId);
         return Ok(programs);
     }
 
     [HttpGet("statistics")]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<ProgramStatisticsDto>> GetStatistics()
     {
         var statistics = await _studyAbroadService.GetStatisticsAsync();
@@ -77,7 +77,7 @@ public class StudyAbroadController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<StudyAbroadProgramDto>> CreateProgram([FromBody] CreateStudyAbroadProgramDto dto)
     {
         if (!ModelState.IsValid)
@@ -88,7 +88,7 @@ public class StudyAbroadController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<StudyAbroadProgramDto>> UpdateProgram(int id, [FromBody] UpdateStudyAbroadProgramDto dto)
     {
         if (!ModelState.IsValid)

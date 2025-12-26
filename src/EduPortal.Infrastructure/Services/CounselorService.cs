@@ -1,4 +1,5 @@
 using EduPortal.Application.DTOs.Counselor;
+using EduPortal.Application.DTOs.Teacher;
 using EduPortal.Application.Interfaces;
 using EduPortal.Domain.Entities;
 using EduPortal.Infrastructure.Data;
@@ -324,6 +325,69 @@ public class CounselorService : ICounselorService
             .ToListAsync();
 
         return counselors.Select(MapToDto);
+    }
+
+    public async Task<CounselorDto> CreateCounselorFromTeacherAsync(int teacherId, string? specialization)
+    {
+        var teacher = await _context.Teachers
+            .Include(t => t.User)
+            .FirstOrDefaultAsync(t => t.Id == teacherId && !t.IsDeleted);
+
+        if (teacher == null)
+            throw new Exception("Öğretmen bulunamadı");
+
+        // Zaten danışman mı kontrol et
+        var existingCounselor = await _context.Counselors
+            .FirstOrDefaultAsync(c => c.TeacherId == teacherId && !c.IsDeleted);
+
+        if (existingCounselor != null)
+        {
+            existingCounselor.IsActive = true;
+            existingCounselor.Specialization = specialization;
+            existingCounselor.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return (await GetCounselorByIdAsync(existingCounselor.Id))!;
+        }
+
+        var counselor = new Counselor
+        {
+            UserId = teacher.UserId,
+            TeacherId = teacherId,
+            Specialization = specialization,
+            IsActive = true
+        };
+
+        _context.Counselors.Add(counselor);
+        await _context.SaveChangesAsync();
+
+        // Teacher'ı güncelle
+        teacher.IsAlsoCounselor = true;
+        teacher.CounselorId = counselor.Id;
+        await _context.SaveChangesAsync();
+
+        return (await GetCounselorByIdAsync(counselor.Id))!;
+    }
+
+    public async Task<IEnumerable<TeacherSummaryDto>> GetTeachersAvailableForCounselingAsync()
+    {
+        var counselorTeacherIds = await _context.Counselors
+            .Where(c => !c.IsDeleted && c.IsActive)
+            .Select(c => c.TeacherId)
+            .ToListAsync();
+
+        var teachers = await _context.Teachers
+            .Include(t => t.User)
+            .Where(t => !t.IsDeleted && t.IsActive && !counselorTeacherIds.Contains(t.Id))
+            .Select(t => new TeacherSummaryDto
+            {
+                Id = t.Id,
+                FullName = $"{t.User.FirstName} {t.User.LastName}",
+                Email = t.User.Email,
+                Specialization = t.Specialization
+            })
+            .ToListAsync();
+
+        return teachers;
     }
 
     private CounselorDto MapToDto(Counselor counselor)

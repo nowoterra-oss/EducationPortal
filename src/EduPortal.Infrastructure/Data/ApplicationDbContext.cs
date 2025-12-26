@@ -66,11 +66,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<EmailTemplate> EmailTemplates => Set<EmailTemplate>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
-    // Coaching
-    public DbSet<Coach> Coaches => Set<Coach>();
-    public DbSet<StudentCoachAssignment> StudentCoachAssignments => Set<StudentCoachAssignment>();
-    public DbSet<CoachingSession> CoachingSessions => Set<CoachingSession>();
-
     // Study Abroad
     public DbSet<StudyAbroadProgram> StudyAbroadPrograms => Set<StudyAbroadProgram>();
     public DbSet<ApplicationDocument> ApplicationDocuments => Set<ApplicationDocument>();
@@ -443,11 +438,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(p => p.BranchId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            entity.HasOne(p => p.CoachingSession)
-                .WithMany()
-                .HasForeignKey(p => p.CoachingSessionId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             entity.HasOne(p => p.PackagePurchase)
                 .WithMany()
                 .HasForeignKey(p => p.PackagePurchaseId)
@@ -581,52 +571,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         });
 
         // ===============================================
-        // COACHING MODULE RELATIONSHIPS
-        // ===============================================
-
-        // Coach relationships
-        builder.Entity<Coach>(entity =>
-        {
-            entity.HasOne(c => c.User)
-                .WithMany()
-                .HasForeignKey(c => c.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(c => c.TeacherProfile)
-                .WithOne(t => t.CoachProfile)
-                .HasForeignKey<Coach>(c => c.TeacherId)
-                .OnDelete(DeleteBehavior.SetNull);
-        });
-
-        // StudentCoachAssignment relationships
-        builder.Entity<StudentCoachAssignment>(entity =>
-        {
-            entity.HasOne(sca => sca.Student)
-                .WithMany(s => s.CoachAssignments)
-                .HasForeignKey(sca => sca.StudentId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(sca => sca.Coach)
-                .WithMany(c => c.Students)
-                .HasForeignKey(sca => sca.CoachId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // CoachingSession relationships
-        builder.Entity<CoachingSession>(entity =>
-        {
-            entity.HasOne(cs => cs.Student)
-                .WithMany(s => s.CoachingSessions)
-                .HasForeignKey(cs => cs.StudentId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(cs => cs.Coach)
-                .WithMany(c => c.Sessions)
-                .HasForeignKey(cs => cs.CoachId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
-        // ===============================================
         // STUDY ABROAD MODULE RELATIONSHIPS
         // ===============================================
 
@@ -638,9 +582,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(sap => sap.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(sap => sap.Coach)
+            entity.HasOne(sap => sap.Counselor)
                 .WithMany()
-                .HasForeignKey(sap => sap.CoachId)
+                .HasForeignKey(sap => sap.CounselorId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -683,9 +627,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(ca => ca.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(ca => ca.Coach)
+            entity.HasOne(ca => ca.Counselor)
                 .WithMany()
-                .HasForeignKey(ca => ca.CoachId)
+                .HasForeignKey(ca => ca.CounselorId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -697,9 +641,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(sr => sr.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(sr => sr.Coach)
+            entity.HasOne(sr => sr.Counselor)
                 .WithMany()
-                .HasForeignKey(sr => sr.CoachId)
+                .HasForeignKey(sr => sr.CounselorId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -711,9 +655,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .HasForeignKey(sa => sa.StudentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(sa => sa.Coach)
+            entity.HasOne(sa => sa.Counselor)
                 .WithMany()
-                .HasForeignKey(sa => sa.CoachId)
+                .HasForeignKey(sa => sa.CounselorId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -844,22 +788,6 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .WithMany(t => t.TeacherWorkTypes)
                 .HasForeignKey(twt => twt.TeacherId)
                 .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        builder.Entity<Coach>(entity =>
-        {
-            entity.HasOne(c => c.Branch)
-                .WithMany(b => b.Coaches)
-                .HasForeignKey(c => c.BranchId)
-                .OnDelete(DeleteBehavior.SetNull);
-        });
-
-        builder.Entity<CoachingSession>(entity =>
-        {
-            entity.HasOne(cs => cs.Branch)
-                .WithMany(b => b.CoachingSessions)
-                .HasForeignKey(cs => cs.BranchId)
-                .OnDelete(DeleteBehavior.SetNull);
         });
 
         builder.Entity<Class>(entity =>

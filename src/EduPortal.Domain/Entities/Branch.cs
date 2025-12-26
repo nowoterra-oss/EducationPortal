@@ -52,6 +52,4 @@ public class Branch : BaseAuditableEntity
     public virtual ICollection<Teacher> Teachers { get; set; } = new List<Teacher>();
     public virtual ICollection<Class> Classes { get; set; } = new List<Class>();
     public virtual ICollection<Classroom> Classrooms { get; set; } = new List<Classroom>();
-    public virtual ICollection<Coach> Coaches { get; set; } = new List<Coach>();
-    public virtual ICollection<CoachingSession> CoachingSessions { get; set; } = new List<CoachingSession>();
 }

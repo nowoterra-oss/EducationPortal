@@ -7,7 +7,7 @@ public interface IStudyAbroadService
     Task<IEnumerable<StudyAbroadProgramDto>> GetAllProgramsAsync();
     Task<IEnumerable<StudyAbroadProgramDto>> GetActiveProgramsAsync();
     Task<IEnumerable<StudyAbroadProgramDto>> GetProgramsByStudentAsync(int studentId);
-    Task<IEnumerable<StudyAbroadProgramDto>> GetProgramsByCoachAsync(int coachId);
+    Task<IEnumerable<StudyAbroadProgramDto>> GetProgramsByCounselorAsync(int counselorId);
     Task<IEnumerable<ProgramSummaryDto>> GetProgramSummariesAsync();
     Task<StudyAbroadProgramDto?> GetProgramByIdAsync(int id);
     Task<StudyAbroadProgramDto> CreateProgramAsync(CreateStudyAbroadProgramDto dto);

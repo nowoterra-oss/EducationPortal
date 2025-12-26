@@ -6,8 +6,8 @@ public class SchoolRecommendationDto
     public int StudentId { get; set; }
     public string StudentName { get; set; } = string.Empty;
     public string StudentNo { get; set; } = string.Empty;
-    public int CoachId { get; set; }
-    public string CoachName { get; set; } = string.Empty;
+    public int CounselorId { get; set; }
+    public string CounselorName { get; set; } = string.Empty;
     public string SchoolName { get; set; } = string.Empty;
     public string SchoolLevel { get; set; } = string.Empty;
     public string SchoolType { get; set; } = string.Empty;

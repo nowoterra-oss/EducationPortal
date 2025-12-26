@@ -6,8 +6,8 @@ public class CareerAssessmentDto
     public int StudentId { get; set; }
     public string StudentName { get; set; } = string.Empty;
     public string StudentNo { get; set; } = string.Empty;
-    public int CoachId { get; set; }
-    public string CoachName { get; set; } = string.Empty;
+    public int CounselorId { get; set; }
+    public string CounselorName { get; set; } = string.Empty;
     public DateTime AssessmentDate { get; set; }
     public string AssessmentType { get; set; } = string.Empty;
     public string? Results { get; set; }

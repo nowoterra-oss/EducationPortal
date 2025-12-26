@@ -8,7 +8,7 @@ public class CreateSportsAssessmentDto
     public int StudentId { get; set; }
 
     [Required]
-    public int CoachId { get; set; }
+    public int CounselorId { get; set; }
 
     [Required]
     public DateTime AssessmentDate { get; set; }

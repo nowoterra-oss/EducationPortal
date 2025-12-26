@@ -61,12 +61,12 @@ public class CareerAssessmentsController : ControllerBase
     }
 
     /// <summary>
-    /// Get career assessments by coach
+    /// Get career assessments by counselor
     /// </summary>
-    [HttpGet("coach/{coachId}")]
-    public async Task<ActionResult<IEnumerable<CareerAssessmentDto>>> GetByCoach(int coachId)
+    [HttpGet("counselor/{counselorId}")]
+    public async Task<ActionResult<IEnumerable<CareerAssessmentDto>>> GetByCounselor(int counselorId)
     {
-        var assessments = await _assessmentService.GetAssessmentsByCoachAsync(coachId);
+        var assessments = await _assessmentService.GetAssessmentsByCounselorAsync(counselorId);
         return Ok(assessments);
     }
 
@@ -84,7 +84,7 @@ public class CareerAssessmentsController : ControllerBase
     /// Create new career assessment
     /// </summary>
     [HttpPost]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<CareerAssessmentDto>> Create([FromBody] CreateCareerAssessmentDto dto)
     {
         try
@@ -102,7 +102,7 @@ public class CareerAssessmentsController : ControllerBase
     /// Update career assessment
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin,Coach,Danışman")]
+    [Authorize(Roles = "Admin,Danışman")]
     public async Task<ActionResult<CareerAssessmentDto>> Update(int id, [FromBody] UpdateCareerAssessmentDto dto)
     {
         try

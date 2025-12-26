@@ -1,5 +1,6 @@
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.Counselor;
+using EduPortal.Application.DTOs.Teacher;
 using EduPortal.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -120,6 +121,48 @@ public class CounselorsController : ControllerBase
         {
             _logger.LogError(ex, "Error creating counselor");
             return StatusCode(500, ApiResponse<CounselorDto>.ErrorResponse("Danışman oluşturulurken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Create counselor from teacher
+    /// </summary>
+    [HttpPost("from-teacher/{teacherId}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<CounselorDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<CounselorDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<CounselorDto>>> CreateFromTeacher(int teacherId, [FromBody] CreateCounselorFromTeacherDto dto)
+    {
+        try
+        {
+            var counselor = await _counselorService.CreateCounselorFromTeacherAsync(teacherId, dto.Specialization);
+            return CreatedAtAction(nameof(GetById), new { id = counselor.Id },
+                ApiResponse<CounselorDto>.SuccessResponse(counselor, "Danışman başarıyla oluşturuldu"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating counselor from teacher {TeacherId}", teacherId);
+            return BadRequest(ApiResponse<CounselorDto>.ErrorResponse(ex.Message));
+        }
+    }
+
+    /// <summary>
+    /// Get teachers available for counseling
+    /// </summary>
+    [HttpGet("available-teachers")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<TeacherSummaryDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<TeacherSummaryDto>>>> GetAvailableTeachers()
+    {
+        try
+        {
+            var teachers = await _counselorService.GetTeachersAvailableForCounselingAsync();
+            return Ok(ApiResponse<IEnumerable<TeacherSummaryDto>>.SuccessResponse(teachers));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting available teachers for counseling");
+            return StatusCode(500, ApiResponse<IEnumerable<TeacherSummaryDto>>.ErrorResponse("Öğretmenler alınırken hata oluştu"));
         }
     }
 

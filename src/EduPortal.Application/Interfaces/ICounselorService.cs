@@ -1,4 +1,5 @@
 using EduPortal.Application.DTOs.Counselor;
+using EduPortal.Application.DTOs.Teacher;
 
 namespace EduPortal.Application.Interfaces;
 
@@ -11,6 +12,10 @@ public interface ICounselorService
     Task<CounselorDto> CreateCounselorAsync(CreateCounselorDto dto);
     Task<CounselorDto> UpdateCounselorAsync(int id, UpdateCounselorDto dto);
     Task<bool> DeleteCounselorAsync(int id);
+
+    // Create counselor from teacher
+    Task<CounselorDto> CreateCounselorFromTeacherAsync(int teacherId, string? specialization);
+    Task<IEnumerable<TeacherSummaryDto>> GetTeachersAvailableForCounselingAsync();
 
     // Student assignments
     Task<IEnumerable<CounselorStudentDto>> GetCounselorStudentsAsync(int counselorId);

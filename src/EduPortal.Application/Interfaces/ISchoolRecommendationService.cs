@@ -6,7 +6,7 @@ public interface ISchoolRecommendationService
 {
     Task<IEnumerable<SchoolRecommendationDto>> GetAllRecommendationsAsync();
     Task<IEnumerable<SchoolRecommendationDto>> GetRecommendationsByStudentAsync(int studentId);
-    Task<IEnumerable<SchoolRecommendationDto>> GetRecommendationsByCoachAsync(int coachId);
+    Task<IEnumerable<SchoolRecommendationDto>> GetRecommendationsByCounselorAsync(int counselorId);
     Task<IEnumerable<SchoolRecommendationSummaryDto>> GetRecommendationSummariesAsync();
     Task<SchoolRecommendationDto?> GetRecommendationByIdAsync(int id);
     Task<SchoolRecommendationDto> CreateRecommendationAsync(CreateSchoolRecommendationDto dto);

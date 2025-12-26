@@ -20,7 +20,7 @@ public class SchoolRecommendationService : ISchoolRecommendationService
     {
         var recommendations = await _context.SchoolRecommendations
             .Include(r => r.Student).ThenInclude(s => s.User)
-            .Include(r => r.Coach).ThenInclude(c => c.User)
+            .Include(r => r.Counselor).ThenInclude(c => c.User)
             .Where(r => !r.IsDeleted)
             .OrderByDescending(r => r.RankingScore)
             .ToListAsync();
@@ -32,7 +32,7 @@ public class SchoolRecommendationService : ISchoolRecommendationService
     {
         var recommendations = await _context.SchoolRecommendations
             .Include(r => r.Student).ThenInclude(s => s.User)
-            .Include(r => r.Coach).ThenInclude(c => c.User)
+            .Include(r => r.Counselor).ThenInclude(c => c.User)
             .Where(r => r.StudentId == studentId && !r.IsDeleted)
             .OrderByDescending(r => r.RankingScore)
             .ToListAsync();
@@ -40,12 +40,12 @@ public class SchoolRecommendationService : ISchoolRecommendationService
         return recommendations.Select(MapToDto);
     }
 
-    public async Task<IEnumerable<SchoolRecommendationDto>> GetRecommendationsByCoachAsync(int coachId)
+    public async Task<IEnumerable<SchoolRecommendationDto>> GetRecommendationsByCounselorAsync(int counselorId)
     {
         var recommendations = await _context.SchoolRecommendations
             .Include(r => r.Student).ThenInclude(s => s.User)
-            .Include(r => r.Coach).ThenInclude(c => c.User)
-            .Where(r => r.CoachId == coachId && !r.IsDeleted)
+            .Include(r => r.Counselor).ThenInclude(c => c.User)
+            .Where(r => r.CounselorId == counselorId && !r.IsDeleted)
             .OrderByDescending(r => r.CreatedAt)
             .ToListAsync();
 
@@ -75,7 +75,7 @@ public class SchoolRecommendationService : ISchoolRecommendationService
     {
         var recommendation = await _context.SchoolRecommendations
             .Include(r => r.Student).ThenInclude(s => s.User)
-            .Include(r => r.Coach).ThenInclude(c => c.User)
+            .Include(r => r.Counselor).ThenInclude(c => c.User)
             .FirstOrDefaultAsync(r => r.Id == id && !r.IsDeleted);
 
         return recommendation != null ? MapToDto(recommendation) : null;
@@ -86,7 +86,7 @@ public class SchoolRecommendationService : ISchoolRecommendationService
         var recommendation = new SchoolRecommendation
         {
             StudentId = dto.StudentId,
-            CoachId = dto.CoachId,
+            CounselorId = dto.CounselorId,
             SchoolName = dto.SchoolName,
             SchoolLevel = (SchoolLevel)dto.SchoolLevel,
             SchoolType = (SchoolType)dto.SchoolType,
@@ -185,8 +185,8 @@ public class SchoolRecommendationService : ISchoolRecommendationService
             StudentId = recommendation.StudentId,
             StudentName = $"{recommendation.Student.User.FirstName} {recommendation.Student.User.LastName}",
             StudentNo = recommendation.Student.StudentNo,
-            CoachId = recommendation.CoachId,
-            CoachName = $"{recommendation.Coach.User.FirstName} {recommendation.Coach.User.LastName}",
+            CounselorId = recommendation.CounselorId,
+            CounselorName = $"{recommendation.Counselor.User.FirstName} {recommendation.Counselor.User.LastName}",
             SchoolName = recommendation.SchoolName,
             SchoolLevel = recommendation.SchoolLevel.ToString(),
             SchoolType = recommendation.SchoolType.ToString(),

@@ -6,7 +6,7 @@ public interface ICareerAssessmentService
 {
     Task<IEnumerable<CareerAssessmentDto>> GetAllAssessmentsAsync();
     Task<IEnumerable<CareerAssessmentDto>> GetAssessmentsByStudentAsync(int studentId);
-    Task<IEnumerable<CareerAssessmentDto>> GetAssessmentsByCoachAsync(int coachId);
+    Task<IEnumerable<CareerAssessmentDto>> GetAssessmentsByCounselorAsync(int counselorId);
     Task<IEnumerable<CareerAssessmentSummaryDto>> GetAssessmentSummariesAsync();
     Task<CareerAssessmentDto?> GetAssessmentByIdAsync(int id);
     Task<CareerAssessmentDto> CreateAssessmentAsync(CreateCareerAssessmentDto dto);

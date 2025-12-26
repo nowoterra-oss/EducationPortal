@@ -118,9 +118,7 @@ public class Student : BaseAuditableEntity
     public virtual ICollection<StudentPaymentPlan> PaymentPlans { get; set; } = new List<StudentPaymentPlan>();
     public virtual ICollection<ExamResult> ExamResults { get; set; } = new List<ExamResult>();
 
-    // Coaching relationships
-    public virtual ICollection<StudentCoachAssignment> CoachAssignments { get; set; } = new List<StudentCoachAssignment>();
-    public virtual ICollection<CoachingSession> CoachingSessions { get; set; } = new List<CoachingSession>();
+    // Assessment relationships
     public virtual ICollection<CareerAssessment> CareerAssessments { get; set; } = new List<CareerAssessment>();
     public virtual ICollection<SchoolRecommendation> SchoolRecommendations { get; set; } = new List<SchoolRecommendation>();
     public virtual ICollection<SportsAssessment> SportsAssessments { get; set; } = new List<SportsAssessment>();
