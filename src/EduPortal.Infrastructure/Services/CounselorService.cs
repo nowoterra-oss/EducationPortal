@@ -125,7 +125,7 @@ public class CounselorService : ICounselorService
         var assignments = await _context.StudentCounselorAssignments
             .Include(a => a.Student)
                 .ThenInclude(s => s.User)
-            .Where(a => a.CounselorId == counselorId && !a.IsDeleted)
+            .Where(a => a.CounselorId == counselorId && a.IsActive && !a.IsDeleted)
             .ToListAsync();
 
         var result = new List<CounselorStudentDto>();
@@ -144,6 +144,7 @@ public class CounselorService : ICounselorService
             {
                 StudentId = assignment.StudentId,
                 StudentName = $"{assignment.Student.User.FirstName} {assignment.Student.User.LastName}",
+                StudentNo = assignment.Student.StudentNo,
                 Email = assignment.Student.User.Email,
                 AssignmentStartDate = assignment.StartDate,
                 AssignmentEndDate = assignment.EndDate,
@@ -162,23 +163,100 @@ public class CounselorService : ICounselorService
         if (counselor == null || counselor.IsDeleted)
             return false;
 
+        // TÜM kayıtları kontrol et (IsDeleted hariç)
         var existingAssignment = await _context.StudentCounselorAssignments
-            .FirstOrDefaultAsync(a => a.CounselorId == counselorId && a.StudentId == studentId && a.IsActive && !a.IsDeleted);
+            .FirstOrDefaultAsync(a => a.CounselorId == counselorId && a.StudentId == studentId && !a.IsDeleted);
 
         if (existingAssignment != null)
-            return false; // Already assigned
+        {
+            // Kayıt zaten var
+            if (existingAssignment.IsActive)
+            {
+                // Zaten aktif - başarılı sayılsın
+                return true;
+            }
+            else
+            {
+                // Pasif kayıt var - reaktive et
+                existingAssignment.IsActive = true;
+                existingAssignment.StartDate = DateTime.UtcNow;
+                existingAssignment.EndDate = null;
+                existingAssignment.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+        }
 
+        // Hiç kayıt yoksa yeni oluştur
         var assignment = new StudentCounselorAssignment
         {
             CounselorId = counselorId,
             StudentId = studentId,
             StartDate = DateTime.UtcNow,
-            IsActive = true
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
         };
 
         _context.StudentCounselorAssignments.Add(assignment);
         await _context.SaveChangesAsync();
 
+        return true;
+    }
+
+    public async Task<bool> UpdateCounselorStudentsAsync(int counselorId, List<int> newStudentIds)
+    {
+        var counselor = await _context.Counselors.FindAsync(counselorId);
+        if (counselor == null || counselor.IsDeleted)
+            return false;
+
+        // 1. Mevcut aktif atamaları al
+        var currentAssignments = await _context.StudentCounselorAssignments
+            .Where(a => a.CounselorId == counselorId && a.IsActive && !a.IsDeleted)
+            .ToListAsync();
+
+        var currentStudentIds = currentAssignments.Select(a => a.StudentId).ToList();
+
+        // 2. Kaldırılacak öğrenciler (mevcut olup yeni listede olmayanlar)
+        var toRemove = currentStudentIds.Except(newStudentIds).ToList();
+        foreach (var studentId in toRemove)
+        {
+            var assignment = currentAssignments.First(a => a.StudentId == studentId);
+            assignment.IsActive = false;
+            assignment.EndDate = DateTime.UtcNow;
+            assignment.UpdatedAt = DateTime.UtcNow;
+        }
+
+        // 3. Eklenecek öğrenciler (yeni listede olup mevcut olmayanlar)
+        var toAdd = newStudentIds.Except(currentStudentIds).ToList();
+        foreach (var studentId in toAdd)
+        {
+            // Önce pasif kayıt var mı kontrol et
+            var existingInactive = await _context.StudentCounselorAssignments
+                .FirstOrDefaultAsync(a => a.CounselorId == counselorId && a.StudentId == studentId && !a.IsActive && !a.IsDeleted);
+
+            if (existingInactive != null)
+            {
+                // Reaktive et
+                existingInactive.IsActive = true;
+                existingInactive.StartDate = DateTime.UtcNow;
+                existingInactive.EndDate = null;
+                existingInactive.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                // Yeni kayıt oluştur
+                _context.StudentCounselorAssignments.Add(new StudentCounselorAssignment
+                {
+                    CounselorId = counselorId,
+                    StudentId = studentId,
+                    StartDate = DateTime.UtcNow,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+        }
+
+        await _context.SaveChangesAsync();
         return true;
     }
 

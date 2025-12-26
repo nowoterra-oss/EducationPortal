@@ -28,8 +28,6 @@ public class TeacherCreateDto
 
     public int? BranchId { get; set; }
 
-    public bool IsAlsoCoach { get; set; } = false;
-
     // Identity fields
     public IdentityType? IdentityType { get; set; }
 

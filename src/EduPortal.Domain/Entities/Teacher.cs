@@ -19,7 +19,6 @@ public class Teacher : BaseEntity
 
     public int? BranchId { get; set; }
 
-    public bool IsAlsoCoach { get; set; } = false;
     public int? CoachId { get; set; }
 
     // Identity fields

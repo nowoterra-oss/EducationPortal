@@ -225,6 +225,32 @@ public class CounselorsController : ControllerBase
     }
 
     /// <summary>
+    /// Batch update counselor students - replaces all current assignments
+    /// </summary>
+    [HttpPut("{id}/students")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<bool>>> UpdateStudents(int id, [FromBody] List<int> studentIds)
+    {
+        try
+        {
+            var result = await _counselorService.UpdateCounselorStudentsAsync(id, studentIds);
+            if (!result)
+            {
+                return BadRequest(ApiResponse<bool>.ErrorResponse("Öğrenciler güncellenemedi"));
+            }
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Öğrenciler başarıyla güncellendi"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating students for counselor {CounselorId}", id);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Öğrenciler güncellenirken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
     /// Unassign student from counselor
     /// </summary>
     [HttpDelete("{id}/students/{studentId}")]

@@ -129,6 +129,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<UserPermission> UserPermissions => Set<UserPermission>();
     public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
+    // Counselor Dashboard Related
+    public DbSet<CounselorNote> CounselorNotes => Set<CounselorNote>();
+    public DbSet<UniversityRequirement> UniversityRequirements => Set<UniversityRequirement>();
+    public DbSet<StudentExamCalendar> StudentExamCalendars => Set<StudentExamCalendar>();
+    public DbSet<CharacterixResult> CharacterixResults => Set<CharacterixResult>();
+    public DbSet<StudentAward> StudentAwards => Set<StudentAward>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -1163,6 +1170,81 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(rp => new { rp.RoleId, rp.PermissionId }).IsUnique();
+        });
+
+        // ===============================================
+        // COUNSELOR DASHBOARD RELATIONSHIPS
+        // ===============================================
+
+        // CounselorNote relationships
+        builder.Entity<CounselorNote>(entity =>
+        {
+            entity.HasOne(cn => cn.Student)
+                .WithMany()
+                .HasForeignKey(cn => cn.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(cn => cn.Counselor)
+                .WithMany()
+                .HasForeignKey(cn => cn.CounselorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(cn => cn.CounselingMeeting)
+                .WithMany()
+                .HasForeignKey(cn => cn.CounselingMeetingId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(cn => cn.StudentId);
+            entity.HasIndex(cn => cn.CounselorId);
+            entity.HasIndex(cn => cn.NoteDate);
+        });
+
+        // UniversityRequirement relationships
+        builder.Entity<UniversityRequirement>(entity =>
+        {
+            entity.HasOne(ur => ur.UniversityApplication)
+                .WithMany()
+                .HasForeignKey(ur => ur.UniversityApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(ur => ur.UniversityApplicationId);
+        });
+
+        // StudentExamCalendar relationships
+        builder.Entity<StudentExamCalendar>(entity =>
+        {
+            entity.HasOne(sec => sec.Student)
+                .WithMany()
+                .HasForeignKey(sec => sec.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(sec => sec.StudentId);
+            entity.HasIndex(sec => sec.ExamDate);
+            entity.HasIndex(sec => sec.ExamType);
+        });
+
+        // CharacterixResult relationships
+        builder.Entity<CharacterixResult>(entity =>
+        {
+            entity.HasOne(cr => cr.Student)
+                .WithMany()
+                .HasForeignKey(cr => cr.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(cr => cr.StudentId);
+        });
+
+        // StudentAward relationships
+        builder.Entity<StudentAward>(entity =>
+        {
+            entity.HasOne(sa => sa.Student)
+                .WithMany()
+                .HasForeignKey(sa => sa.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(sa => sa.StudentId);
+            entity.HasIndex(sa => sa.Scope);
+            entity.HasIndex(sa => sa.Category);
         });
 
         // Global query filter for soft delete

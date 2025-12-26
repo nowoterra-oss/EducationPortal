@@ -15,7 +15,6 @@ public class TeacherDto
     public bool IsActive { get; set; }
     public int? BranchId { get; set; }
     public string? BranchName { get; set; }
-    public bool IsAlsoCoach { get; set; }
     public int? CoachId { get; set; }
 
     // Identity fields
@@ -41,10 +40,6 @@ public class TeacherDto
     public List<TeacherCertificateDto>? Certificates { get; set; }
     public List<TeacherReferenceDto>? References { get; set; }
     public List<int>? WorkTypes { get; set; }
-
-    // Student Assignments
-    public List<int> AdvisorStudentIds { get; set; } = new();
-    public List<int> CoachStudentIds { get; set; } = new();
 }
 
 public class TeacherAddressDto

@@ -68,22 +68,6 @@ public class TeacherService : ITeacherService
             }
 
             var dto = _mapper.Map<TeacherDto>(teacher);
-
-            // Load student assignments
-            var assignments = await _dbContext.Set<StudentTeacherAssignment>()
-                .Where(a => a.TeacherId == id && a.IsActive)
-                .ToListAsync();
-
-            dto.AdvisorStudentIds = assignments
-                .Where(a => a.AssignmentType == AssignmentType.Advisor)
-                .Select(a => a.StudentId)
-                .ToList();
-
-            dto.CoachStudentIds = assignments
-                .Where(a => a.AssignmentType == AssignmentType.Coach)
-                .Select(a => a.StudentId)
-                .ToList();
-
             return ApiResponse<TeacherDto>.SuccessResponse(dto);
         }
         catch (Exception ex)
@@ -167,9 +151,6 @@ public class TeacherService : ITeacherService
 
             if (dto.BranchId.HasValue)
                 teacher.BranchId = dto.BranchId.Value;
-
-            if (dto.IsAlsoCoach.HasValue)
-                teacher.IsAlsoCoach = dto.IsAlsoCoach.Value;
 
             // Update identity fields
             if (dto.IdentityType.HasValue)
@@ -304,50 +285,6 @@ public class TeacherService : ITeacherService
                         TeacherId = teacher.Id,
                         WorkType = (WorkType)workType
                     });
-                }
-            }
-
-            // Update Student Assignments (Advisor/Coach) - if any assignment list is provided, replace all
-            if (dto.AdvisorStudentIds != null || dto.CoachStudentIds != null)
-            {
-                // 1. Remove ALL existing assignments for this teacher first
-                var existingAssignments = await _dbContext.Set<StudentTeacherAssignment>()
-                    .Where(a => a.TeacherId == teacher.Id)
-                    .ToListAsync();
-                _dbContext.Set<StudentTeacherAssignment>().RemoveRange(existingAssignments);
-
-                // 2. Add new advisor assignments
-                if (dto.AdvisorStudentIds != null)
-                {
-                    foreach (var studentId in dto.AdvisorStudentIds)
-                    {
-                        _dbContext.Set<StudentTeacherAssignment>().Add(new StudentTeacherAssignment
-                        {
-                            TeacherId = teacher.Id,
-                            StudentId = studentId,
-                            CourseId = null,
-                            AssignmentType = AssignmentType.Advisor,
-                            StartDate = DateTime.UtcNow,
-                            IsActive = true
-                        });
-                    }
-                }
-
-                // 3. Add new coach assignments
-                if (dto.CoachStudentIds != null)
-                {
-                    foreach (var studentId in dto.CoachStudentIds)
-                    {
-                        _dbContext.Set<StudentTeacherAssignment>().Add(new StudentTeacherAssignment
-                        {
-                            TeacherId = teacher.Id,
-                            StudentId = studentId,
-                            CourseId = null,
-                            AssignmentType = AssignmentType.Coach,
-                            StartDate = DateTime.UtcNow,
-                            IsActive = true
-                        });
-                    }
                 }
             }
 

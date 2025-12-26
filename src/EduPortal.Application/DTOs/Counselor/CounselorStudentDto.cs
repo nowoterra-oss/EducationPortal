@@ -4,6 +4,7 @@ public class CounselorStudentDto
 {
     public int StudentId { get; set; }
     public string StudentName { get; set; } = string.Empty;
+    public string? StudentNo { get; set; }
     public string? Email { get; set; }
     public DateTime AssignmentStartDate { get; set; }
     public DateTime? AssignmentEndDate { get; set; }

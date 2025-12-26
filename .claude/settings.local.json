@@ -24,7 +24,9 @@
       "Bash(timeout /t 3 /nobreak)",
       "Bash(curl:*)",
       "Bash(git merge:*)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(dotnet ef database execute-sql:*)",
+      "Bash(sqlcmd -S \"45.143.4.64,1433\" -d \"EduPortalDb\" -U \"sa\" -P \"DevStrongPass123!\" -C -Q \"SELECT CounselorId, StudentId, COUNT(*) as RecordCount FROM StudentCounselorAssignments WHERE IsDeleted = 0 GROUP BY CounselorId, StudentId HAVING COUNT(*) > 1\")"
     ]
   }
 }

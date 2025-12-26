@@ -18,8 +18,6 @@ public class TeacherUpdateDto
 
     public int? BranchId { get; set; }
 
-    public bool? IsAlsoCoach { get; set; }
-
     [Phone]
     public string? PhoneNumber { get; set; }
 
@@ -68,14 +66,4 @@ public class TeacherUpdateDto
     public List<TeacherCertificateDto>? Certificates { get; set; }
     public List<TeacherReferenceDto>? References { get; set; }
     public List<int>? WorkTypes { get; set; }
-
-    /// <summary>
-    /// Danışman olarak atanacak öğrenci ID'leri
-    /// </summary>
-    public List<int>? AdvisorStudentIds { get; set; }
-
-    /// <summary>
-    /// Koç olarak atanacak öğrenci ID'leri
-    /// </summary>
-    public List<int>? CoachStudentIds { get; set; }
 }
