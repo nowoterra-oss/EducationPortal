@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddScoped<IHomeworkRepository, HomeworkRepository>();
         services.AddScoped<IInternalExamRepository, InternalExamRepository>();
         services.AddScoped<IAttendanceRepository, AttendanceRepository>();
+        services.AddScoped<IAgpPeriodRepository, AgpPeriodRepository>();
 
         // Register Infrastructure Services
         services.AddScoped<IBranchService, BranchService>();
@@ -100,6 +101,9 @@ public static class DependencyInjection
 
         // Counselor Dashboard Service
         services.AddScoped<ICounselorDashboardService, CounselorDashboardService>();
+
+        // AGP Period Service
+        services.AddScoped<IAgpPeriodService, Application.Services.Implementations.AgpPeriodService>();
 
         return services;
     }

@@ -12,6 +12,12 @@ public class AgpPeriod : BaseEntity
     [Required]
     public int AgpId { get; set; }
 
+    /// <summary>
+    /// Dönem adı (opsiyonel, boş bırakılırsa tarihlerden otomatik oluşturulur)
+    /// </summary>
+    [MaxLength(200)]
+    public string? PeriodName { get; set; }
+
     [Required]
     [MaxLength(200)]
     public string Title { get; set; } = string.Empty;

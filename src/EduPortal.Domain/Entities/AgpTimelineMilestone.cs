@@ -26,6 +26,11 @@ public class AgpTimelineMilestone : BaseEntity
     [MaxLength(50)]
     public string Type { get; set; } = "exam"; // "exam", "goal", "event"
 
+    /// <summary>
+    /// Milestone olarak işaretlensin mi? (Timeline'da elmas şeklinde gösterilir)
+    /// </summary>
+    public bool IsMilestone { get; set; } = false;
+
     // Navigation property
     [ForeignKey(nameof(AgpPeriodId))]
     public virtual AgpPeriod Period { get; set; } = null!;

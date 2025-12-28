@@ -3,6 +3,7 @@ using EduPortal.API.Attributes;
 using EduPortal.Application.Common;
 using EduPortal.Application.DTOs.AGP;
 using EduPortal.Application.Interfaces;
+using EduPortal.Application.Services.Interfaces;
 using EduPortal.Domain.Constants;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,15 +20,18 @@ namespace EduPortal.API.Controllers;
 public class AGPController : ControllerBase
 {
     private readonly IAGPService _agpService;
+    private readonly IAgpPeriodService _periodService;
     private readonly IAdvisorAccessService _advisorAccessService;
     private readonly ILogger<AGPController> _logger;
 
     public AGPController(
         IAGPService agpService,
+        IAgpPeriodService periodService,
         IAdvisorAccessService advisorAccessService,
         ILogger<AGPController> logger)
     {
         _agpService = agpService;
+        _periodService = periodService;
         _advisorAccessService = advisorAccessService;
         _logger = logger;
     }
@@ -346,4 +350,190 @@ public class AGPController : ControllerBase
             return StatusCode(500, ApiResponse<AGPProgressDto>.ErrorResponse("İlerleme durumu getirilirken bir hata oluştu"));
         }
     }
+
+    #region Period (Dönem) Endpoints
+
+    /// <summary>
+    /// Get all periods for an AGP
+    /// </summary>
+    [HttpGet("{agpId}/periods")]
+    [RequirePermission(Permissions.AgpView)]
+    [ProducesResponseType(typeof(ApiResponse<List<AgpPeriodResponseDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<AgpPeriodResponseDto>>>> GetPeriods(int agpId)
+    {
+        try
+        {
+            var result = await _periodService.GetByAgpIdAsync(agpId);
+            if (!result.Success)
+                return BadRequest(result);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP dönemleri getirilirken hata oluştu. AGPId: {AGPId}", agpId);
+            return StatusCode(500, ApiResponse<List<AgpPeriodResponseDto>>.ErrorResponse("Dönemler getirilirken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Get timeline view for an AGP (Gantt Chart)
+    /// </summary>
+    [HttpGet("{agpId}/timeline")]
+    [RequirePermission(Permissions.AgpView)]
+    [ProducesResponseType(typeof(ApiResponse<AgpTimelineViewDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<AgpTimelineViewDto>>> GetTimeline(
+        int agpId,
+        [FromQuery] int months = 6)
+    {
+        try
+        {
+            var result = await _periodService.GetTimelineViewAsync(agpId, months);
+            if (!result.Success)
+                return BadRequest(result);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP timeline getirilirken hata oluştu. AGPId: {AGPId}", agpId);
+            return StatusCode(500, ApiResponse<AgpTimelineViewDto>.ErrorResponse("Timeline getirilirken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Get a specific period by ID
+    /// </summary>
+    [HttpGet("periods/{periodId}")]
+    [RequirePermission(Permissions.AgpView)]
+    [ProducesResponseType(typeof(ApiResponse<AgpPeriodResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<AgpPeriodResponseDto>>> GetPeriod(int periodId)
+    {
+        try
+        {
+            var result = await _periodService.GetByIdAsync(periodId);
+            if (!result.Success)
+                return NotFound(result);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP dönemi getirilirken hata oluştu. PeriodId: {PeriodId}", periodId);
+            return StatusCode(500, ApiResponse<AgpPeriodResponseDto>.ErrorResponse("Dönem getirilirken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Create a new period for an AGP
+    /// </summary>
+    [HttpPost("periods")]
+    [RequirePermission(Permissions.AgpCreate)]
+    [ProducesResponseType(typeof(ApiResponse<AgpPeriodResponseDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<AgpPeriodResponseDto>>> CreatePeriod([FromBody] AgpPeriodCreateDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<AgpPeriodResponseDto>.ErrorResponse("Geçersiz veri"));
+
+            var result = await _periodService.CreateAsync(dto);
+            if (!result.Success)
+                return BadRequest(result);
+
+            return CreatedAtAction(nameof(GetPeriod), new { periodId = result.Data!.Id }, result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP dönemi oluşturulurken hata oluştu. AGPId: {AGPId}", dto.AgpId);
+            return StatusCode(500, ApiResponse<AgpPeriodResponseDto>.ErrorResponse("Dönem oluşturulurken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Update a period
+    /// </summary>
+    [HttpPut("periods/{periodId}")]
+    [RequirePermission(Permissions.AgpEdit)]
+    [ProducesResponseType(typeof(ApiResponse<AgpPeriodResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<AgpPeriodResponseDto>>> UpdatePeriod(int periodId, [FromBody] AgpPeriodUpdateDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ApiResponse<AgpPeriodResponseDto>.ErrorResponse("Geçersiz veri"));
+
+            var result = await _periodService.UpdateAsync(periodId, dto);
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP dönemi güncellenirken hata oluştu. PeriodId: {PeriodId}", periodId);
+            return StatusCode(500, ApiResponse<AgpPeriodResponseDto>.ErrorResponse("Dönem güncellenirken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Delete a period
+    /// </summary>
+    [HttpDelete("periods/{periodId}")]
+    [RequirePermission(Permissions.AgpEdit)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> DeletePeriod(int periodId)
+    {
+        try
+        {
+            var result = await _periodService.DeleteAsync(periodId);
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "AGP dönemi silinirken hata oluştu. PeriodId: {PeriodId}", periodId);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Dönem silinirken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Get all periods for a student (across all AGPs)
+    /// </summary>
+    [HttpGet("student/{studentId}/periods")]
+    [RequirePermission(Permissions.AgpView)]
+    [ProducesResponseType(typeof(ApiResponse<List<AgpPeriodResponseDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<AgpPeriodResponseDto>>>> GetStudentPeriods(int studentId)
+    {
+        try
+        {
+            // Danışman erişim kontrolü
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccess)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<List<AgpPeriodResponseDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
+            }
+
+            var result = await _periodService.GetByStudentIdAsync(studentId);
+            if (!result.Success)
+                return BadRequest(result);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Öğrenci AGP dönemleri getirilirken hata oluştu. StudentId: {StudentId}", studentId);
+            return StatusCode(500, ApiResponse<List<AgpPeriodResponseDto>>.ErrorResponse("Dönemler getirilirken bir hata oluştu"));
+        }
+    }
+
+    #endregion
 }
