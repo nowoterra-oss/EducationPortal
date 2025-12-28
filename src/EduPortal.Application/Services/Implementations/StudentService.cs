@@ -12,15 +12,18 @@ public class StudentService : IStudentService
 {
     private readonly IStudentRepository _studentRepository;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IPermissionService _permissionService;
     private readonly IMapper _mapper;
 
     public StudentService(
         IStudentRepository studentRepository,
         UserManager<ApplicationUser> userManager,
+        IPermissionService permissionService,
         IMapper mapper)
     {
         _studentRepository = studentRepository;
         _userManager = userManager;
+        _permissionService = permissionService;
         _mapper = mapper;
     }
 
@@ -163,8 +166,8 @@ public class StudentService : IStudentService
                 return ApiResponse<StudentDto>.ErrorResponse("Kullanıcı oluşturulamadı", errors);
             }
 
-            // Assign Student role
-            await _userManager.AddToRoleAsync(user, "Ogrenci");
+            // Varsayılan öğrenci yetkilerini ata (rol yerine permission bazlı)
+            await _permissionService.AssignDefaultPermissionsToUserAsync(user.Id, "Student");
 
             // Create Student entity
             var student = _mapper.Map<Student>(dto);

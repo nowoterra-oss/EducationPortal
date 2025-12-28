@@ -13,7 +13,14 @@ public class UserDto
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
 
-    // Rol bazlı ID'ler - Frontend için gerekli
+    // Kullanıcı tipi - Permission bazlı yetkilendirme için
+    // Değerler: Admin, Student, Teacher, Counselor, Parent
+    public string UserType { get; set; } = string.Empty;
+
+    // Kullanıcının sahip olduğu yetkiler
+    public List<string> Permissions { get; set; } = new();
+
+    // Entity ID'ler - Frontend için gerekli
     public int? StudentId { get; set; }
     public int? TeacherId { get; set; }
     public int? ParentId { get; set; }

@@ -14,17 +14,20 @@ public class TeacherService : ITeacherService
 {
     private readonly ITeacherRepository _teacherRepository;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IPermissionService _permissionService;
     private readonly IMapper _mapper;
     private readonly DbContext _dbContext;
 
     public TeacherService(
         ITeacherRepository teacherRepository,
         UserManager<ApplicationUser> userManager,
+        IPermissionService permissionService,
         IMapper mapper,
         DbContext dbContext)
     {
         _teacherRepository = teacherRepository;
         _userManager = userManager;
+        _permissionService = permissionService;
         _mapper = mapper;
         _dbContext = dbContext;
     }
@@ -109,8 +112,8 @@ public class TeacherService : ITeacherService
                 return ApiResponse<TeacherDto>.ErrorResponse("Kullanıcı oluşturulamadı", errors);
             }
 
-            // Assign Teacher role
-            await _userManager.AddToRoleAsync(user, "Ogretmen");
+            // Varsayılan öğretmen yetkilerini ata (rol yerine permission bazlı)
+            await _permissionService.AssignDefaultPermissionsToUserAsync(user.Id, "Teacher");
 
             // Create Teacher entity
             var teacher = _mapper.Map<Teacher>(dto);

@@ -28,11 +28,9 @@ public class AdvisorAccessService : IAdvisorAccessService
 
     public async Task<bool> IsAdvisorAsync(string userId)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return false;
-
-        var roles = await _userManager.GetRolesAsync(user);
-        return roles.Contains("Danisman");
+        // Danışman sistemi kaldırıldı - artık kimse danışman olarak değerlendirilmiyor
+        await Task.CompletedTask; // async imza için
+        return false;
     }
 
     public async Task<int?> GetAdvisorTeacherIdAsync(string userId)
@@ -52,43 +50,15 @@ public class AdvisorAccessService : IAdvisorAccessService
 
     public async Task<bool> CanAccessStudentAsync(string userId, int studentId)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return false;
-
-        var roles = await _userManager.GetRolesAsync(user);
-
-        // Admin her zaman erişebilir
-        if (roles.Contains("Admin")) return true;
-
-        // Danışman değilse (örn: normal Öğretmen veya diğer roller) erişebilir
-        if (!roles.Contains("Danisman")) return true;
-
-        // Danışman ise sadece atanmış öğrencilerine erişebilir
-        var teacherId = await GetAdvisorTeacherIdAsync(userId);
-        if (!teacherId.HasValue) return false;
-
-        var assignedStudentIds = await GetAssignedStudentIdsAsync(teacherId.Value);
-        return assignedStudentIds.Contains(studentId);
+        // Danışman sistemi kaldırıldı - tüm kullanıcılar tüm öğrencilere erişebilir
+        await Task.CompletedTask; // async imza için
+        return true;
     }
 
     public async Task<bool> CanAccessStudentsAsync(string userId, IEnumerable<int> studentIds)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null) return false;
-
-        var roles = await _userManager.GetRolesAsync(user);
-
-        // Admin her zaman erişebilir
-        if (roles.Contains("Admin")) return true;
-
-        // Danışman değilse erişebilir
-        if (!roles.Contains("Danisman")) return true;
-
-        // Danışman ise tüm öğrencilerin atanmış olması gerekir
-        var teacherId = await GetAdvisorTeacherIdAsync(userId);
-        if (!teacherId.HasValue) return false;
-
-        var assignedStudentIds = await GetAssignedStudentIdsAsync(teacherId.Value);
-        return studentIds.All(id => assignedStudentIds.Contains(id));
+        // Danışman sistemi kaldırıldı - tüm kullanıcılar tüm öğrencilere erişebilir
+        await Task.CompletedTask; // async imza için
+        return true;
     }
 }

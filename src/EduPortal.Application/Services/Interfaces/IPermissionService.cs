@@ -33,4 +33,15 @@ public interface IPermissionService
 
     // Sync permissions from constants to database
     Task SyncPermissionsAsync();
+
+    // Default Permissions
+    Task<ApiResponse<bool>> AssignDefaultPermissionsToUserAsync(string userId, string userType);
+
+    // User Management for Permissions
+    Task<UserSearchResultDto> GetAllUsersForPermissionAsync(string? searchTerm, string? userType, int pageNumber, int pageSize);
+    Task<IEnumerable<PermissionModuleDto>> GetPermissionsByUserTypeAsync(string userType);
+
+    // User Type Management
+    Task<ApiResponse<bool>> UpdateUserTypeAsync(string userId, string newUserType);
+    Task<string> GetUserTypeAsync(string userId);
 }

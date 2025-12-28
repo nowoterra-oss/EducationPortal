@@ -89,15 +89,37 @@ public static class Permissions
     public const string BranchesEdit = "branches.edit";
     public const string BranchesDelete = "branches.delete";
 
-    // Danışmanlık
+    // Danışmanlık (Admin Paneli)
     public const string CounselingView = "counseling.view";
     public const string CounselingCreate = "counseling.create";
     public const string CounselingEdit = "counseling.edit";
 
-    // Koçluk
-    public const string CoachingView = "coaching.view";
-    public const string CoachingCreate = "coaching.create";
-    public const string CoachingEdit = "coaching.edit";
+    // Öğrenci Paneli Yetkileri
+    public const string StudentDashboard = "student.dashboard";
+    public const string StudentCourses = "student.courses";
+    public const string StudentSchedule = "student.schedule";
+    public const string StudentAssignments = "student.assignments";
+    public const string StudentExams = "student.exams";
+    public const string StudentMessages = "student.messages";
+    public const string StudentAnnouncements = "student.announcements";
+    public const string StudentProfile = "student.profile";
+    public const string StudentPayments = "student.payments";
+
+    // Danışman Paneli Yetkileri
+    public const string CounselorDashboard = "counselor.dashboard";
+    public const string CounselorStudents = "counselor.students";
+    public const string CounselorSchedule = "counselor.schedule";
+    public const string CounselorReports = "counselor.reports";
+    public const string CounselorMessages = "counselor.messages";
+    public const string CounselorMeetings = "counselor.meetings";
+
+    // Veli Paneli Yetkileri
+    public const string ParentDashboard = "parent.dashboard";
+    public const string ParentChildren = "parent.children";
+    public const string ParentPayments = "parent.payments";
+    public const string ParentMessages = "parent.messages";
+    public const string ParentReports = "parent.reports";
+    public const string ParentMeetings = "parent.meetings";
 
     // Paket Yönetimi
     public const string PackagesView = "packages.view";
@@ -195,22 +217,89 @@ public static class Permissions
         { BranchesEdit, new PermissionInfo("Şube Düzenle", "Şube Yönetimi", "🏢", 54) },
         { BranchesDelete, new PermissionInfo("Şube Sil", "Şube Yönetimi", "🏢", 55) },
 
-        // Danışmanlık
+        // Danışmanlık (Admin Paneli)
         { CounselingView, new PermissionInfo("Danışmanlık Görüntüle", "Danışmanlık", "🧑‍💼", 56) },
         { CounselingCreate, new PermissionInfo("Danışmanlık Oluştur", "Danışmanlık", "🧑‍💼", 57) },
         { CounselingEdit, new PermissionInfo("Danışmanlık Düzenle", "Danışmanlık", "🧑‍💼", 58) },
 
-        // Koçluk
-        { CoachingView, new PermissionInfo("Koçluk Görüntüle", "Koçluk", "🏆", 59) },
-        { CoachingCreate, new PermissionInfo("Koçluk Oluştur", "Koçluk", "🏆", 60) },
-        { CoachingEdit, new PermissionInfo("Koçluk Düzenle", "Koçluk", "🏆", 61) },
-
         // Paket Yönetimi
-        { PackagesView, new PermissionInfo("Paket Görüntüle", "Paket Yönetimi", "📦", 62) },
-        { PackagesCreate, new PermissionInfo("Paket Oluştur", "Paket Yönetimi", "📦", 63) },
-        { PackagesEdit, new PermissionInfo("Paket Düzenle", "Paket Yönetimi", "📦", 64) },
-        { PackagesDelete, new PermissionInfo("Paket Sil", "Paket Yönetimi", "📦", 65) },
+        { PackagesView, new PermissionInfo("Paket Görüntüle", "Paket Yönetimi", "📦", 59) },
+        { PackagesCreate, new PermissionInfo("Paket Oluştur", "Paket Yönetimi", "📦", 60) },
+        { PackagesEdit, new PermissionInfo("Paket Düzenle", "Paket Yönetimi", "📦", 61) },
+        { PackagesDelete, new PermissionInfo("Paket Sil", "Paket Yönetimi", "📦", 62) },
+
+        // Öğrenci Paneli
+        { StudentDashboard, new PermissionInfo("Ana Sayfa", "Öğrenci Paneli", "🎓", 100) },
+        { StudentCourses, new PermissionInfo("Derslerim", "Öğrenci Paneli", "🎓", 101) },
+        { StudentSchedule, new PermissionInfo("Ders Programım", "Öğrenci Paneli", "🎓", 102) },
+        { StudentAssignments, new PermissionInfo("Ödevlerim", "Öğrenci Paneli", "🎓", 103) },
+        { StudentExams, new PermissionInfo("Sınavlarım", "Öğrenci Paneli", "🎓", 104) },
+        { StudentMessages, new PermissionInfo("Mesajlarım", "Öğrenci Paneli", "🎓", 105) },
+        { StudentAnnouncements, new PermissionInfo("Duyurular", "Öğrenci Paneli", "🎓", 106) },
+        { StudentProfile, new PermissionInfo("Profilim", "Öğrenci Paneli", "🎓", 107) },
+        { StudentPayments, new PermissionInfo("Ödemelerim", "Öğrenci Paneli", "🎓", 108) },
+
+        // Danışman Paneli
+        { CounselorDashboard, new PermissionInfo("Ana Sayfa", "Danışman Paneli", "👨‍💼", 200) },
+        { CounselorStudents, new PermissionInfo("Öğrencilerim", "Danışman Paneli", "👨‍💼", 201) },
+        { CounselorSchedule, new PermissionInfo("Görüşme Takvimi", "Danışman Paneli", "👨‍💼", 202) },
+        { CounselorReports, new PermissionInfo("Raporlar", "Danışman Paneli", "👨‍💼", 203) },
+        { CounselorMessages, new PermissionInfo("Mesajlar", "Danışman Paneli", "👨‍💼", 204) },
+        { CounselorMeetings, new PermissionInfo("Görüşmeler", "Danışman Paneli", "👨‍💼", 205) },
+
+        // Veli Paneli
+        { ParentDashboard, new PermissionInfo("Ana Sayfa", "Veli Paneli", "👪", 300) },
+        { ParentChildren, new PermissionInfo("Çocuklarım", "Veli Paneli", "👪", 301) },
+        { ParentPayments, new PermissionInfo("Ödemeler", "Veli Paneli", "👪", 302) },
+        { ParentMessages, new PermissionInfo("Mesajlar", "Veli Paneli", "👪", 303) },
+        { ParentReports, new PermissionInfo("Raporlar", "Veli Paneli", "👪", 304) },
+        { ParentMeetings, new PermissionInfo("Görüşmeler", "Veli Paneli", "👪", 305) },
     };
+
+    // Kullanıcı tipine göre varsayılan yetkiler
+    public static List<string> GetDefaultPermissionsForUserType(string userType)
+    {
+        return userType.ToLower() switch
+        {
+            "student" or "ogrenci" => new List<string>
+            {
+                StudentDashboard, StudentCourses, StudentSchedule, StudentAssignments,
+                StudentExams, StudentMessages, StudentAnnouncements, StudentProfile, StudentPayments
+            },
+            "teacher" or "ogretmen" => new List<string>
+            {
+                // Öğrenci işlemleri
+                StudentsView,
+                // Ders yönetimi
+                CoursesView,
+                // Ders programı
+                SchedulingView,
+                // Ödevler
+                AssignmentsView, AssignmentsCreate, AssignmentsGrade,
+                // Sınavlar
+                ExamsView, ExamsCreate, ExamsGrade,
+                // Yoklama
+                AttendanceView, AttendanceCreate, AttendanceEdit,
+                // Duyurular
+                AnnouncementsView,
+                // Mesajlar
+                MessagesView, MessagesSend,
+                // Grup dersleri
+                GroupLessonsView, GroupLessonsCreate, GroupLessonsEdit
+            },
+            "counselor" or "danışman" or "danisman" => new List<string>
+            {
+                CounselorDashboard, CounselorStudents, CounselorSchedule,
+                CounselorReports, CounselorMessages, CounselorMeetings
+            },
+            "parent" or "veli" => new List<string>
+            {
+                ParentDashboard, ParentChildren, ParentPayments,
+                ParentMessages, ParentReports, ParentMeetings
+            },
+            _ => new List<string>()
+        };
+    }
 }
 
 public record PermissionInfo(string Name, string Category, string Icon, int Order);

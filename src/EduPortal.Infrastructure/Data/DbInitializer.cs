@@ -126,7 +126,8 @@ public static class DbInitializer
             var result = await userManager.CreateAsync(studentUser, "Student@123");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(studentUser, "Ogrenci");
+                // Permission tabanlı yetki ataması (rol yerine)
+                await AssignDefaultPermissionsAsync(context, studentUser.Id, "Student");
 
                 if (branch != null)
                 {
@@ -321,7 +322,8 @@ public static class DbInitializer
             var result = await userManager.CreateAsync(teacherUser, "Teacher@123");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(teacherUser, "Ogretmen");
+                // Permission tabanlı yetki ataması (rol yerine)
+                await AssignDefaultPermissionsAsync(context, teacherUser.Id, "Teacher");
 
                 if (branch != null)
                 {
@@ -528,7 +530,8 @@ public static class DbInitializer
             var result = await userManager.CreateAsync(parentUser, "Parent@123");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(parentUser, "Veli");
+                // Permission tabanlı yetki ataması (rol yerine)
+                await AssignDefaultPermissionsAsync(context, parentUser.Id, "Parent");
 
                 var parent = new Parent
                 {
@@ -947,7 +950,8 @@ public static class DbInitializer
             var result = await userManager.CreateAsync(user, "Teacher@123");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(user, "Ogretmen");
+                // Permission tabanlı yetki ataması (rol yerine)
+                await AssignDefaultPermissionsAsync(context, user.Id, "Teacher");
                 teacherUsers.Add(user);
             }
         }
@@ -994,7 +998,8 @@ public static class DbInitializer
             var result = await userManager.CreateAsync(user, "Counselor@123");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(user, "Danışman");
+                // Permission tabanlı yetki ataması (rol yerine)
+                await AssignDefaultPermissionsAsync(context, user.Id, "Counselor");
                 counselorUsers.Add(user);
             }
         }
@@ -1042,7 +1047,8 @@ public static class DbInitializer
             var studentResult = await userManager.CreateAsync(studentUser, "Student@123");
             if (!studentResult.Succeeded) continue;
 
-            await userManager.AddToRoleAsync(studentUser, "Ogrenci");
+            // Permission tabanlı yetki ataması (rol yerine)
+            await AssignDefaultPermissionsAsync(context, studentUser.Id, "Student");
 
             // Student Entity
             var birthYear = DateTime.Now.Year - random.Next(14, 18);
@@ -1079,7 +1085,8 @@ public static class DbInitializer
             var motherResult = await userManager.CreateAsync(motherUser, "Parent@123");
             if (motherResult.Succeeded)
             {
-                await userManager.AddToRoleAsync(motherUser, "Veli");
+                // Permission tabanlı yetki ataması (rol yerine)
+                await AssignDefaultPermissionsAsync(context, motherUser.Id, "Parent");
                 parentUserIds.Add(motherUser.Id);
 
                 var mother = new Parent
@@ -1109,7 +1116,8 @@ public static class DbInitializer
             var fatherResult = await userManager.CreateAsync(fatherUser, "Parent@123");
             if (fatherResult.Succeeded)
             {
-                await userManager.AddToRoleAsync(fatherUser, "Veli");
+                // Permission tabanlı yetki ataması (rol yerine)
+                await AssignDefaultPermissionsAsync(context, fatherUser.Id, "Parent");
                 parentUserIds.Add(fatherUser.Id);
 
                 var father = new Parent
@@ -1680,5 +1688,41 @@ public static class DbInitializer
 
         // NOT: Diğer roller (Kayitci, Ogretmen, Danışman, Coach, Muhasebe) kaldırıldı.
         // Yetkiler artık permission tabanlı sistem ile kullanıcı bazında yönetilmektedir.
+    }
+
+    private static async Task AssignDefaultPermissionsAsync(ApplicationDbContext context, string userId, string userType)
+    {
+        // Kullanıcı tipine göre varsayılan yetki kodlarını al
+        var defaultPermissionCodes = Permissions.GetDefaultPermissionsForUserType(userType);
+        if (!defaultPermissionCodes.Any())
+        {
+            return;
+        }
+
+        // Kodlara göre permission ID'lerini bul
+        var permissions = await context.Permissions
+            .Where(p => defaultPermissionCodes.Contains(p.Code) && !p.IsDeleted && p.IsActive)
+            .ToListAsync();
+
+        if (!permissions.Any())
+        {
+            return;
+        }
+
+        // Yetkileri ata
+        foreach (var permission in permissions)
+        {
+            var userPermission = new UserPermission
+            {
+                UserId = userId,
+                PermissionId = permission.Id,
+                IsGranted = true,
+                GrantedAt = DateTime.UtcNow,
+                Notes = $"Varsayılan {userType} yetkileri - DbInitializer"
+            };
+            await context.UserPermissions.AddAsync(userPermission);
+        }
+
+        await context.SaveChangesAsync();
     }
 }

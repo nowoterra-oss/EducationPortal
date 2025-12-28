@@ -249,7 +249,7 @@ public class PermissionsController : ControllerBase
     }
 
     /// <summary>
-    /// Get current user's effective permissions
+    /// Get current user's direct permissions (rol bazlı yetkiler dahil değil)
     /// </summary>
     /// <returns>List of permission codes</returns>
     [HttpGet("my")]
@@ -264,8 +264,13 @@ public class PermissionsController : ControllerBase
                 return BadRequest(ApiResponse<List<string>>.ErrorResponse("Kullanıcı kimliği alınamadı"));
             }
 
-            var permissions = await _permissionService.GetEffectivePermissionsAsync(userId);
-            return Ok(ApiResponse<List<string>>.SuccessResponse(permissions));
+            // Sadece direkt atanan yetkileri döndür (rol bazlı yetkiler hariç)
+            var userPermissions = await _permissionService.GetUserPermissionsAsync(userId);
+            var directPermissionCodes = userPermissions.DirectPermissions
+                .Select(p => p.Code)
+                .ToList();
+
+            return Ok(ApiResponse<List<string>>.SuccessResponse(directPermissionCodes));
         }
         catch (Exception ex)
         {
@@ -423,6 +428,57 @@ public class PermissionsController : ControllerBase
         {
             _logger.LogError(ex, "Error syncing permissions");
             return StatusCode(500, ApiResponse<bool>.ErrorResponse("Yetki senkronizasyonu sırasında bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Get all users for permission management
+    /// </summary>
+    /// <param name="searchTerm">Search term for filtering users</param>
+    /// <param name="userType">User type filter (Admin, Student, Teacher, Counselor, Parent)</param>
+    /// <param name="pageNumber">Page number (default 1)</param>
+    /// <param name="pageSize">Page size (default 50)</param>
+    /// <returns>List of users with their current permissions</returns>
+    [HttpGet("users")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<UserSearchResultDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<UserSearchResultDto>>> GetAllUsers(
+        [FromQuery] string? searchTerm,
+        [FromQuery] string? userType,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        try
+        {
+            var result = await _permissionService.GetAllUsersForPermissionAsync(searchTerm, userType, pageNumber, pageSize);
+            return Ok(ApiResponse<UserSearchResultDto>.SuccessResponse(result));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting users for permission management");
+            return StatusCode(500, ApiResponse<UserSearchResultDto>.ErrorResponse("Kullanıcılar alınırken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Get permissions filtered by user type
+    /// </summary>
+    /// <param name="userType">User type (Admin, Student, Teacher, Counselor, Parent)</param>
+    /// <returns>Permissions grouped by module/category</returns>
+    [HttpGet("by-user-type/{userType}")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<PermissionModuleDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<PermissionModuleDto>>>> GetPermissionsByUserType(string userType)
+    {
+        try
+        {
+            var permissions = await _permissionService.GetPermissionsByUserTypeAsync(userType);
+            return Ok(ApiResponse<IEnumerable<PermissionModuleDto>>.SuccessResponse(permissions));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting permissions for user type {UserType}", userType);
+            return StatusCode(500, ApiResponse<IEnumerable<PermissionModuleDto>>.ErrorResponse("Yetkiler alınırken bir hata oluştu"));
         }
     }
 }

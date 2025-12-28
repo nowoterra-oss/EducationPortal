@@ -5,6 +5,7 @@ using EduPortal.Application.Interfaces;
 using EduPortal.Application.Services.Interfaces;
 using EduPortal.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -21,6 +22,8 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IStudentRepository _studentRepository;
     private readonly ITeacherRepository _teacherRepository;
+    private readonly IPermissionService _permissionService;
+    private readonly DbContext _dbContext;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
@@ -28,7 +31,9 @@ public class AuthService : IAuthService
         IMapper mapper,
         IConfiguration configuration,
         IStudentRepository studentRepository,
-        ITeacherRepository teacherRepository)
+        ITeacherRepository teacherRepository,
+        IPermissionService permissionService,
+        DbContext dbContext)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -36,6 +41,8 @@ public class AuthService : IAuthService
         _configuration = configuration;
         _studentRepository = studentRepository;
         _teacherRepository = teacherRepository;
+        _permissionService = permissionService;
+        _dbContext = dbContext;
     }
 
     public async Task<ApiResponse<LoginResponseDto>> LoginAsync(LoginDto loginDto)
@@ -67,8 +74,11 @@ public class AuthService : IAuthService
             var roles = await _userManager.GetRolesAsync(user);
             userDto.Roles = roles.ToList();
 
-            // Rol bazlı ID'leri doldur
-            await PopulateRoleBasedIdsAsync(userDto, user.Id, roles);
+            // Kullanıcı tipini ve entity ID'lerini belirle (entity tablolarından)
+            await PopulateUserTypeAndIdsAsync(userDto, user.Id, roles);
+
+            // Kullanıcının permission'larını al
+            userDto.Permissions = await _permissionService.GetEffectivePermissionsAsync(user.Id);
 
             var token = GenerateJwtToken(userDto);
             var expiresAt = DateTime.UtcNow.AddHours(
@@ -185,8 +195,11 @@ public class AuthService : IAuthService
             var roles = await _userManager.GetRolesAsync(user);
             userDto.Roles = roles.ToList();
 
-            // Rol bazlı ID'leri doldur
-            await PopulateRoleBasedIdsAsync(userDto, userId, roles);
+            // Kullanıcı tipini ve entity ID'lerini belirle (entity tablolarından)
+            await PopulateUserTypeAndIdsAsync(userDto, userId, roles);
+
+            // Kullanıcının permission'larını al
+            userDto.Permissions = await _permissionService.GetEffectivePermissionsAsync(userId);
 
             return ApiResponse<UserDto>.SuccessResponse(userDto);
         }
@@ -196,29 +209,55 @@ public class AuthService : IAuthService
         }
     }
 
-    private async Task PopulateRoleBasedIdsAsync(UserDto userDto, string userId, IList<string> roles)
+    private async Task PopulateUserTypeAndIdsAsync(UserDto userDto, string userId, IList<string> roles)
     {
-        // Öğrenci kontrolü
-        if (roles.Contains("Ogrenci") || roles.Contains("Student"))
+        // Admin kontrolü (role bazlı - sadece Admin rolü kaldı)
+        if (roles.Contains("Admin"))
         {
-            var student = await _studentRepository.GetByUserIdAsync(userId);
-            if (student != null)
-            {
-                userDto.StudentId = student.Id;
-            }
+            userDto.UserType = "Admin";
+            return;
         }
 
-        // Öğretmen kontrolü
-        if (roles.Contains("Ogretmen") || roles.Contains("Teacher"))
+        // Öğrenci kontrolü (entity tablosundan)
+        var student = await _studentRepository.GetByUserIdAsync(userId);
+        if (student != null)
         {
-            var teacher = await _teacherRepository.GetByUserIdAsync(userId);
-            if (teacher != null)
-            {
-                userDto.TeacherId = teacher.Id;
-            }
+            userDto.StudentId = student.Id;
+            userDto.UserType = "Student";
+            return;
         }
 
-        // Admin için tüm ID'ler null kalabilir - Admin her şeye erişebilir
+        // Öğretmen kontrolü (entity tablosundan)
+        var teacher = await _teacherRepository.GetByUserIdAsync(userId);
+        if (teacher != null)
+        {
+            userDto.TeacherId = teacher.Id;
+            userDto.UserType = "Teacher";
+            return;
+        }
+
+        // Danışman kontrolü (entity tablosundan)
+        var counselor = await _dbContext.Set<Counselor>()
+            .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsDeleted);
+        if (counselor != null)
+        {
+            userDto.CounselorId = counselor.Id;
+            userDto.UserType = "Counselor";
+            return;
+        }
+
+        // Veli kontrolü (entity tablosundan)
+        var parent = await _dbContext.Set<Parent>()
+            .FirstOrDefaultAsync(p => p.UserId == userId && !p.IsDeleted);
+        if (parent != null)
+        {
+            userDto.ParentId = parent.Id;
+            userDto.UserType = "Parent";
+            return;
+        }
+
+        // Hiçbir entity'ye ait değilse UserType boş kalır
+        userDto.UserType = "Unknown";
     }
 
     public string GenerateJwtToken(UserDto user)
@@ -242,7 +281,13 @@ public class AuthService : IAuthService
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
-        // Add role-based IDs to claims
+        // Add UserType to claims
+        if (!string.IsNullOrEmpty(user.UserType))
+        {
+            claims.Add(new Claim("UserType", user.UserType));
+        }
+
+        // Add entity IDs to claims
         if (user.StudentId.HasValue)
         {
             claims.Add(new Claim("StudentId", user.StudentId.Value.ToString()));
