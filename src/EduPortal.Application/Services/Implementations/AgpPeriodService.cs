@@ -35,15 +35,19 @@ public class AgpPeriodService : IAgpPeriodService
                 return ApiResponse<AgpPeriodResponseDto>.ErrorResponse("AGP bulunamadı");
             }
 
+            // Period tarihleri boş ise AGP tarihlerini kullan
+            var periodStartDate = dto.StartDate ?? agp.StartDate;
+            var periodEndDate = dto.EndDate ?? agp.EndDate;
+
             // Tarih validasyonu
-            if (dto.EndDate < dto.StartDate)
+            if (periodEndDate < periodStartDate)
             {
                 return ApiResponse<AgpPeriodResponseDto>.ErrorResponse("Bitiş tarihi başlangıç tarihinden önce olamaz");
             }
 
             // Çakışma kontrolü
             var overlapping = await _periodRepository.FindOverlappingPeriodsAsync(
-                dto.AgpId, dto.StartDate, dto.EndDate);
+                dto.AgpId, periodStartDate, periodEndDate);
             if (overlapping.Any())
             {
                 return ApiResponse<AgpPeriodResponseDto>.ErrorResponse("Bu tarih aralığında başka bir dönem mevcut");
@@ -53,7 +57,7 @@ public class AgpPeriodService : IAgpPeriodService
             var periodName = dto.PeriodName;
             if (string.IsNullOrWhiteSpace(periodName))
             {
-                periodName = $"{dto.StartDate:dd.MM.yyyy} - {dto.EndDate:dd.MM.yyyy}";
+                periodName = $"{periodStartDate:dd.MM.yyyy} - {periodEndDate:dd.MM.yyyy}";
             }
 
             // Entity oluştur
@@ -62,9 +66,9 @@ public class AgpPeriodService : IAgpPeriodService
                 AgpId = dto.AgpId,
                 PeriodName = periodName,
                 Title = string.IsNullOrWhiteSpace(dto.Title) ? periodName : dto.Title,
-                StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
-                Color = dto.Color,
+                StartDate = periodStartDate,
+                EndDate = periodEndDate,
+                Color = dto.Color ?? "#3B82F6",
                 Order = dto.Order
             };
 

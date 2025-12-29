@@ -109,6 +109,49 @@ public class StudentsController : ControllerBase
     }
 
     /// <summary>
+    /// Get current student's own profile (no permission required)
+    /// </summary>
+    /// <returns>Current student details</returns>
+    /// <remarks>
+    /// Öğrenciler bu endpoint ile kendi profillerini yetki kontrolü olmadan görüntüleyebilir.
+    /// </remarks>
+    /// <response code="200">Student profile retrieved successfully</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="404">Student not found</response>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<StudentDto>>> GetMyProfile()
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(ApiResponse<StudentDto>.ErrorResponse("Kullanıcı kimliği bulunamadı"));
+            }
+
+            // Kullanıcının öğrenci kaydını bul
+            var student = await _studentRepository.GetByUserIdAsync(userId);
+            if (student == null)
+            {
+                return NotFound(ApiResponse<StudentDto>.ErrorResponse("Öğrenci kaydı bulunamadı"));
+            }
+
+            // Öğrenci bilgilerini getir
+            var result = await _studentService.GetByIdAsync(student.Id);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while getting current student profile");
+            return StatusCode(500, ApiResponse<StudentDto>.ErrorResponse("Profil bilgisi getirilirken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
     /// Get student by ID
     /// </summary>
     /// <param name="id">Student ID</param>

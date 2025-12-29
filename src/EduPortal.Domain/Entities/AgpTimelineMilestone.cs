@@ -31,6 +31,39 @@ public class AgpTimelineMilestone : BaseEntity
     /// </summary>
     public bool IsMilestone { get; set; } = false;
 
+    /// <summary>
+    /// Başvuru başlangıç tarihi (opsiyonel)
+    /// </summary>
+    public DateTime? ApplicationStartDate { get; set; }
+
+    /// <summary>
+    /// Başvuru bitiş tarihi (opsiyonel)
+    /// </summary>
+    public DateTime? ApplicationEndDate { get; set; }
+
+    /// <summary>
+    /// Sınav/hedef puanı (opsiyonel)
+    /// </summary>
+    [Column(TypeName = "decimal(10,2)")]
+    public decimal? Score { get; set; }
+
+    /// <summary>
+    /// Maksimum puan (opsiyonel)
+    /// </summary>
+    [Column(TypeName = "decimal(10,2)")]
+    public decimal? MaxScore { get; set; }
+
+    /// <summary>
+    /// Sonuç notları (opsiyonel)
+    /// </summary>
+    [MaxLength(1000)]
+    public string? ResultNotes { get; set; }
+
+    /// <summary>
+    /// Tamamlandı mı? (opsiyonel)
+    /// </summary>
+    public bool? IsCompleted { get; set; }
+
     // Navigation property
     [ForeignKey(nameof(AgpPeriodId))]
     public virtual AgpPeriod Period { get; set; } = null!;

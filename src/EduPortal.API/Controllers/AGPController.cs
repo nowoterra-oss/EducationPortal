@@ -22,18 +22,63 @@ public class AGPController : ControllerBase
     private readonly IAGPService _agpService;
     private readonly IAgpPeriodService _periodService;
     private readonly IAdvisorAccessService _advisorAccessService;
+    private readonly IStudentRepository _studentRepository;
     private readonly ILogger<AGPController> _logger;
 
     public AGPController(
         IAGPService agpService,
         IAgpPeriodService periodService,
         IAdvisorAccessService advisorAccessService,
+        IStudentRepository studentRepository,
         ILogger<AGPController> logger)
     {
         _agpService = agpService;
         _periodService = periodService;
         _advisorAccessService = advisorAccessService;
+        _studentRepository = studentRepository;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Get current student's own AGP (no permission required)
+    /// </summary>
+    /// <remarks>
+    /// Öğrenciler bu endpoint ile kendi AGP kayıtlarını yetki kontrolü olmadan görüntüleyebilir.
+    /// </remarks>
+    /// <response code="200">AGP records retrieved successfully</response>
+    /// <response code="401">Unauthorized</response>
+    /// <response code="404">Student not found</response>
+    [HttpGet("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<AGPDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(ApiResponse<IEnumerable<AGPDto>>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<IEnumerable<AGPDto>>>> GetMyAgp()
+    {
+        try
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(ApiResponse<IEnumerable<AGPDto>>.ErrorResponse("Kullanıcı kimliği bulunamadı"));
+            }
+
+            // Kullanıcının öğrenci kaydını bul
+            var student = await _studentRepository.GetByUserIdAsync(userId);
+            if (student == null)
+            {
+                return NotFound(ApiResponse<IEnumerable<AGPDto>>.ErrorResponse("Öğrenci kaydı bulunamadı"));
+            }
+
+            // Öğrencinin AGP kayıtlarını getir
+            var agps = await _agpService.GetByStudentAsync(student.Id);
+            return Ok(ApiResponse<IEnumerable<AGPDto>>.SuccessResponse(agps));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while getting current student's AGP");
+            return StatusCode(500, ApiResponse<IEnumerable<AGPDto>>.ErrorResponse("AGP kayıtları getirilirken bir hata oluştu"));
+        }
     }
 
     /// <summary>
@@ -127,8 +172,9 @@ public class AGPController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "AGP oluşturulurken hata oluştu");
-            return StatusCode(500, ApiResponse<AGPDto>.ErrorResponse("AGP oluşturulurken bir hata oluştu"));
+            _logger.LogError(ex, "AGP oluşturulurken hata oluştu. Detay: {Message}, InnerException: {InnerMessage}",
+                ex.Message, ex.InnerException?.Message);
+            return StatusCode(500, ApiResponse<AGPDto>.ErrorResponse($"AGP oluşturulurken bir hata oluştu: {ex.Message}"));
         }
     }
 

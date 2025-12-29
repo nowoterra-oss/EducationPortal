@@ -19,13 +19,14 @@ public class AGPService : IAGPService
     public async Task<(IEnumerable<AGPDto> Items, int TotalCount)> GetAllPagedAsync(int pageNumber, int pageSize)
     {
         var query = _context.AcademicDevelopmentPlans
+            .Where(a => !a.IsDeleted)
             .Include(a => a.Student)
                 .ThenInclude(s => s.User)
-            .Include(a => a.Milestones)
-            .Include(a => a.Periods)
-                .ThenInclude(p => p.Milestones)
-            .Include(a => a.Periods)
-                .ThenInclude(p => p.Activities)
+            .Include(a => a.Milestones.Where(m => !m.IsDeleted))
+            .Include(a => a.Periods.Where(p => !p.IsDeleted))
+                .ThenInclude(p => p.Milestones.Where(m => !m.IsDeleted))
+            .Include(a => a.Periods.Where(p => !p.IsDeleted))
+                .ThenInclude(p => p.Activities.Where(act => !act.IsDeleted))
             .AsNoTracking();
 
         var totalCount = await query.CountAsync();
@@ -44,13 +45,14 @@ public class AGPService : IAGPService
     public async Task<AGPDto?> GetByIdAsync(int id)
     {
         var agp = await _context.AcademicDevelopmentPlans
+            .Where(a => !a.IsDeleted)
             .Include(a => a.Student)
                 .ThenInclude(s => s.User)
-            .Include(a => a.Milestones)
-            .Include(a => a.Periods.OrderBy(p => p.Order))
-                .ThenInclude(p => p.Milestones)
-            .Include(a => a.Periods)
-                .ThenInclude(p => p.Activities)
+            .Include(a => a.Milestones.Where(m => !m.IsDeleted))
+            .Include(a => a.Periods.Where(p => !p.IsDeleted))
+                .ThenInclude(p => p.Milestones.Where(m => !m.IsDeleted))
+            .Include(a => a.Periods.Where(p => !p.IsDeleted))
+                .ThenInclude(p => p.Activities.Where(act => !act.IsDeleted))
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id);
 
@@ -59,46 +61,86 @@ public class AGPService : IAGPService
 
     public async Task<AGPDto> CreateAsync(CreateAGPDto dto)
     {
-        var agp = new AcademicDevelopmentPlan
+        try
         {
-            StudentId = dto.StudentId,
-            AcademicYear = dto.AcademicYear,
-            StartDate = dto.StartDate,
-            EndDate = dto.EndDate,
-            PlanDocumentUrl = dto.PlanDocumentUrl,
-            Status = dto.Status
-        };
-
-        // Timeline periods ekleme
-        if (dto.Periods != null && dto.Periods.Any())
-        {
-            agp.Periods = dto.Periods.Select(p => new AgpPeriod
+            var agp = new AcademicDevelopmentPlan
             {
-                Title = p.Title ?? string.Empty,
-                StartDate = DateTime.TryParse(p.StartDate, out var startDate) ? startDate : DateTime.UtcNow,
-                EndDate = DateTime.TryParse(p.EndDate, out var endDate) ? endDate : DateTime.UtcNow,
-                Color = p.Color,
-                Order = p.Order,
-                Milestones = p.Milestones?.Select(m => new AgpTimelineMilestone
+                StudentId = dto.StudentId,
+                AcademicYear = dto.AcademicYear,
+                StartDate = dto.StartDate,
+                EndDate = dto.EndDate,
+                PlanDocumentUrl = dto.PlanDocumentUrl,
+                Status = dto.Status
+            };
+
+            // Timeline periods ekleme
+            if (dto.Periods != null && dto.Periods.Any())
+            {
+                var orderIndex = 0;
+                agp.Periods = dto.Periods.Select((p, index) =>
                 {
-                    Title = m.Title ?? string.Empty,
-                    Date = DateTime.TryParse(m.Date, out var milestoneDate) ? milestoneDate : DateTime.UtcNow,
-                    Color = m.Color,
-                    Type = string.IsNullOrWhiteSpace(m.Type) ? "exam" : m.Type
-                }).ToList() ?? new List<AgpTimelineMilestone>(),
-                Activities = p.Activities?.Select(a => new AgpActivity
-                {
-                    Title = a.Title ?? string.Empty,
-                    HoursPerWeek = a.HoursPerWeek,
-                    Notes = a.Notes
-                }).ToList() ?? new List<AgpActivity>()
-            }).ToList();
+                    // Period tarihleri boş ise AGP tarihlerini kullan
+                    var periodStartDate = !string.IsNullOrEmpty(p.StartDate) && DateTime.TryParse(p.StartDate, out var pStart)
+                        ? pStart : dto.StartDate;
+                    var periodEndDate = !string.IsNullOrEmpty(p.EndDate) && DateTime.TryParse(p.EndDate, out var pEnd)
+                        ? pEnd : dto.EndDate;
+
+                    // Title boş ise otomatik oluştur
+                    var periodTitle = !string.IsNullOrWhiteSpace(p.Title)
+                        ? p.Title
+                        : $"Dönem {index + 1}";
+
+                    return new AgpPeriod
+                    {
+                        Title = periodTitle,
+                        PeriodName = p.PeriodName,
+                        StartDate = periodStartDate,
+                        EndDate = periodEndDate,
+                        Color = p.Color ?? "#3B82F6",
+                        Order = p.Order > 0 ? p.Order : orderIndex++,
+                        Milestones = p.Milestones?.Select(m => new AgpTimelineMilestone
+                        {
+                            Title = m.Title ?? string.Empty,
+                            Date = DateTime.TryParse(m.Date, out var milestoneDate) ? milestoneDate : DateTime.UtcNow,
+                            Color = m.Color,
+                            Type = string.IsNullOrWhiteSpace(m.Type) ? "exam" : m.Type,
+                            IsMilestone = m.IsMilestone,
+                            ApplicationStartDate = !string.IsNullOrEmpty(m.ApplicationStartDate) && DateTime.TryParse(m.ApplicationStartDate, out var appStart)
+                                ? appStart : null,
+                            ApplicationEndDate = !string.IsNullOrEmpty(m.ApplicationEndDate) && DateTime.TryParse(m.ApplicationEndDate, out var appEnd)
+                                ? appEnd : null,
+                            Score = m.Score,
+                            MaxScore = m.MaxScore,
+                            ResultNotes = m.ResultNotes,
+                            IsCompleted = m.IsCompleted
+                        }).ToList() ?? new List<AgpTimelineMilestone>(),
+                        Activities = p.Activities?.Select(a => new AgpActivity
+                        {
+                            Title = a.Title ?? string.Empty,
+                            StartDate = !string.IsNullOrEmpty(a.StartDate) && DateTime.TryParse(a.StartDate, out var aStart)
+                                ? aStart : periodStartDate,
+                            EndDate = !string.IsNullOrEmpty(a.EndDate) && DateTime.TryParse(a.EndDate, out var aEnd)
+                                ? aEnd : periodEndDate,
+                            HoursPerWeek = a.HoursPerWeek,
+                            OwnerType = a.OwnerType,
+                            Status = !string.IsNullOrEmpty(a.Status) && Enum.TryParse<ActivityStatus>(a.Status, true, out var status)
+                                ? status : ActivityStatus.Planned,
+                            NeedsReview = a.NeedsReview,
+                            Notes = a.Notes
+                        }).ToList() ?? new List<AgpActivity>()
+                    };
+                }).ToList();
+            }
+
+            _context.AcademicDevelopmentPlans.Add(agp);
+            await _context.SaveChangesAsync();
+
+            return await GetByIdAsync(agp.Id) ?? throw new InvalidOperationException("AGP oluşturulamadı");
         }
-
-        _context.AcademicDevelopmentPlans.Add(agp);
-        await _context.SaveChangesAsync();
-
-        return await GetByIdAsync(agp.Id) ?? throw new InvalidOperationException("AGP oluşturulamadı");
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"AGP oluşturulurken hata: {ex.Message}. InnerException: {ex.InnerException?.Message}", ex);
+        }
     }
 
     public async Task<AGPDto> UpdateAsync(int id, UpdateAGPDto dto)
@@ -144,31 +186,61 @@ public class AGPService : IAGPService
             }
 
             // 3. Yeni periods'ları ekle
+            var periodIndex = 0;
             foreach (var periodDto in dto.Periods)
             {
+                // Period tarihleri boş ise AGP tarihlerini kullan
+                var periodStartDate = !string.IsNullOrEmpty(periodDto.StartDate) && DateTime.TryParse(periodDto.StartDate, out var pStart)
+                    ? pStart : dto.StartDate;
+                var periodEndDate = !string.IsNullOrEmpty(periodDto.EndDate) && DateTime.TryParse(periodDto.EndDate, out var pEnd)
+                    ? pEnd : dto.EndDate;
+
+                // Title boş ise otomatik oluştur
+                var periodTitle = !string.IsNullOrWhiteSpace(periodDto.Title)
+                    ? periodDto.Title
+                    : $"Dönem {periodIndex + 1}";
+
                 var period = new AgpPeriod
                 {
                     AgpId = id,
-                    Title = periodDto.Title ?? string.Empty,
-                    StartDate = DateTime.TryParse(periodDto.StartDate, out var startDate) ? startDate : DateTime.UtcNow,
-                    EndDate = DateTime.TryParse(periodDto.EndDate, out var endDate) ? endDate : DateTime.UtcNow,
-                    Color = periodDto.Color,
+                    Title = periodTitle,
+                    StartDate = periodStartDate,
+                    EndDate = periodEndDate,
+                    Color = periodDto.Color ?? "#3B82F6",
                     Order = periodDto.Order,
                     Milestones = periodDto.Milestones?.Select(m => new AgpTimelineMilestone
                     {
                         Title = m.Title ?? string.Empty,
                         Date = DateTime.TryParse(m.Date, out var milestoneDate) ? milestoneDate : DateTime.UtcNow,
                         Color = m.Color,
-                        Type = string.IsNullOrWhiteSpace(m.Type) ? "exam" : m.Type
+                        Type = string.IsNullOrWhiteSpace(m.Type) ? "exam" : m.Type,
+                        IsMilestone = m.IsMilestone,
+                        ApplicationStartDate = !string.IsNullOrEmpty(m.ApplicationStartDate) && DateTime.TryParse(m.ApplicationStartDate, out var appStart)
+                            ? appStart : null,
+                        ApplicationEndDate = !string.IsNullOrEmpty(m.ApplicationEndDate) && DateTime.TryParse(m.ApplicationEndDate, out var appEnd)
+                            ? appEnd : null,
+                        Score = m.Score,
+                        MaxScore = m.MaxScore,
+                        ResultNotes = m.ResultNotes,
+                        IsCompleted = m.IsCompleted
                     }).ToList() ?? new List<AgpTimelineMilestone>(),
                     Activities = periodDto.Activities?.Select(a => new AgpActivity
                     {
                         Title = a.Title ?? string.Empty,
+                        StartDate = !string.IsNullOrEmpty(a.StartDate) && DateTime.TryParse(a.StartDate, out var aStart)
+                            ? aStart : periodStartDate,
+                        EndDate = !string.IsNullOrEmpty(a.EndDate) && DateTime.TryParse(a.EndDate, out var aEnd)
+                            ? aEnd : periodEndDate,
                         HoursPerWeek = a.HoursPerWeek,
+                        OwnerType = a.OwnerType,
+                        Status = !string.IsNullOrEmpty(a.Status) && Enum.TryParse<ActivityStatus>(a.Status, true, out var status)
+                            ? status : ActivityStatus.Planned,
+                        NeedsReview = a.NeedsReview,
                         Notes = a.Notes
                     }).ToList() ?? new List<AgpActivity>()
                 };
                 _context.AgpPeriods.Add(period);
+                periodIndex++;
             }
         }
 
@@ -182,15 +254,42 @@ public class AGPService : IAGPService
         var agp = await _context.AcademicDevelopmentPlans
             .Include(a => a.Milestones)
             .Include(a => a.Periods)
-            .FirstOrDefaultAsync(a => a.Id == id);
+                .ThenInclude(p => p.Milestones)
+            .Include(a => a.Periods)
+                .ThenInclude(p => p.Activities)
+            .FirstOrDefaultAsync(a => a.Id == id && !a.IsDeleted);
 
         if (agp == null)
             return false;
 
-        // Remove milestones and periods first (cascade will handle nested entities)
-        _context.AGPMilestones.RemoveRange(agp.Milestones);
-        _context.AgpPeriods.RemoveRange(agp.Periods);
-        _context.AcademicDevelopmentPlans.Remove(agp);
+        // Soft delete - tüm ilişkili kayıtları da soft delete yap
+        agp.IsDeleted = true;
+        agp.UpdatedAt = DateTime.UtcNow;
+
+        foreach (var milestone in agp.Milestones)
+        {
+            milestone.IsDeleted = true;
+            milestone.UpdatedAt = DateTime.UtcNow;
+        }
+
+        foreach (var period in agp.Periods)
+        {
+            period.IsDeleted = true;
+            period.UpdatedAt = DateTime.UtcNow;
+
+            foreach (var periodMilestone in period.Milestones)
+            {
+                periodMilestone.IsDeleted = true;
+                periodMilestone.UpdatedAt = DateTime.UtcNow;
+            }
+
+            foreach (var activity in period.Activities)
+            {
+                activity.IsDeleted = true;
+                activity.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         return true;
@@ -199,14 +298,14 @@ public class AGPService : IAGPService
     public async Task<IEnumerable<AGPDto>> GetByStudentAsync(int studentId)
     {
         var agps = await _context.AcademicDevelopmentPlans
+            .Where(a => a.StudentId == studentId && !a.IsDeleted)
             .Include(a => a.Student)
                 .ThenInclude(s => s.User)
-            .Include(a => a.Milestones)
-            .Include(a => a.Periods.OrderBy(p => p.Order))
-                .ThenInclude(p => p.Milestones)
-            .Include(a => a.Periods)
-                .ThenInclude(p => p.Activities)
-            .Where(a => a.StudentId == studentId)
+            .Include(a => a.Milestones.Where(m => !m.IsDeleted))
+            .Include(a => a.Periods.Where(p => !p.IsDeleted))
+                .ThenInclude(p => p.Milestones.Where(m => !m.IsDeleted))
+            .Include(a => a.Periods.Where(p => !p.IsDeleted))
+                .ThenInclude(p => p.Activities.Where(act => !act.IsDeleted))
             .OrderByDescending(a => a.StartDate)
             .AsNoTracking()
             .ToListAsync();
@@ -217,7 +316,7 @@ public class AGPService : IAGPService
     public async Task<IEnumerable<AGPGoalDto>> GetGoalsAsync(int agpId)
     {
         var milestones = await _context.AGPMilestones
-            .Where(m => m.AGPId == agpId)
+            .Where(m => m.AGPId == agpId && !m.IsDeleted)
             .OrderBy(m => m.Month)
             .ThenBy(m => m.StartDate)
             .AsNoTracking()
@@ -228,7 +327,7 @@ public class AGPService : IAGPService
 
     public async Task<AGPGoalDto> AddGoalAsync(int agpId, CreateAGPGoalDto dto)
     {
-        var agpExists = await _context.AcademicDevelopmentPlans.AnyAsync(a => a.Id == agpId);
+        var agpExists = await _context.AcademicDevelopmentPlans.AnyAsync(a => a.Id == agpId && !a.IsDeleted);
         if (!agpExists)
             throw new KeyNotFoundException("AGP bulunamadı");
 
@@ -254,7 +353,7 @@ public class AGPService : IAGPService
     public async Task<AGPGoalDto> UpdateGoalAsync(int agpId, int goalId, UpdateAGPGoalDto dto)
     {
         var milestone = await _context.AGPMilestones
-            .FirstOrDefaultAsync(m => m.Id == goalId && m.AGPId == agpId);
+            .FirstOrDefaultAsync(m => m.Id == goalId && m.AGPId == agpId && !m.IsDeleted);
 
         if (milestone == null)
             throw new KeyNotFoundException("Hedef bulunamadı");
@@ -276,12 +375,14 @@ public class AGPService : IAGPService
     public async Task<bool> DeleteGoalAsync(int agpId, int goalId)
     {
         var milestone = await _context.AGPMilestones
-            .FirstOrDefaultAsync(m => m.Id == goalId && m.AGPId == agpId);
+            .FirstOrDefaultAsync(m => m.Id == goalId && m.AGPId == agpId && !m.IsDeleted);
 
         if (milestone == null)
             return false;
 
-        _context.AGPMilestones.Remove(milestone);
+        // Soft delete
+        milestone.IsDeleted = true;
+        milestone.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
 
         return true;
@@ -290,7 +391,8 @@ public class AGPService : IAGPService
     public async Task<AGPProgressDto> GetProgressAsync(int agpId)
     {
         var agp = await _context.AcademicDevelopmentPlans
-            .Include(a => a.Milestones)
+            .Where(a => !a.IsDeleted)
+            .Include(a => a.Milestones.Where(m => !m.IsDeleted))
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == agpId);
 
@@ -366,24 +468,38 @@ public class AGPService : IAGPService
         return new AgpPeriodDto
         {
             Id = period.Id,
+            PeriodName = period.PeriodName,
             Title = period.Title,
             StartDate = period.StartDate.ToString("yyyy-MM-dd"),
             EndDate = period.EndDate.ToString("yyyy-MM-dd"),
             Color = period.Color,
             Order = period.Order,
-            Milestones = period.Milestones?.Select(m => new AgpMilestoneDto
+            Milestones = period.Milestones?.Where(m => !m.IsDeleted).Select(m => new AgpMilestoneDto
             {
                 Id = m.Id,
                 Title = m.Title,
                 Date = m.Date.ToString("yyyy-MM-dd"),
                 Color = m.Color,
-                Type = m.Type
+                Type = m.Type,
+                Category = m.Type, // Frontend uyumluluğu için
+                IsMilestone = m.IsMilestone,
+                ApplicationStartDate = m.ApplicationStartDate?.ToString("yyyy-MM-dd"),
+                ApplicationEndDate = m.ApplicationEndDate?.ToString("yyyy-MM-dd"),
+                Score = m.Score,
+                MaxScore = m.MaxScore,
+                ResultNotes = m.ResultNotes,
+                IsCompleted = m.IsCompleted
             }).ToList() ?? new List<AgpMilestoneDto>(),
-            Activities = period.Activities?.Select(a => new AgpActivityDto
+            Activities = period.Activities?.Where(a => !a.IsDeleted).Select(a => new AgpActivityDto
             {
                 Id = a.Id,
                 Title = a.Title,
+                StartDate = a.StartDate.ToString("yyyy-MM-dd"),
+                EndDate = a.EndDate.ToString("yyyy-MM-dd"),
                 HoursPerWeek = a.HoursPerWeek,
+                OwnerType = a.OwnerType,
+                Status = a.Status.ToString(),
+                NeedsReview = a.NeedsReview,
                 Notes = a.Notes
             }).ToList() ?? new List<AgpActivityDto>()
         };

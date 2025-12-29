@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using EduPortal.Domain.Enums;
 
 namespace EduPortal.Application.DTOs.AGP;
@@ -14,9 +15,18 @@ public class AgpPeriodDto
     /// </summary>
     public string? PeriodName { get; set; }
 
-    public string Title { get; set; } = string.Empty;
-    public string StartDate { get; set; } = string.Empty;
-    public string EndDate { get; set; } = string.Empty;
+    public string? Title { get; set; }
+
+    /// <summary>
+    /// Dönem başlangıç tarihi (opsiyonel - boş ise AGP başlangıç tarihi kullanılır)
+    /// </summary>
+    public string? StartDate { get; set; }
+
+    /// <summary>
+    /// Dönem bitiş tarihi (opsiyonel - boş ise AGP bitiş tarihi kullanılır)
+    /// </summary>
+    public string? EndDate { get; set; }
+
     public string? Color { get; set; }
     public int Order { get; set; }
     public List<AgpMilestoneDto> Milestones { get; set; } = new();
@@ -57,11 +67,17 @@ public class AgpPeriodCreateDto
     /// </summary>
     public string? PeriodName { get; set; }
 
-    public string Title { get; set; } = string.Empty;
+    public string? Title { get; set; }
 
-    public DateTime StartDate { get; set; }
+    /// <summary>
+    /// Dönem başlangıç tarihi (opsiyonel - boş ise AGP başlangıç tarihi kullanılır)
+    /// </summary>
+    public DateTime? StartDate { get; set; }
 
-    public DateTime EndDate { get; set; }
+    /// <summary>
+    /// Dönem bitiş tarihi (opsiyonel - boş ise AGP bitiş tarihi kullanılır)
+    /// </summary>
+    public DateTime? EndDate { get; set; }
 
     public string? Color { get; set; }
 
@@ -100,7 +116,53 @@ public class AgpMilestoneDto
     public string Date { get; set; } = string.Empty;
     public string? Color { get; set; }
     public string Type { get; set; } = "exam"; // "exam", "goal", "event"
+
+    /// <summary>
+    /// Frontend uyumluluğu için Category alias'ı (Type ile aynı değeri döndürür)
+    /// </summary>
+    public string Category
+    {
+        get => Type;
+        set => Type = value;
+    }
+
     public bool IsMilestone { get; set; } = false;
+
+    /// <summary>
+    /// Başvuru başlangıç tarihi (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("applicationStartDate")]
+    public string? ApplicationStartDate { get; set; }
+
+    /// <summary>
+    /// Başvuru bitiş tarihi (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("applicationEndDate")]
+    public string? ApplicationEndDate { get; set; }
+
+    /// <summary>
+    /// Sınav/hedef puanı (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("score")]
+    public decimal? Score { get; set; }
+
+    /// <summary>
+    /// Maksimum puan (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("maxScore")]
+    public decimal? MaxScore { get; set; }
+
+    /// <summary>
+    /// Sonuç notları (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("resultNotes")]
+    public string? ResultNotes { get; set; }
+
+    /// <summary>
+    /// Tamamlandı mı? (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("isCompleted")]
+    public bool? IsCompleted { get; set; }
 }
 
 /// <summary>
@@ -113,7 +175,49 @@ public class AgpMilestoneResponseDto
     public DateTime Date { get; set; }
     public string? Color { get; set; }
     public string Type { get; set; } = "exam";
+
+    /// <summary>
+    /// Frontend uyumluluğu için Category alias'ı
+    /// </summary>
+    public string Category => Type;
+
     public bool IsMilestone { get; set; }
+
+    /// <summary>
+    /// Başvuru başlangıç tarihi (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("applicationStartDate")]
+    public DateTime? ApplicationStartDate { get; set; }
+
+    /// <summary>
+    /// Başvuru bitiş tarihi (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("applicationEndDate")]
+    public DateTime? ApplicationEndDate { get; set; }
+
+    /// <summary>
+    /// Sınav/hedef puanı (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("score")]
+    public decimal? Score { get; set; }
+
+    /// <summary>
+    /// Maksimum puan (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("maxScore")]
+    public decimal? MaxScore { get; set; }
+
+    /// <summary>
+    /// Sonuç notları (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("resultNotes")]
+    public string? ResultNotes { get; set; }
+
+    /// <summary>
+    /// Tamamlandı mı? (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("isCompleted")]
+    public bool? IsCompleted { get; set; }
 }
 
 /// <summary>
@@ -127,6 +231,42 @@ public class AgpMilestoneCreateDto
     public string? Color { get; set; }
     public string Type { get; set; } = "exam";
     public bool IsMilestone { get; set; } = false;
+
+    /// <summary>
+    /// Başvuru başlangıç tarihi (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("applicationStartDate")]
+    public DateTime? ApplicationStartDate { get; set; }
+
+    /// <summary>
+    /// Başvuru bitiş tarihi (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("applicationEndDate")]
+    public DateTime? ApplicationEndDate { get; set; }
+
+    /// <summary>
+    /// Sınav/hedef puanı (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("score")]
+    public decimal? Score { get; set; }
+
+    /// <summary>
+    /// Maksimum puan (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("maxScore")]
+    public decimal? MaxScore { get; set; }
+
+    /// <summary>
+    /// Sonuç notları (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("resultNotes")]
+    public string? ResultNotes { get; set; }
+
+    /// <summary>
+    /// Tamamlandı mı? (opsiyonel)
+    /// </summary>
+    [JsonPropertyName("isCompleted")]
+    public bool? IsCompleted { get; set; }
 }
 
 /// <summary>
