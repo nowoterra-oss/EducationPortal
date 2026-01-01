@@ -25,6 +25,21 @@ public class Attendance : BaseAuditableEntity
     [MaxLength(1000)]
     public string? Notes { get; set; }
 
+    // Ders sonrası değerlendirme alanları
+    [Range(0, 100)]
+    public int? Performance { get; set; } // 0-100 performans puanı
+
+    [MaxLength(2000)]
+    public string? LessonEvaluation { get; set; } // Ders değerlendirme notu
+
+    public bool IsEvaluationCompleted { get; set; } = false;
+
+    // Ders programı bağlantısı (aynı gün birden fazla ders için)
+    public int? ScheduleId { get; set; }
+
+    [MaxLength(5)]
+    public string? LessonTime { get; set; } // Format: "09:00"
+
     [ForeignKey(nameof(StudentId))]
     public virtual Student Student { get; set; } = null!;
 

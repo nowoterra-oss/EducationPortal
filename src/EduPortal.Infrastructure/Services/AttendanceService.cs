@@ -100,13 +100,25 @@ public class AttendanceService : IAttendanceService
                 return ApiResponse<AttendanceDto>.ErrorResponse("Öğrenci bulunamadı");
             }
 
-            // Check if attendance already exists for this student, course and date
-            var existingAttendance = await _context.Attendances
-                .FirstOrDefaultAsync(a =>
+            // Check if attendance already exists for this student, course, date and lesson time
+            var query = _context.Attendances
+                .Where(a =>
                     a.StudentId == dto.StudentId &&
                     a.CourseId == dto.CourseId &&
                     a.Date.Date == dto.Date.Date &&
                     !a.IsDeleted);
+
+            // ScheduleId veya LessonTime varsa bunları da kontrol et
+            if (dto.ScheduleId.HasValue)
+            {
+                query = query.Where(a => a.ScheduleId == dto.ScheduleId);
+            }
+            else if (!string.IsNullOrEmpty(dto.LessonTime))
+            {
+                query = query.Where(a => a.LessonTime == dto.LessonTime);
+            }
+
+            var existingAttendance = await query.FirstOrDefaultAsync();
 
             Attendance attendance;
 
@@ -115,6 +127,9 @@ public class AttendanceService : IAttendanceService
                 // Update existing attendance
                 existingAttendance.Status = dto.Status;
                 existingAttendance.Notes = dto.Notes;
+                existingAttendance.Performance = dto.Performance;
+                existingAttendance.ScheduleId = dto.ScheduleId;
+                existingAttendance.LessonTime = dto.LessonTime;
                 existingAttendance.UpdatedAt = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync();
@@ -131,6 +146,9 @@ public class AttendanceService : IAttendanceService
                     Date = dto.Date,
                     Status = dto.Status,
                     Notes = dto.Notes,
+                    Performance = dto.Performance,
+                    ScheduleId = dto.ScheduleId,
+                    LessonTime = dto.LessonTime,
                     CreatedAt = DateTime.UtcNow,
                     IsDeleted = false
                 };
@@ -179,6 +197,9 @@ public class AttendanceService : IAttendanceService
 
             attendance.Status = dto.Status;
             attendance.Notes = dto.Notes;
+            attendance.Performance = dto.Performance;
+            attendance.ScheduleId = dto.ScheduleId;
+            attendance.LessonTime = dto.LessonTime;
             attendance.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -351,19 +372,34 @@ public class AttendanceService : IAttendanceService
                     continue; // Skip non-existing students
                 }
 
-                // Check if attendance already exists for this student, course and date
-                var existingAttendance = await _context.Attendances
-                    .FirstOrDefaultAsync(a =>
+                // Check if attendance already exists for this student, course, date and lesson time
+                var query = _context.Attendances
+                    .Where(a =>
                         a.StudentId == dto.StudentId &&
                         a.CourseId == dto.CourseId &&
                         a.Date.Date == dto.Date.Date &&
                         !a.IsDeleted);
+
+                // ScheduleId veya LessonTime varsa bunları da kontrol et
+                if (dto.ScheduleId.HasValue)
+                {
+                    query = query.Where(a => a.ScheduleId == dto.ScheduleId);
+                }
+                else if (!string.IsNullOrEmpty(dto.LessonTime))
+                {
+                    query = query.Where(a => a.LessonTime == dto.LessonTime);
+                }
+
+                var existingAttendance = await query.FirstOrDefaultAsync();
 
                 if (existingAttendance != null)
                 {
                     // Update existing attendance
                     existingAttendance.Status = dto.Status;
                     existingAttendance.Notes = dto.Notes;
+                    existingAttendance.Performance = dto.Performance;
+                    existingAttendance.ScheduleId = dto.ScheduleId;
+                    existingAttendance.LessonTime = dto.LessonTime;
                     existingAttendance.UpdatedAt = DateTime.UtcNow;
                     createdAttendances.Add(existingAttendance);
                 }
@@ -378,6 +414,9 @@ public class AttendanceService : IAttendanceService
                         Date = dto.Date,
                         Status = dto.Status,
                         Notes = dto.Notes,
+                        Performance = dto.Performance,
+                        ScheduleId = dto.ScheduleId,
+                        LessonTime = dto.LessonTime,
                         CreatedAt = DateTime.UtcNow,
                         IsDeleted = false
                     };
@@ -531,7 +570,11 @@ public class AttendanceService : IAttendanceService
                 : string.Empty,
             Date = attendance.Date,
             Status = attendance.Status,
-            Notes = attendance.Notes
+            Notes = attendance.Notes,
+            Performance = attendance.Performance,
+            CreatedAt = attendance.CreatedAt,
+            ScheduleId = attendance.ScheduleId,
+            LessonTime = attendance.LessonTime
         };
     }
 }

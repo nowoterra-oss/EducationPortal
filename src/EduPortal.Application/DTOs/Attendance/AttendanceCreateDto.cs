@@ -19,4 +19,13 @@ public class AttendanceCreateDto
 
     [StringLength(500)]
     public string? Notes { get; set; }
+
+    [Range(0, 100)]
+    public int? Performance { get; set; }
+
+    // Ders programı bağlantısı (aynı gün birden fazla ders için)
+    public int? ScheduleId { get; set; }
+
+    [StringLength(5)]
+    public string? LessonTime { get; set; } // Format: "09:00"
 }

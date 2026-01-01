@@ -8,6 +8,7 @@ using EduPortal.Domain.Enums;
 using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace EduPortal.Infrastructure.Services;
 
@@ -63,6 +64,26 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
     {
         try
         {
+            // Yoklama kontrolünü atla parametresi false ise kontrol yap
+            if (!dto.SkipAttendanceCheck)
+            {
+                // Yoklama ve değerlendirme yapılmış mı kontrol et
+                var today = DateTime.UtcNow.Date;
+                var hasCompletedAttendance = await _context.Attendances
+                    .AnyAsync(a =>
+                        a.TeacherId == teacherId &&
+                        a.StudentId == dto.StudentId &&
+                        a.Date.Date == today &&
+                        a.IsEvaluationCompleted &&
+                        !a.IsDeleted);
+
+                if (!hasCompletedAttendance)
+                {
+                    return ApiResponse<HomeworkAssignmentDto>.ErrorResponse(
+                        "Ödev vermeden önce bugünkü yoklama ve ders değerlendirmesi tamamlanmalıdır.");
+                }
+            }
+
             // Get a default course if not provided
             var courseId = dto.CourseId ?? await GetDefaultCourseIdAsync(teacherId);
 
@@ -91,11 +112,63 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
                 StartDate = dto.StartDate,
                 DueDate = dto.DueDate,
                 Status = HomeworkAssignmentStatus.Atandi,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                TestDueDate = dto.TestDueDate,
+                HasTest = dto.HasTest ?? false
             };
+
+            // Ders İçeriği kaynaklarını JSON olarak kaydet
+            if ((dto.ContentUrls?.Any() == true) || (dto.ContentFiles?.Any() == true))
+            {
+                var contentFiles = await ProcessContentFilesAsync(dto.ContentFiles, "homework-content");
+                var contentResources = new ContentResourcesDto
+                {
+                    Urls = dto.ContentUrls?.Select(url => new ResourceUrlDto { Url = url }).ToList() ?? new(),
+                    Files = contentFiles
+                };
+                assignment.ContentResourcesJson = JsonSerializer.Serialize(contentResources);
+            }
+
+            // Ders Sonu Testi kaynaklarını JSON olarak kaydet
+            if ((dto.TestUrls?.Any() == true) || (dto.TestFiles?.Any() == true))
+            {
+                var testFiles = await ProcessContentFilesAsync(dto.TestFiles, "homework-tests");
+                var testInfo = new TestInfoDto
+                {
+                    DueDate = dto.TestDueDate,
+                    Urls = dto.TestUrls?.Select(url => new ResourceUrlDto { Url = url }).ToList() ?? new(),
+                    Files = testFiles
+                };
+                assignment.TestInfoJson = JsonSerializer.Serialize(testInfo);
+            }
 
             await _context.HomeworkAssignments.AddAsync(assignment);
             await _context.SaveChangesAsync();
+
+            // 2.5 Seçilen ders kaynaklarını HomeworkAttachment olarak kaydet
+            if (dto.CourseResourceIds?.Any() == true)
+            {
+                var courseResources = await _context.CourseResources
+                    .Where(cr => dto.CourseResourceIds.Contains(cr.Id) && !cr.IsDeleted)
+                    .ToListAsync();
+
+                foreach (var resource in courseResources)
+                {
+                    var attachment = new HomeworkAttachment
+                    {
+                        HomeworkAssignmentId = assignment.Id,
+                        FileName = resource.FileName ?? resource.Title,
+                        FilePath = resource.FilePath ?? resource.ResourceUrl,
+                        MimeType = resource.MimeType,
+                        FileSize = resource.FileSize ?? 0,
+                        IsFromCourseResource = true,
+                        CourseResourceId = resource.Id,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _context.HomeworkAttachments.AddAsync(attachment);
+                }
+                await _context.SaveChangesAsync();
+            }
 
             // 3. Öğrenciye bildirim gönder
             var student = await _context.Students
@@ -132,6 +205,35 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
     {
         try
         {
+            // Yoklama kontrolünü atla parametresi false ise kontrol yap
+            if (!dto.SkipAttendanceCheck)
+            {
+                var today = DateTime.UtcNow.Date;
+                var studentsWithoutAttendance = new List<int>();
+
+                foreach (var studentId in dto.StudentIds.Distinct())
+                {
+                    var hasCompletedAttendance = await _context.Attendances
+                        .AnyAsync(a =>
+                            a.TeacherId == teacherId &&
+                            a.StudentId == studentId &&
+                            a.Date.Date == today &&
+                            a.IsEvaluationCompleted &&
+                            !a.IsDeleted);
+
+                    if (!hasCompletedAttendance)
+                    {
+                        studentsWithoutAttendance.Add(studentId);
+                    }
+                }
+
+                if (studentsWithoutAttendance.Any())
+                {
+                    return ApiResponse<List<HomeworkAssignmentDto>>.ErrorResponse(
+                        $"Ödev vermeden önce bugünkü yoklama ve ders değerlendirmesi tamamlanmalıdır. Eksik öğrenci sayısı: {studentsWithoutAttendance.Count}");
+                }
+            }
+
             var courseId = dto.CourseId ?? await GetDefaultCourseIdAsync(teacherId);
 
             // 1. Homework oluştur (tüm öğrenciler için aynı)
@@ -153,6 +255,32 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
             var assignments = new List<HomeworkAssignment>();
             var studentIds = dto.StudentIds.Distinct().ToList();
 
+            // JSON serialize işlemleri (tüm öğrenciler için aynı)
+            string? contentResourcesJson = null;
+            if ((dto.ContentUrls?.Any() == true) || (dto.ContentFiles?.Any() == true))
+            {
+                var contentFiles = await ProcessContentFilesAsync(dto.ContentFiles, "homework-content");
+                var contentResources = new ContentResourcesDto
+                {
+                    Urls = dto.ContentUrls?.Select(url => new ResourceUrlDto { Url = url }).ToList() ?? new(),
+                    Files = contentFiles
+                };
+                contentResourcesJson = JsonSerializer.Serialize(contentResources);
+            }
+
+            string? testInfoJson = null;
+            if ((dto.TestUrls?.Any() == true) || (dto.TestFiles?.Any() == true))
+            {
+                var testFiles = await ProcessContentFilesAsync(dto.TestFiles, "homework-tests");
+                var testInfo = new TestInfoDto
+                {
+                    DueDate = dto.TestDueDate,
+                    Urls = dto.TestUrls?.Select(url => new ResourceUrlDto { Url = url }).ToList() ?? new(),
+                    Files = testFiles
+                };
+                testInfoJson = JsonSerializer.Serialize(testInfo);
+            }
+
             // 2. Her öğrenci için assignment oluştur
             foreach (var studentId in studentIds)
             {
@@ -164,13 +292,44 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
                     StartDate = dto.StartDate,
                     DueDate = dto.DueDate,
                     Status = HomeworkAssignmentStatus.Atandi,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    TestDueDate = dto.TestDueDate,
+                    ContentResourcesJson = contentResourcesJson,
+                    TestInfoJson = testInfoJson
                 };
                 assignments.Add(assignment);
             }
 
             await _context.HomeworkAssignments.AddRangeAsync(assignments);
             await _context.SaveChangesAsync();
+
+            // 2.5 Seçilen ders kaynaklarını HomeworkAttachment olarak kaydet (her assignment için)
+            if (dto.CourseResourceIds?.Any() == true)
+            {
+                var courseResources = await _context.CourseResources
+                    .Where(cr => dto.CourseResourceIds.Contains(cr.Id) && !cr.IsDeleted)
+                    .ToListAsync();
+
+                foreach (var assignment in assignments)
+                {
+                    foreach (var resource in courseResources)
+                    {
+                        var attachment = new HomeworkAttachment
+                        {
+                            HomeworkAssignmentId = assignment.Id,
+                            FileName = resource.FileName ?? resource.Title,
+                            FilePath = resource.FilePath ?? resource.ResourceUrl,
+                            MimeType = resource.MimeType,
+                            FileSize = resource.FileSize ?? 0,
+                            IsFromCourseResource = true,
+                            CourseResourceId = resource.Id,
+                            CreatedAt = DateTime.UtcNow
+                        };
+                        await _context.HomeworkAttachments.AddAsync(attachment);
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
 
             // 3. Öğrencilere bildirim gönder ve takvime ekle
             var students = await _context.Students
@@ -224,10 +383,13 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
             var query = _context.HomeworkAssignments
                 .Where(a => a.TeacherId == teacherId && !a.IsDeleted)
                 .Include(a => a.Homework)
+                    .ThenInclude(h => h.Course)
                 .Include(a => a.Student)
                     .ThenInclude(s => s.User)
                 .Include(a => a.Teacher)
                     .ThenInclude(t => t.User)
+                .Include(a => a.Attachments)
+                    .ThenInclude(att => att.CourseResource)
                 .OrderByDescending(a => a.CreatedAt);
 
             var totalCount = await query.CountAsync();
@@ -255,10 +417,13 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
             var query = _context.HomeworkAssignments
                 .Where(a => a.StudentId == studentId && !a.IsDeleted)
                 .Include(a => a.Homework)
+                    .ThenInclude(h => h.Course)
                 .Include(a => a.Student)
                     .ThenInclude(s => s.User)
                 .Include(a => a.Teacher)
                     .ThenInclude(t => t.User)
+                .Include(a => a.Attachments)
+                    .ThenInclude(att => att.CourseResource)
                 .OrderByDescending(a => a.CreatedAt);
 
             var totalCount = await query.CountAsync();
@@ -294,10 +459,13 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
 
             var assignments = await query
                 .Include(a => a.Homework)
+                    .ThenInclude(h => h.Course)
                 .Include(a => a.Student)
                     .ThenInclude(s => s.User)
                 .Include(a => a.Teacher)
                     .ThenInclude(t => t.User)
+                .Include(a => a.Attachments)
+                    .ThenInclude(att => att.CourseResource)
                 .OrderByDescending(a => a.CreatedAt)
                 .ToListAsync();
 
@@ -366,8 +534,13 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
             // status parametresine göre filtrele
             if (status == "all")
             {
-                // Tüm aktif ödevler (Degerlendirildi hariç)
-                query = query.Where(a => a.Status != HomeworkAssignmentStatus.Degerlendirildi);
+                // Tüm ödevler - frontend filtreleme yapacak
+                // Hiçbir status filtresi uygulanmaz
+            }
+            else if (status == "completed")
+            {
+                // Sadece tamamlanan ödevler (Degerlendirildi)
+                query = query.Where(a => a.Status == HomeworkAssignmentStatus.Degerlendirildi);
             }
             else if (status == "pending")
             {
@@ -378,16 +551,20 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
             }
             else
             {
-                // Varsayılan: Sadece teslim edilmiş ve değerlendirilmeyi bekleyenler
-                query = query.Where(a => a.Status == HomeworkAssignmentStatus.TeslimEdildi);
+                // Varsayılan: Teslim edilmiş ve değerlendirilmeyi bekleyenler (TeslimEdildi veya TestTeslimEdildi)
+                query = query.Where(a => a.Status == HomeworkAssignmentStatus.TeslimEdildi ||
+                                        a.Status == HomeworkAssignmentStatus.TestTeslimEdildi);
             }
 
             var orderedQuery = query
                 .Include(a => a.Homework)
+                    .ThenInclude(h => h.Course)
                 .Include(a => a.Student)
                     .ThenInclude(s => s.User)
                 .Include(a => a.Teacher)
                     .ThenInclude(t => t.User)
+                .Include(a => a.Attachments)
+                    .ThenInclude(att => att.CourseResource)
                 .OrderBy(a => a.DueDate);
 
             var totalCount = await orderedQuery.CountAsync();
@@ -414,10 +591,13 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
         {
             var assignment = await _context.HomeworkAssignments
                 .Include(a => a.Homework)
+                    .ThenInclude(h => h.Course)
                 .Include(a => a.Student)
                     .ThenInclude(s => s.User)
                 .Include(a => a.Teacher)
                     .ThenInclude(t => t.User)
+                .Include(a => a.Attachments)
+                    .ThenInclude(att => att.CourseResource)
                 .FirstOrDefaultAsync(a => a.Id == assignmentId && !a.IsDeleted);
 
             if (assignment == null)
@@ -445,6 +625,7 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
                     .Include(a => a.Student)
                         .ThenInclude(s => s.User)
                     .Include(a => a.Homework)
+                        .ThenInclude(h => h.Course)
                     .FirstOrDefaultAsync(a => a.Id == dto.AssignmentId && !a.IsDeleted);
             }
             else
@@ -454,18 +635,49 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
                     .Include(a => a.Student)
                         .ThenInclude(s => s.User)
                     .Include(a => a.Homework)
+                        .ThenInclude(h => h.Course)
                     .FirstOrDefaultAsync(a => a.Id == dto.AssignmentId && a.TeacherId == teacherId && !a.IsDeleted);
             }
 
             if (assignment == null)
                 return ApiResponse<HomeworkAssignmentDto>.ErrorResponse("Ödev bulunamadı");
 
+            // Genel değerlendirme
             assignment.CompletionPercentage = dto.CompletionPercentage;
             assignment.TeacherFeedback = dto.TeacherFeedback;
             assignment.Score = dto.Score;
-            assignment.GradedAt = DateTime.UtcNow;
-            assignment.Status = HomeworkAssignmentStatus.Degerlendirildi;
             assignment.UpdatedAt = DateTime.UtcNow;
+
+            // Ayrı değerlendirmeler (ödev ve test için)
+            assignment.HomeworkScore = dto.HomeworkScore;
+            assignment.HomeworkFeedback = dto.HomeworkFeedback;
+            assignment.TestScore = dto.TestScore;
+            assignment.TestFeedback = dto.TestFeedback;
+
+            // KRITIK: Status değişiklik mantığı
+            // HasTest=false ise veya test teslim edildiyse → Degerlendirildi
+            // HasTest=true ve test henüz teslim edilmediyse → TeslimEdildi olarak kalır
+            string notificationMessage;
+
+            bool canCompleteGrading =
+                !assignment.HasTest || // Test yok
+                assignment.Status == HomeworkAssignmentStatus.TestTeslimEdildi || // Test teslim edildi
+                !string.IsNullOrEmpty(assignment.TestSubmissionUrl) || // Test URL ile teslim edildi
+                !string.IsNullOrEmpty(assignment.TestSubmissionText); // Test metin ile teslim edildi
+
+            if (canCompleteGrading)
+            {
+                // Test yok veya test de teslim edildi → tam değerlendirme yapılabilir
+                assignment.Status = HomeworkAssignmentStatus.Degerlendirildi;
+                assignment.GradedAt = DateTime.UtcNow;
+                notificationMessage = $"'{assignment.Homework.Title}' ödeviniz değerlendirildi. Tamamlanma: %{dto.CompletionPercentage}";
+            }
+            else
+            {
+                // HasTest=true ve test henüz teslim edilmedi → ödev puanı verilir ama status değişmez
+                // Öğrenci hala test çözecek
+                notificationMessage = $"'{assignment.Homework.Title}' ödevinizin ödev kısmı değerlendirildi. Lütfen testi de tamamlayın.";
+            }
 
             await _context.SaveChangesAsync();
 
@@ -473,8 +685,8 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
             await _notificationService.SendAsync(new CreateNotificationDto
             {
                 UserId = assignment.Student.UserId,
-                Title = "Ödev Değerlendirildi",
-                Message = $"'{assignment.Homework.Title}' ödeviniz değerlendirildi. Tamamlanma: %{dto.CompletionPercentage}",
+                Title = assignment.Status == HomeworkAssignmentStatus.Degerlendirildi ? "Ödev Değerlendirildi" : "Ödev Puanı Verildi",
+                Message = notificationMessage,
                 Type = NotificationType.Success,
                 RelatedEntityType = "HomeworkAssignment",
                 RelatedEntityId = assignment.Id
@@ -711,11 +923,14 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
         {
             var assignment = await _context.HomeworkAssignments
                 .Include(a => a.Homework)
+                    .ThenInclude(h => h.Course)
                 .Include(a => a.Student)
                     .ThenInclude(s => s.User)
                 .Include(a => a.Teacher)
                     .ThenInclude(t => t.User)
                 .Include(a => a.SubmissionFiles)
+                .Include(a => a.Attachments)
+                    .ThenInclude(att => att.CourseResource)
                 .FirstOrDefaultAsync(a => a.Id == assignmentId && a.StudentId == studentId && !a.IsDeleted);
 
             if (assignment == null)
@@ -728,7 +943,17 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
             assignment.SubmissionText = dto.SubmissionText;
             assignment.SubmissionUrl = dto.SubmissionUrl;
             assignment.SubmittedAt = DateTime.UtcNow;
-            assignment.Status = HomeworkAssignmentStatus.TeslimEdildi;
+
+            // HasTest kontrolü - test yoksa direkt TestTeslimEdildi statüsüne geç
+            if (assignment.HasTest)
+            {
+                assignment.Status = HomeworkAssignmentStatus.TeslimEdildi; // Test bekleniyor
+            }
+            else
+            {
+                assignment.Status = HomeworkAssignmentStatus.TestTeslimEdildi; // Değerlendirme bekleniyor (test yok)
+            }
+
             assignment.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
@@ -823,8 +1048,205 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
         }
     }
 
+    /// <summary>
+    /// Assignment'tan bağımsız dosya yükleme (frontend akışı için).
+    /// Öğrenci önce dosya yükler, dönen URL ile submit çağırır.
+    /// </summary>
+    public async Task<ApiResponse<FileUploadResultDto>> UploadFileAsync(Stream fileStream, string fileName, string contentType)
+    {
+        try
+        {
+            // Dosya boyutu kontrolü (50MB)
+            const long maxFileSize = 50 * 1024 * 1024;
+            if (fileStream.Length > maxFileSize)
+                return ApiResponse<FileUploadResultDto>.ErrorResponse("Dosya boyutu 50MB'dan büyük olamaz");
+
+            // İzin verilen dosya tipleri
+            var allowedExtensions = new[] {
+                ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt",
+                ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp",
+                ".zip", ".rar", ".7z",
+                ".mp3", ".wav", ".ogg",
+                ".mp4", ".avi", ".mov", ".wmv", ".webm"
+            };
+            var extension = Path.GetExtension(fileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(extension))
+                return ApiResponse<FileUploadResultDto>.ErrorResponse(
+                    "Bu dosya türü desteklenmiyor. İzin verilen türler: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, resimler, arşivler, ses ve video dosyaları");
+
+            // Dosyayı kaydet
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "homework-submissions");
+            Directory.CreateDirectory(uploadsFolder);
+
+            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var fileStreamOut = new FileStream(filePath, FileMode.Create))
+            {
+                await fileStream.CopyToAsync(fileStreamOut);
+            }
+
+            var fileUrl = $"/uploads/homework-submissions/{uniqueFileName}";
+
+            var result = new FileUploadResultDto
+            {
+                Success = true,
+                FileUrl = fileUrl,
+                FileName = fileName,
+                FileSize = fileStream.Length,
+                ContentType = contentType
+            };
+
+            _logger.LogInformation("File uploaded successfully: {FileName} -> {FileUrl}", fileName, fileUrl);
+            return ApiResponse<FileUploadResultDto>.SuccessResponse(result, "Dosya başarıyla yüklendi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error uploading file: {FileName}", fileName);
+            return ApiResponse<FileUploadResultDto>.ErrorResponse(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Test teslimi. Sadece TeslimEdildi durumundaki ödevler için test teslim edilebilir.
+    /// </summary>
+    public async Task<ApiResponse<HomeworkAssignmentDto>> SubmitTestAsync(int assignmentId, int studentId, SubmitTestDto dto)
+    {
+        try
+        {
+            var assignment = await _context.HomeworkAssignments
+                .Include(a => a.Homework)
+                    .ThenInclude(h => h.Course)
+                .Include(a => a.Student)
+                    .ThenInclude(s => s.User)
+                .Include(a => a.Teacher)
+                    .ThenInclude(t => t.User)
+                .Include(a => a.SubmissionFiles)
+                .Include(a => a.Attachments)
+                    .ThenInclude(att => att.CourseResource)
+                .FirstOrDefaultAsync(a => a.Id == assignmentId && a.StudentId == studentId && !a.IsDeleted);
+
+            if (assignment == null)
+                return ApiResponse<HomeworkAssignmentDto>.ErrorResponse("Ödev bulunamadı veya bu ödev size ait değil");
+
+            // Sadece TeslimEdildi durumundaki ödevler için test teslim edilebilir
+            if (assignment.Status != HomeworkAssignmentStatus.TeslimEdildi)
+                return ApiResponse<HomeworkAssignmentDto>.ErrorResponse("Sadece ödev teslim edildikten sonra test teslim edilebilir");
+
+            // Ödevde test var mı kontrol et
+            if (string.IsNullOrEmpty(assignment.TestInfoJson) && !assignment.TestDueDate.HasValue)
+                return ApiResponse<HomeworkAssignmentDto>.ErrorResponse("Bu ödevde test bulunmamaktadır");
+
+            // Test teslim bilgilerini güncelle
+            assignment.TestSubmissionText = dto.TestSubmissionText;
+            assignment.TestSubmissionUrl = dto.TestSubmissionUrl;
+            assignment.TestSubmittedAt = DateTime.UtcNow;
+            assignment.Status = HomeworkAssignmentStatus.TestTeslimEdildi;
+            assignment.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            // Öğretmene bildirim gönder
+            await _notificationService.SendAsync(new CreateNotificationDto
+            {
+                UserId = assignment.Teacher.UserId,
+                Title = "Test Teslim Edildi",
+                Message = $"{assignment.Student.User.FirstName} {assignment.Student.User.LastName} '{assignment.Homework.Title}' ödevinin testini teslim etti.",
+                Type = NotificationType.Info,
+                RelatedEntityType = "HomeworkAssignment",
+                RelatedEntityId = assignment.Id
+            });
+
+            return ApiResponse<HomeworkAssignmentDto>.SuccessResponse(MapToDto(assignment), "Test başarıyla teslim edildi");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error submitting test for assignment {AssignmentId}", assignmentId);
+            return ApiResponse<HomeworkAssignmentDto>.ErrorResponse(ex.Message);
+        }
+    }
+
     private HomeworkAssignmentDto MapToDto(HomeworkAssignment assignment)
     {
+        // Content Resources parsing - doğrudan JSON'dan deserialize
+        ContentResourcesDto? contentResources = null;
+        if (!string.IsNullOrEmpty(assignment.ContentResourcesJson))
+        {
+            try
+            {
+                contentResources = JsonSerializer.Deserialize<ContentResourcesDto>(assignment.ContentResourcesJson);
+            }
+            catch
+            {
+                contentResources = null;
+            }
+        }
+
+        // HomeworkAttachments'tan gelen CourseResource'ları ContentResources'a ekle
+        if (assignment.Attachments?.Any(a => a.IsFromCourseResource && a.CourseResource != null) == true)
+        {
+            contentResources ??= new ContentResourcesDto();
+
+            foreach (var attachment in assignment.Attachments.Where(a => a.IsFromCourseResource && a.CourseResource != null))
+            {
+                var resource = attachment.CourseResource!;
+                var resourceType = resource.ResourceType?.ToLowerInvariant();
+
+                // URL tipi kaynaklar (Video, Link gibi)
+                if (resourceType == "link" || resourceType == "video" || resourceType == "url")
+                {
+                    if (!contentResources.Urls.Any(u => u.Url == resource.ResourceUrl))
+                    {
+                        contentResources.Urls.Add(new ResourceUrlDto
+                        {
+                            Url = resource.ResourceUrl,
+                            Title = resource.Title
+                        });
+                    }
+                }
+                else
+                {
+                    // Dosya tipi kaynaklar (PDF, Document gibi)
+                    var downloadUrl = resource.FilePath ?? resource.ResourceUrl;
+                    if (!string.IsNullOrEmpty(downloadUrl) && !contentResources.Files.Any(f => f.DownloadUrl == downloadUrl))
+                    {
+                        contentResources.Files.Add(new ResourceFileDto
+                        {
+                            Name = resource.FileName ?? resource.Title,
+                            DownloadUrl = downloadUrl,
+                            FileSize = resource.FileSize
+                        });
+                    }
+                }
+            }
+        }
+
+        // Test Info parsing - doğrudan JSON'dan deserialize
+        TestInfoDto? testInfo = null;
+        if (!string.IsNullOrEmpty(assignment.TestInfoJson))
+        {
+            try
+            {
+                testInfo = JsonSerializer.Deserialize<TestInfoDto>(assignment.TestInfoJson);
+                if (testInfo != null)
+                {
+                    testInfo.DueDate = assignment.TestDueDate;
+                }
+            }
+            catch
+            {
+                testInfo = null;
+            }
+        }
+        else if (assignment.TestDueDate.HasValue)
+        {
+            // Sadece TestDueDate varsa boş bir testInfo oluştur
+            testInfo = new TestInfoDto { DueDate = assignment.TestDueDate };
+        }
+
+        var hasContentResources = contentResources != null && (contentResources.Urls.Any() || contentResources.Files.Any());
+        var hasTest = testInfo != null && (testInfo.DueDate.HasValue || testInfo.Urls.Any() || testInfo.Files.Any());
+
         return new HomeworkAssignmentDto
         {
             Id = assignment.Id,
@@ -840,6 +1262,9 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
             TeacherName = assignment.Teacher != null
                 ? $"{assignment.Teacher.User.FirstName} {assignment.Teacher.User.LastName}"
                 : "",
+            // Ders bilgisi
+            CourseId = assignment.Homework?.CourseId,
+            CourseName = assignment.Homework?.Course?.CourseName,
             StartDate = assignment.StartDate,
             DueDate = assignment.DueDate,
             IsViewed = assignment.IsViewed,
@@ -861,10 +1286,149 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
                 ContentType = f.ContentType,
                 UploadedAt = f.UploadedAt
             }).ToList() ?? new List<SubmissionFileDto>(),
+            // Test teslimi
+            TestSubmissionText = assignment.TestSubmissionText,
+            TestSubmissionUrl = assignment.TestSubmissionUrl,
+            TestSubmittedAt = assignment.TestSubmittedAt,
             // Değerlendirme
             TeacherFeedback = assignment.TeacherFeedback,
             Score = assignment.Score,
-            GradedAt = assignment.GradedAt
+            GradedAt = assignment.GradedAt,
+            // Ayrı değerlendirmeler
+            HomeworkScore = assignment.HomeworkScore,
+            HomeworkFeedback = assignment.HomeworkFeedback,
+            TestScore = assignment.TestScore,
+            TestFeedback = assignment.TestFeedback,
+            // Ders İçeriği ve Test
+            ContentResources = contentResources,
+            TestInfo = testInfo,
+            HasContentResources = hasContentResources,
+            HasTest = hasTest
         };
+    }
+
+    private List<ResourceUrlDto> ParseUrls(string? json)
+    {
+        if (string.IsNullOrEmpty(json)) return new List<ResourceUrlDto>();
+
+        try
+        {
+            var urls = JsonSerializer.Deserialize<List<string>>(json);
+            return urls?.Select(u => new ResourceUrlDto { Url = u, Title = ExtractTitleFromUrl(u) }).ToList()
+                ?? new List<ResourceUrlDto>();
+        }
+        catch
+        {
+            return new List<ResourceUrlDto>();
+        }
+    }
+
+    private List<ResourceFileDto> ParseFiles(string? json)
+    {
+        if (string.IsNullOrEmpty(json)) return new List<ResourceFileDto>();
+
+        try
+        {
+            var files = JsonSerializer.Deserialize<List<JsonElement>>(json);
+            return files?.Select(f => new ResourceFileDto
+            {
+                Name = f.TryGetProperty("name", out var name) ? name.GetString() ?? "" : "",
+                DownloadUrl = f.TryGetProperty("url", out var url) ? url.GetString() ?? "" : ""
+            }).ToList() ?? new List<ResourceFileDto>();
+        }
+        catch
+        {
+            return new List<ResourceFileDto>();
+        }
+    }
+
+    private string ExtractTitleFromUrl(string url)
+    {
+        try
+        {
+            var uri = new Uri(url);
+            if (uri.Host.Contains("youtube") || uri.Host.Contains("youtu.be"))
+                return "YouTube Video";
+            if (uri.Host.Contains("vimeo"))
+                return "Vimeo Video";
+            return uri.Host.Replace("www.", "");
+        }
+        catch
+        {
+            return "Link";
+        }
+    }
+
+    /// <summary>
+    /// Base64 encoded dosyayı kaydeder ve URL döner
+    /// </summary>
+    private async Task<string> SaveBase64FileAsync(string base64Content, string fileName, string subFolder)
+    {
+        try
+        {
+            // Base64 header'ını temizle (data:application/pdf;base64, gibi)
+            var base64Data = base64Content;
+            if (base64Content.Contains(","))
+            {
+                base64Data = base64Content.Split(',')[1];
+            }
+
+            var fileBytes = Convert.FromBase64String(base64Data);
+            var extension = Path.GetExtension(fileName);
+            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", subFolder);
+            Directory.CreateDirectory(uploadsFolder);
+
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            await File.WriteAllBytesAsync(filePath, fileBytes);
+
+            return $"/uploads/{subFolder}/{uniqueFileName}";
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving base64 file: {FileName}", fileName);
+            return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// ContentFileDto listesini ResourceFileDto listesine dönüştürür, gerekirse dosyaları kaydeder
+    /// </summary>
+    private async Task<List<ResourceFileDto>> ProcessContentFilesAsync(List<ContentFileDto>? files, string subFolder)
+    {
+        if (files == null || !files.Any())
+            return new List<ResourceFileDto>();
+
+        var result = new List<ResourceFileDto>();
+
+        foreach (var file in files)
+        {
+            string downloadUrl;
+
+            if (!string.IsNullOrEmpty(file.Base64))
+            {
+                // Base64 dosyası - kaydet
+                downloadUrl = await SaveBase64FileAsync(file.Base64, file.Name, subFolder);
+            }
+            else if (!string.IsNullOrEmpty(file.Url))
+            {
+                // Zaten yüklenmiş dosya
+                downloadUrl = file.Url;
+            }
+            else
+            {
+                // Ne base64 ne de URL var - boş bırak
+                downloadUrl = string.Empty;
+            }
+
+            result.Add(new ResourceFileDto
+            {
+                Name = file.Name,
+                DownloadUrl = downloadUrl
+            });
+        }
+
+        return result;
     }
 }

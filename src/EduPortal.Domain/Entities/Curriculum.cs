@@ -23,9 +23,17 @@ public class Curriculum : BaseEntity
 
     public bool IsCompleted { get; set; } = false;
 
+    // Sınav sistemi için
+    public bool HasExam { get; set; } = false;
+    public int? ExamResourceId { get; set; } // Sınav dosyası
+
     // Navigation Properties
     [ForeignKey(nameof(CourseId))]
     public virtual Course Course { get; set; } = null!;
 
+    [ForeignKey(nameof(ExamResourceId))]
+    public virtual CourseResource? ExamResource { get; set; }
+
     public virtual ICollection<CourseResource> Resources { get; set; } = new List<CourseResource>();
+    public virtual ICollection<StudentCurriculumProgress> StudentProgresses { get; set; } = new List<StudentCurriculumProgress>();
 }

@@ -40,6 +40,17 @@ public interface IHomeworkAssignmentService
     Task<ApiResponse<HomeworkAssignmentDto>> SubmitAssignmentAsync(int assignmentId, int studentId, SubmitHomeworkDto dto);
     Task<ApiResponse<FileUploadResultDto>> UploadSubmissionFileAsync(int assignmentId, int studentId, Stream fileStream, string fileName, string contentType);
 
+    /// <summary>
+    /// Assignment'tan bağımsız dosya yükleme (frontend akışı için).
+    /// Öğrenci önce dosya yükler, dönen URL ile submit çağırır.
+    /// </summary>
+    Task<ApiResponse<FileUploadResultDto>> UploadFileAsync(Stream fileStream, string fileName, string contentType);
+
+    /// <summary>
+    /// Test teslimi. Sadece TeslimEdildi durumundaki ödevler için test teslim edilebilir.
+    /// </summary>
+    Task<ApiResponse<HomeworkAssignmentDto>> SubmitTestAsync(int assignmentId, int studentId, SubmitTestDto dto);
+
     // Performans Analizi
     Task<ApiResponse<StudentHomeworkPerformanceDto>> GetStudentPerformanceAsync(int studentId, DateTime? startDate, DateTime? endDate);
     Task<ApiResponse<HomeworkPerformanceChartDto>> GetPerformanceChartDataAsync(int studentId, int months = 6);

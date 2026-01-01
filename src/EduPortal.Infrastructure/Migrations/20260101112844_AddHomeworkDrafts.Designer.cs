@@ -4,6 +4,7 @@ using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduPortal.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260101112844_AddHomeworkDrafts")]
+    partial class AddHomeworkDrafts
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2153,9 +2156,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Property<DateTime?>("GradedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("HasTest")
-                        .HasColumnType("bit");
-
                     b.Property<string>("HomeworkFeedback")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)");
@@ -2351,9 +2351,6 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("HasTest")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");

@@ -131,6 +131,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<CharacterixResult> CharacterixResults => Set<CharacterixResult>();
     public DbSet<StudentAward> StudentAwards => Set<StudentAward>();
 
+    // Homework Progress & Curriculum Tracking
+    public DbSet<HomeworkAttachment> HomeworkAttachments => Set<HomeworkAttachment>();
+    public DbSet<HomeworkDraft> HomeworkDrafts => Set<HomeworkDraft>();
+    public DbSet<StudentCurriculumProgress> StudentCurriculumProgresses => Set<StudentCurriculumProgress>();
+    public DbSet<Curriculum> Curriculums => Set<Curriculum>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -1173,6 +1179,70 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(sa => sa.StudentId);
             entity.HasIndex(sa => sa.Scope);
             entity.HasIndex(sa => sa.Category);
+        });
+
+        // ===============================================
+        // HOMEWORK ATTACHMENT RELATIONSHIPS
+        // ===============================================
+
+        builder.Entity<HomeworkAttachment>(entity =>
+        {
+            entity.HasOne(ha => ha.HomeworkAssignment)
+                .WithMany(h => h.Attachments)
+                .HasForeignKey(ha => ha.HomeworkAssignmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(ha => ha.CourseResource)
+                .WithMany()
+                .HasForeignKey(ha => ha.CourseResourceId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ===============================================
+        // STUDENT CURRICULUM PROGRESS RELATIONSHIPS
+        // ===============================================
+
+        builder.Entity<StudentCurriculumProgress>(entity =>
+        {
+            entity.HasOne(scp => scp.Student)
+                .WithMany()
+                .HasForeignKey(scp => scp.StudentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(scp => scp.Curriculum)
+                .WithMany(c => c.StudentProgresses)
+                .HasForeignKey(scp => scp.CurriculumId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(scp => scp.ApprovedByTeacher)
+                .WithMany()
+                .HasForeignKey(scp => scp.ApprovedByTeacherId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(scp => new { scp.StudentId, scp.CurriculumId }).IsUnique();
+        });
+
+        // HomeworkAssignment - Curriculum relationship
+        builder.Entity<HomeworkAssignment>(entity =>
+        {
+            entity.HasOne(ha => ha.Curriculum)
+                .WithMany()
+                .HasForeignKey(ha => ha.CurriculumId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // Curriculum relationships
+        builder.Entity<Curriculum>(entity =>
+        {
+            entity.HasOne(c => c.Course)
+                .WithMany()
+                .HasForeignKey(c => c.CourseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(c => c.ExamResource)
+                .WithMany()
+                .HasForeignKey(c => c.ExamResourceId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Global query filter for soft delete

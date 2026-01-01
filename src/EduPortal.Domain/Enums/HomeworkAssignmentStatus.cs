@@ -6,6 +6,7 @@ public enum HomeworkAssignmentStatus
     Goruldu = 1,          // Öğrenci gördü
     DevamEdiyor = 2,      // Öğrenci üzerinde çalışıyor
     TeslimEdildi = 3,     // Öğrenci teslim etti
-    Degerlendirildi = 4,  // Öğretmen değerlendirdi
-    Gecikti = 5           // Süresi geçti
+    TestTeslimEdildi = 4, // Öğrenci testi teslim etti (test varsa)
+    Degerlendirildi = 5,  // Öğretmen değerlendirdi
+    Gecikti = 6           // Süresi geçti
 }

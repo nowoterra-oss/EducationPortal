@@ -278,11 +278,26 @@ public class HomeworkAssignmentsController : ControllerBase
     }
 
     /// <summary>
-    /// Ödev için dosya yükle
+    /// Test teslim et (ödev teslim edildikten sonra)
+    /// </summary>
+    /// <remarks>
+    /// Sadece TeslimEdildi durumundaki ödevler için test teslim edilebilir.
+    /// </remarks>
+    [HttpPost("{id}/submit-test")]
+    public async Task<ActionResult<ApiResponse<HomeworkAssignmentDto>>> SubmitTest(
+        int id, [FromBody] SubmitTestDto dto)
+    {
+        var studentId = GetCurrentStudentId();
+        var result = await _service.SubmitTestAsync(id, studentId, dto);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>
+    /// Ödev için dosya yükle (belirli assignment'a bağlı)
     /// </summary>
     [HttpPost("{id}/upload")]
     [RequestSizeLimit(10 * 1024 * 1024)] // 10MB
-    public async Task<ActionResult<ApiResponse<FileUploadResultDto>>> UploadFile(
+    public async Task<ActionResult<ApiResponse<FileUploadResultDto>>> UploadFileForAssignment(
         int id, IFormFile file)
     {
         if (file == null || file.Length == 0)
@@ -291,6 +306,22 @@ public class HomeworkAssignmentsController : ControllerBase
         var studentId = GetCurrentStudentId();
         using var stream = file.OpenReadStream();
         var result = await _service.UploadSubmissionFileAsync(id, studentId, stream, file.FileName, file.ContentType);
+        return result.Success ? Ok(result) : BadRequest(result);
+    }
+
+    /// <summary>
+    /// Genel dosya yükleme endpoint'i (öğrenci ödev teslimi için).
+    /// Öğrenci önce bu endpoint ile dosya yükler, dönen URL'i submit ile gönderir.
+    /// </summary>
+    [HttpPost("upload")]
+    [RequestSizeLimit(50 * 1024 * 1024)] // 50MB
+    public async Task<ActionResult<ApiResponse<FileUploadResultDto>>> UploadFile(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(ApiResponse<FileUploadResultDto>.ErrorResponse("Dosya seçilmedi"));
+
+        using var stream = file.OpenReadStream();
+        var result = await _service.UploadFileAsync(stream, file.FileName, file.ContentType);
         return result.Success ? Ok(result) : BadRequest(result);
     }
 

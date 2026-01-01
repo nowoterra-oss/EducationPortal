@@ -14,6 +14,12 @@ public class AttendanceDto
     public DateTime Date { get; set; }
     public AttendanceStatus Status { get; set; }
     public string? Notes { get; set; }
+    public int? Performance { get; set; }
+    public DateTime CreatedAt { get; set; }
+
+    // Ders programı bağlantısı (aynı gün birden fazla ders için)
+    public int? ScheduleId { get; set; }
+    public string? LessonTime { get; set; } // Format: "09:00"
 }
 
 /// <summary>

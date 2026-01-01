@@ -4,6 +4,7 @@ using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduPortal.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251230154715_AddScheduleIdAndLessonTimeToAttendance")]
+    partial class AddScheduleIdAndLessonTimeToAttendance
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2135,9 +2138,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Property<int>("CompletionPercentage")
                         .HasColumnType("int");
 
-                    b.Property<string>("ContentResourcesJson")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -2153,17 +2153,7 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Property<DateTime?>("GradedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("HasTest")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("HomeworkFeedback")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
                     b.Property<int>("HomeworkId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("HomeworkScore")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsDeleted")
@@ -2213,30 +2203,6 @@ namespace EduPortal.Infrastructure.Migrations
 
                     b.Property<int>("TeacherId")
                         .HasColumnType("int");
-
-                    b.Property<DateTime?>("TestDueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("TestFeedback")
-                        .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
-
-                    b.Property<string>("TestInfoJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("TestScore")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TestSubmissionText")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
-                    b.Property<string>("TestSubmissionUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("TestSubmittedAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -2317,92 +2283,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.HasIndex("HomeworkAssignmentId");
 
                     b.ToTable("HomeworkAttachments");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.HomeworkDraft", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ContentFilesJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ContentUrlsJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("CourseId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CourseResourceIdsJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
-                    b.Property<DateTime>("DueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("HasTest")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsSent")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("LessonId")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime?>("SentAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("StudentsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TeacherId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("TestDueDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("TestFilesJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TestUrlsJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CourseId");
-
-                    b.HasIndex("TeacherId");
-
-                    b.ToTable("HomeworkDrafts");
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.HomeworkSubmissionFile", b =>
@@ -6550,23 +6430,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Navigation("CourseResource");
 
                     b.Navigation("HomeworkAssignment");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.HomeworkDraft", b =>
-                {
-                    b.HasOne("EduPortal.Domain.Entities.Course", "Course")
-                        .WithMany()
-                        .HasForeignKey("CourseId");
-
-                    b.HasOne("EduPortal.Domain.Entities.Teacher", "Teacher")
-                        .WithMany()
-                        .HasForeignKey("TeacherId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Course");
-
-                    b.Navigation("Teacher");
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.HomeworkSubmissionFile", b =>
