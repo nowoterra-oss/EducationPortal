@@ -25,6 +25,7 @@ public class StudentsController : ControllerBase
     private readonly IStudentExtendedInfoService _extendedInfoService;
     private readonly IStudentRepository _studentRepository;
     private readonly IAdvisorAccessService _advisorAccessService;
+    private readonly IParentAccessService _parentAccessService;
     private readonly ILogger<StudentsController> _logger;
     private readonly IWebHostEnvironment _environment;
 
@@ -37,6 +38,7 @@ public class StudentsController : ControllerBase
         IStudentExtendedInfoService extendedInfoService,
         IStudentRepository studentRepository,
         IAdvisorAccessService advisorAccessService,
+        IParentAccessService parentAccessService,
         ILogger<StudentsController> logger,
         IWebHostEnvironment environment)
     {
@@ -45,6 +47,7 @@ public class StudentsController : ControllerBase
         _extendedInfoService = extendedInfoService;
         _studentRepository = studentRepository;
         _advisorAccessService = advisorAccessService;
+        _parentAccessService = parentAccessService;
         _logger = logger;
         _environment = environment;
     }
@@ -164,7 +167,7 @@ public class StudentsController : ControllerBase
     /// <response code="403">Forbidden - Advisor can only access assigned students</response>
     /// <response code="404">Student not found</response>
     [HttpGet("{id}")]
-    [RequirePermission(Permissions.StudentsView, Permissions.UsersView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate)]
+    [RequirePermission(Permissions.StudentsView, Permissions.UsersView, Permissions.AgpView, Permissions.AgpCreate, Permissions.AgpEdit, Permissions.SchedulingView, Permissions.SchedulingCreate, Permissions.ParentStudentView)]
     [ProducesResponseType(typeof(ApiResponse<StudentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -173,15 +176,29 @@ public class StudentsController : ControllerBase
     {
         try
         {
-            // Danışman erişim kontrolü
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!string.IsNullOrEmpty(userId))
             {
-                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, id);
-                if (!canAccess)
+                // Veli erişim kontrolü - veli sadece kendi öğrencisine erişebilir
+                var isParent = await _parentAccessService.IsParentAsync(userId);
+                if (isParent)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden,
-                        ApiResponse<StudentDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                    var canAccessAsParent = await _parentAccessService.CanAccessStudentAsync(userId, id);
+                    if (!canAccessAsParent)
+                    {
+                        return StatusCode(StatusCodes.Status403Forbidden,
+                            ApiResponse<StudentDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                    }
+                }
+                else
+                {
+                    // Danışman erişim kontrolü
+                    var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, id);
+                    if (!canAccess)
+                    {
+                        return StatusCode(StatusCodes.Status403Forbidden,
+                            ApiResponse<StudentDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                    }
                 }
             }
 
@@ -1231,5 +1248,64 @@ public class StudentsController : ControllerBase
     {
         var result = await _extendedInfoService.DeleteReadinessExamAsync(studentId, id);
         return Ok(result);
+    }
+
+    // ===============================================
+    // PARENTS
+    // ===============================================
+
+    /// <summary>
+    /// Get parents of a student
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <returns>List of parents</returns>
+    [HttpGet("{studentId}/parents")]
+    [ProducesResponseType(typeof(ApiResponse<List<Application.DTOs.Parent.ParentDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<List<Application.DTOs.Parent.ParentDto>>>> GetParents(int studentId)
+    {
+        try
+        {
+            var parentService = HttpContext.RequestServices.GetRequiredService<IParentService>();
+            var parents = await parentService.GetParentsByStudentIdAsync(studentId);
+            return Ok(ApiResponse<IEnumerable<Application.DTOs.Parent.ParentDto>>.SuccessResponse(parents));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting parents for student {StudentId}", studentId);
+            return StatusCode(500, ApiResponse<List<Application.DTOs.Parent.ParentDto>>.ErrorResponse("Veliler getirilirken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Create a new parent for a student
+    /// </summary>
+    /// <param name="studentId">Student ID</param>
+    /// <param name="dto">Parent creation data</param>
+    /// <returns>Created parent</returns>
+    [HttpPost("{studentId}/parents")]
+    [RequirePermission(Permissions.StudentsEdit, Permissions.UsersEdit, Permissions.StudentsCreate, Permissions.UsersCreate)]
+    [ProducesResponseType(typeof(ApiResponse<Application.DTOs.Parent.ParentDto>), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ApiResponse<Application.DTOs.Parent.ParentDto>), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ApiResponse<Application.DTOs.Parent.ParentDto>>> CreateParent(
+        int studentId,
+        [FromBody] Application.DTOs.Parent.CreateParentForStudentDto dto)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ApiResponse<Application.DTOs.Parent.ParentDto>.ErrorResponse("Geçersiz veri"));
+            }
+
+            var parentService = HttpContext.RequestServices.GetRequiredService<IParentService>();
+            var parent = await parentService.CreateParentForStudentAsync(studentId, dto);
+            return CreatedAtAction(nameof(GetParents), new { studentId },
+                ApiResponse<Application.DTOs.Parent.ParentDto>.SuccessResponse(parent, "Veli başarıyla oluşturuldu"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating parent for student {StudentId}", studentId);
+            return BadRequest(ApiResponse<Application.DTOs.Parent.ParentDto>.ErrorResponse(ex.Message));
+        }
     }
 }

@@ -120,6 +120,9 @@ public static class Permissions
     public const string ParentMessages = "parent.messages";
     public const string ParentReports = "parent.reports";
     public const string ParentMeetings = "parent.meetings";
+    public const string ParentStudentView = "parent.student.view";
+    public const string ParentHomeworkView = "parent.homework.view";
+    public const string ParentAgpView = "parent.agp.view";
 
     // Paket Yönetimi
     public const string PackagesView = "packages.view";
@@ -254,6 +257,9 @@ public static class Permissions
         { ParentMessages, new PermissionInfo("Mesajlar", "Veli Paneli", "👪", 303) },
         { ParentReports, new PermissionInfo("Raporlar", "Veli Paneli", "👪", 304) },
         { ParentMeetings, new PermissionInfo("Görüşmeler", "Veli Paneli", "👪", 305) },
+        { ParentStudentView, new PermissionInfo("Öğrenci Görüntüle", "Veli Paneli", "👪", 306) },
+        { ParentHomeworkView, new PermissionInfo("Ödev Görüntüle", "Veli Paneli", "👪", 307) },
+        { ParentAgpView, new PermissionInfo("AGP Görüntüle", "Veli Paneli", "👪", 308) },
     };
 
     // Kullanıcı tipine göre varsayılan yetkiler
@@ -295,7 +301,8 @@ public static class Permissions
             "parent" or "veli" => new List<string>
             {
                 ParentDashboard, ParentChildren, ParentPayments,
-                ParentMessages, ParentReports, ParentMeetings
+                ParentMessages, ParentReports, ParentMeetings,
+                ParentStudentView, ParentHomeworkView, ParentAgpView
             },
             _ => new List<string>()
         };

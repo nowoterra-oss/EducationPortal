@@ -1,4 +1,5 @@
 using EduPortal.Domain.Entities;
+using EduPortal.Domain.Entities.Messaging;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -136,6 +137,19 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<HomeworkDraft> HomeworkDrafts => Set<HomeworkDraft>();
     public DbSet<StudentCurriculumProgress> StudentCurriculumProgresses => Set<StudentCurriculumProgress>();
     public DbSet<Curriculum> Curriculums => Set<Curriculum>();
+
+    // ===============================================
+    // MESSAGING MODULE
+    // ===============================================
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
+    public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<MessageReadReceipt> MessageReadReceipts => Set<MessageReadReceipt>();
+    public DbSet<AdminMessageAccessLog> AdminMessageAccessLogs => Set<AdminMessageAccessLog>();
+    public DbSet<BroadcastMessage> BroadcastMessages => Set<BroadcastMessage>();
+    public DbSet<BroadcastMessageRecipient> BroadcastMessageRecipients => Set<BroadcastMessageRecipient>();
+    public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
+    public DbSet<MessageArchive> MessageArchives => Set<MessageArchive>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -1245,6 +1259,159 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
+        // ===============================================
+        // MESSAGING MODULE RELATIONSHIPS
+        // ===============================================
+
+        // Conversation relationships
+        builder.Entity<Conversation>(entity =>
+        {
+            entity.HasOne(c => c.Course)
+                .WithMany()
+                .HasForeignKey(c => c.CourseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(c => c.StudentGroup)
+                .WithMany()
+                .HasForeignKey(c => c.StudentGroupId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(c => c.Type);
+            entity.HasIndex(c => c.LastMessageAt);
+        });
+
+        // ConversationParticipant relationships
+        builder.Entity<ConversationParticipant>(entity =>
+        {
+            entity.HasOne(cp => cp.Conversation)
+                .WithMany(c => c.Participants)
+                .HasForeignKey(cp => cp.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(cp => cp.User)
+                .WithMany()
+                .HasForeignKey(cp => cp.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(cp => cp.LastReadMessage)
+                .WithMany()
+                .HasForeignKey(cp => cp.LastReadMessageId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(cp => new { cp.ConversationId, cp.UserId }).IsUnique();
+            entity.HasIndex(cp => cp.UserId);
+        });
+
+        // ChatMessage relationships
+        builder.Entity<ChatMessage>(entity =>
+        {
+            entity.HasOne(m => m.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Sender)
+                .WithMany()
+                .HasForeignKey(m => m.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(m => m.ReplyToMessage)
+                .WithMany()
+                .HasForeignKey(m => m.ReplyToMessageId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(m => m.ConversationId);
+            entity.HasIndex(m => m.SentAt);
+            entity.HasIndex(m => m.SenderId);
+        });
+
+        // MessageReadReceipt relationships
+        builder.Entity<MessageReadReceipt>(entity =>
+        {
+            entity.HasOne(r => r.Message)
+                .WithMany(m => m.ReadReceipts)
+                .HasForeignKey(r => r.MessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(r => new { r.MessageId, r.UserId }).IsUnique();
+        });
+
+        // AdminMessageAccessLog relationships
+        builder.Entity<AdminMessageAccessLog>(entity =>
+        {
+            entity.HasOne(l => l.AdminUser)
+                .WithMany()
+                .HasForeignKey(l => l.AdminUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(l => l.Conversation)
+                .WithMany()
+                .HasForeignKey(l => l.ConversationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(l => l.Message)
+                .WithMany()
+                .HasForeignKey(l => l.MessageId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(l => l.AdminUserId);
+            entity.HasIndex(l => l.AccessedAt);
+        });
+
+        // BroadcastMessage relationships
+        builder.Entity<BroadcastMessage>(entity =>
+        {
+            entity.HasOne(b => b.Sender)
+                .WithMany()
+                .HasForeignKey(b => b.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(b => b.SentAt);
+            entity.HasIndex(b => b.TargetAudience);
+        });
+
+        // BroadcastMessageRecipient relationships
+        builder.Entity<BroadcastMessageRecipient>(entity =>
+        {
+            entity.HasOne(r => r.BroadcastMessage)
+                .WithMany(b => b.Recipients)
+                .HasForeignKey(r => r.BroadcastMessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(r => new { r.BroadcastMessageId, r.UserId }).IsUnique();
+            entity.HasIndex(r => r.UserId);
+        });
+
+        // PushSubscription relationships
+        builder.Entity<PushSubscription>(entity =>
+        {
+            entity.HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(p => p.UserId);
+            entity.HasIndex(p => p.Endpoint).IsUnique();
+        });
+
+        // MessageArchive relationships (no FK constraints for archived data)
+        builder.Entity<MessageArchive>(entity =>
+        {
+            entity.HasIndex(a => a.OriginalConversationId);
+            entity.HasIndex(a => a.OriginalSentAt);
+            entity.HasIndex(a => a.ArchivedAt);
+        });
+
         // Global query filter for soft delete
         builder.Entity<Student>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<Parent>().HasQueryFilter(e => !e.IsDeleted);
@@ -1256,6 +1423,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<HomeworkAssignment>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<HomeworkSubmissionFile>().HasQueryFilter(e => !e.IsDeleted);
         builder.Entity<HomeworkViewLog>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<Conversation>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<ChatMessage>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<ConversationParticipant>().HasQueryFilter(e => !e.IsDeleted);
+        builder.Entity<BroadcastMessage>().HasQueryFilter(e => !e.IsDeleted);
 
         // Configure decimal precision
         foreach (var property in builder.Model.GetEntityTypes()

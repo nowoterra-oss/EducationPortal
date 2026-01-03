@@ -100,6 +100,9 @@ public static class DependencyInjection
         // Advisor Access Service (Danışman erişim kontrolü)
         services.AddScoped<IAdvisorAccessService, AdvisorAccessService>();
 
+        // Parent Access Service (Veli erişim kontrolü)
+        services.AddScoped<IParentAccessService, ParentAccessService>();
+
         // Counselor Dashboard Service
         services.AddScoped<ICounselorDashboardService, CounselorDashboardService>();
 

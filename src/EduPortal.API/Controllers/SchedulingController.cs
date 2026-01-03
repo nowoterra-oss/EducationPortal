@@ -22,19 +22,22 @@ public class SchedulingController : ControllerBase
     private readonly ITeacherRepository _teacherRepository;
     private readonly IStudentRepository _studentRepository;
     private readonly IPermissionService _permissionService;
+    private readonly IParentAccessService _parentAccessService;
 
     public SchedulingController(
         ISchedulingService schedulingService,
         IStudentGroupService studentGroupService,
         ITeacherRepository teacherRepository,
         IStudentRepository studentRepository,
-        IPermissionService permissionService)
+        IPermissionService permissionService,
+        IParentAccessService parentAccessService)
     {
         _schedulingService = schedulingService;
         _studentGroupService = studentGroupService;
         _teacherRepository = teacherRepository;
         _studentRepository = studentRepository;
         _permissionService = permissionService;
+        _parentAccessService = parentAccessService;
     }
 
     // ===============================================
@@ -331,7 +334,8 @@ public class SchedulingController : ControllerBase
 
     /// <summary>
     /// Öğrenci erişim kontrolü yapar.
-    /// Öğrenci kendi verilerine erişebilir, başkasının verilerine erişmek için scheduling.view yetkisi gereklidir.
+    /// Öğrenci kendi verilerine erişebilir, veli kendi çocuğunun verilerine erişebilir,
+    /// başkasının verilerine erişmek için scheduling.view yetkisi gereklidir.
     /// </summary>
     /// <param name="studentId">Erişilmek istenen öğrenci ID</param>
     /// <returns>Erişim reddedildiyse ActionResult, aksi halde null</returns>
@@ -356,11 +360,22 @@ public class SchedulingController : ControllerBase
             return NotFound(ApiResponse<object>.ErrorResponse("Öğrenci bulunamadı"));
         }
 
-        // Kendi verileri mi kontrol et
+        // Kendi verileri mi kontrol et (öğrenci)
         bool isOwnData = student.UserId == currentUserId;
         if (isOwnData)
         {
             return null; // Kendi verileri - yetki gerekmez
+        }
+
+        // Veli erişim kontrolü - kendi çocuğunun verilerine erişebilir
+        var userType = User.FindFirstValue("UserType");
+        if (userType == "Parent")
+        {
+            var canAccess = await _parentAccessService.CanAccessStudentAsync(currentUserId, studentId);
+            if (canAccess)
+            {
+                return null; // Veli kendi çocuğunun verilerine erişebilir
+            }
         }
 
         // Başka öğrencinin verileri - scheduling.view yetkisi gerekli

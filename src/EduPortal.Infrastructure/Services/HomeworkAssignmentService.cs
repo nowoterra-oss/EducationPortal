@@ -479,6 +479,51 @@ public class HomeworkAssignmentService : IHomeworkAssignmentService
         }
     }
 
+    public async Task<ApiResponse<List<HomeworkProgressDto>>> GetStudentProgressAsync(int studentId)
+    {
+        try
+        {
+            var assignments = await _context.HomeworkAssignments
+                .Where(a => a.StudentId == studentId && !a.IsDeleted)
+                .Include(a => a.Homework)
+                .Include(a => a.Attachments)
+                .OrderByDescending(a => a.CreatedAt)
+                .ToListAsync();
+
+            var progressDtos = assignments.Select(a => new HomeworkProgressDto
+            {
+                Id = a.Id,
+                Title = a.Homework?.Title ?? "",
+                Description = a.Homework?.Description,
+                AssignedDate = a.StartDate != default ? a.StartDate : a.CreatedAt,
+                DueDate = a.DueDate,
+                SubmittedAt = a.SubmittedAt,
+                ProgressPercentage = a.CompletionPercentage,
+                Status = a.Status.ToString(),
+                CurriculumId = null, // TODO: Curriculum bağlantısı varsa eklenebilir
+                CurriculumTopicName = null,
+                Attachments = a.Attachments?.Select(att => new HomeworkAttachmentDto
+                {
+                    Id = att.Id,
+                    FileName = att.FileName,
+                    FilePath = att.FilePath,
+                    MimeType = att.MimeType,
+                    FileSize = att.FileSize,
+                    IsFromCourseResource = att.IsFromCourseResource,
+                    CourseResourceId = att.CourseResourceId,
+                    CourseResourceTitle = att.CourseResource?.Title
+                }).ToList() ?? new List<HomeworkAttachmentDto>()
+            }).ToList();
+
+            return ApiResponse<List<HomeworkProgressDto>>.SuccessResponse(progressDtos);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting student progress for studentId: {StudentId}", studentId);
+            return ApiResponse<List<HomeworkProgressDto>>.ErrorResponse(ex.Message);
+        }
+    }
+
     public async Task<ApiResponse<bool>> MarkAsViewedAsync(int assignmentId, int studentId, string? ipAddress, string? userAgent)
     {
         try

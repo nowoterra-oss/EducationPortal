@@ -15,11 +15,16 @@ public class StudentGroupsController : ControllerBase
 {
     private readonly IStudentGroupService _service;
     private readonly IStudentRepository _studentRepository;
+    private readonly IParentAccessService _parentAccessService;
 
-    public StudentGroupsController(IStudentGroupService service, IStudentRepository studentRepository)
+    public StudentGroupsController(
+        IStudentGroupService service,
+        IStudentRepository studentRepository,
+        IParentAccessService parentAccessService)
     {
         _service = service;
         _studentRepository = studentRepository;
+        _parentAccessService = parentAccessService;
     }
 
     /// <summary>
@@ -107,6 +112,7 @@ public class StudentGroupsController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Öğrenci kendi gruplarını yetki olmadan görüntüleyebilir.
+    /// Veli kendi çocuğunun gruplarını görüntüleyebilir.
     /// Başka öğrencinin gruplarını görüntülemek için yetkilendirme gerekir.
     /// </remarks>
     [HttpGet("student/{studentId}")]
@@ -130,11 +136,24 @@ public class StudentGroupsController : ControllerBase
                 return NotFound(ApiResponse<object>.ErrorResponse("Öğrenci bulunamadı"));
             }
 
-            // Kendi grupları mı kontrol et
+            // Kendi grupları mı kontrol et (öğrenci)
             bool isOwnData = student.UserId == currentUserId;
             if (!isOwnData)
             {
-                return Forbid();
+                // Veli erişim kontrolü - kendi çocuğunun gruplarına erişebilir
+                var userType = User.FindFirstValue("UserType");
+                if (userType == "Parent")
+                {
+                    var canAccess = await _parentAccessService.CanAccessStudentAsync(currentUserId, studentId);
+                    if (!canAccess)
+                    {
+                        return Forbid();
+                    }
+                }
+                else
+                {
+                    return Forbid();
+                }
             }
         }
 

@@ -15,15 +15,18 @@ public class HomeworkAssignmentsController : ControllerBase
 {
     private readonly IHomeworkAssignmentService _service;
     private readonly IAdvisorAccessService _advisorAccessService;
+    private readonly IParentAccessService _parentAccessService;
     private readonly ILogger<HomeworkAssignmentsController> _logger;
 
     public HomeworkAssignmentsController(
         IHomeworkAssignmentService service,
         IAdvisorAccessService advisorAccessService,
+        IParentAccessService parentAccessService,
         ILogger<HomeworkAssignmentsController> logger)
     {
         _service = service;
         _advisorAccessService = advisorAccessService;
+        _parentAccessService = parentAccessService;
         _logger = logger;
     }
 
@@ -57,6 +60,7 @@ public class HomeworkAssignmentsController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Danışmanlar sadece kendilerine atanmış öğrencilerin ödevlerini görüntüleyebilir.
+    /// Veliler sadece kendilerine bağlı öğrencilerin ödevlerini görüntüleyebilir.
     /// </remarks>
     [HttpGet("student/{studentId}")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -65,19 +69,76 @@ public class HomeworkAssignmentsController : ControllerBase
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10)
     {
-        // Danışman erişim kontrolü
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!string.IsNullOrEmpty(userId))
         {
-            var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
-            if (!canAccess)
+            // Veli erişim kontrolü
+            var isParent = await _parentAccessService.IsParentAsync(userId);
+            if (isParent)
             {
-                return StatusCode(StatusCodes.Status403Forbidden,
-                    ApiResponse<PagedResponse<HomeworkAssignmentDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                var canAccessAsParent = await _parentAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccessAsParent)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<PagedResponse<HomeworkAssignmentDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
+            }
+            else
+            {
+                // Danışman erişim kontrolü
+                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccess)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<PagedResponse<HomeworkAssignmentDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
             }
         }
 
         var result = await _service.GetStudentAssignmentsAsync(studentId, pageNumber, pageSize);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Öğrencinin ödev ilerleme durumlarını getir
+    /// </summary>
+    /// <remarks>
+    /// Öğrenci kendi ödev ilerlemelerini yetki olmadan görüntüleyebilir.
+    /// Veliler sadece kendilerine bağlı öğrencilerin ödev ilerlemelerini görüntüleyebilir.
+    /// Danışmanlar sadece kendilerine atanmış öğrencilerin ödev ilerlemelerini görüntüleyebilir.
+    /// </remarks>
+    [HttpGet("student/{studentId}/progress")]
+    [ProducesResponseType(typeof(ApiResponse<List<HomeworkProgressDto>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<ApiResponse<List<HomeworkProgressDto>>>> GetStudentProgress(int studentId)
+    {
+        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            // Veli erişim kontrolü
+            var isParent = await _parentAccessService.IsParentAsync(userId);
+            if (isParent)
+            {
+                var canAccessAsParent = await _parentAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccessAsParent)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<List<HomeworkProgressDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
+            }
+            else
+            {
+                // Danışman erişim kontrolü
+                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccess)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<List<HomeworkProgressDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
+            }
+        }
+
+        var result = await _service.GetStudentProgressAsync(studentId);
         return Ok(result);
     }
 
@@ -118,21 +179,37 @@ public class HomeworkAssignmentsController : ControllerBase
     /// teacherId parametresi verilmezse tüm öğretmenlerin ödevleri döndürülür.
     /// teacherId parametresi verilirse sadece o öğretmenin ödevleri döndürülür.
     /// Danışmanlar sadece kendilerine atanmış öğrencilerin ödev geçmişini görüntüleyebilir.
+    /// Veliler sadece kendi çocuklarının ödev geçmişini görüntüleyebilir.
     /// </remarks>
     [HttpGet("student/{studentId}/history")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<List<HomeworkAssignmentDto>>>> GetStudentHistory(
         int studentId, [FromQuery] int? teacherId = null)
     {
-        // Danışman erişim kontrolü
+        // Erişim kontrolü
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!string.IsNullOrEmpty(userId))
         {
-            var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
-            if (!canAccess)
+            // Veli erişim kontrolü
+            var isParent = await _parentAccessService.IsParentAsync(userId);
+            if (isParent)
             {
-                return StatusCode(StatusCodes.Status403Forbidden,
-                    ApiResponse<List<HomeworkAssignmentDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                var canAccessAsParent = await _parentAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccessAsParent)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<List<HomeworkAssignmentDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
+            }
+            else
+            {
+                // Danışman erişim kontrolü
+                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccess)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<List<HomeworkAssignmentDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
             }
         }
 
@@ -216,21 +293,37 @@ public class HomeworkAssignmentsController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Danışmanlar sadece kendilerine atanmış öğrencilerin performansını görüntüleyebilir.
+    /// Veliler sadece kendi çocuklarının performansını görüntüleyebilir.
     /// </remarks>
     [HttpGet("student/{studentId}/performance")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<StudentHomeworkPerformanceDto>>> GetStudentPerformance(
         int studentId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
     {
-        // Danışman erişim kontrolü
+        // Erişim kontrolü
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!string.IsNullOrEmpty(userId))
         {
-            var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
-            if (!canAccess)
+            // Veli erişim kontrolü
+            var isParent = await _parentAccessService.IsParentAsync(userId);
+            if (isParent)
             {
-                return StatusCode(StatusCodes.Status403Forbidden,
-                    ApiResponse<StudentHomeworkPerformanceDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                var canAccessAsParent = await _parentAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccessAsParent)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<StudentHomeworkPerformanceDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
+            }
+            else
+            {
+                // Danışman erişim kontrolü
+                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccess)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<StudentHomeworkPerformanceDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
             }
         }
 
@@ -243,21 +336,37 @@ public class HomeworkAssignmentsController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Danışmanlar sadece kendilerine atanmış öğrencilerin performans grafiğini görüntüleyebilir.
+    /// Veliler sadece kendi çocuklarının performans grafiğini görüntüleyebilir.
     /// </remarks>
     [HttpGet("student/{studentId}/performance/chart")]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<HomeworkPerformanceChartDto>>> GetPerformanceChart(
         int studentId, [FromQuery] int months = 6)
     {
-        // Danışman erişim kontrolü
+        // Erişim kontrolü
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!string.IsNullOrEmpty(userId))
         {
-            var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
-            if (!canAccess)
+            // Veli erişim kontrolü
+            var isParent = await _parentAccessService.IsParentAsync(userId);
+            if (isParent)
             {
-                return StatusCode(StatusCodes.Status403Forbidden,
-                    ApiResponse<HomeworkPerformanceChartDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                var canAccessAsParent = await _parentAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccessAsParent)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<HomeworkPerformanceChartDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
+            }
+            else
+            {
+                // Danışman erişim kontrolü
+                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
+                if (!canAccess)
+                {
+                    return StatusCode(StatusCodes.Status403Forbidden,
+                        ApiResponse<HomeworkPerformanceChartDto>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                }
             }
         }
 

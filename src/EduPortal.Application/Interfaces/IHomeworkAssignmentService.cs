@@ -17,6 +17,12 @@ public interface IHomeworkAssignmentService
     Task<ApiResponse<PagedResponse<HomeworkAssignmentDto>>> GetStudentAssignmentsAsync(int studentId, int pageNumber, int pageSize);
     Task<ApiResponse<List<HomeworkAssignmentDto>>> GetStudentAssignmentHistoryAsync(int studentId, int? teacherId = null);
 
+    /// <summary>
+    /// Öğrencinin ödev ilerleme durumlarını getirir.
+    /// Aktif ödevlerin progress bilgilerini döndürür.
+    /// </summary>
+    Task<ApiResponse<List<HomeworkProgressDto>>> GetStudentProgressAsync(int studentId);
+
     // Ödev Görüntüleme Logu
     Task<ApiResponse<bool>> MarkAsViewedAsync(int assignmentId, int studentId, string? ipAddress, string? userAgent);
 

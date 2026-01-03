@@ -22,6 +22,7 @@ public class AGPController : ControllerBase
     private readonly IAGPService _agpService;
     private readonly IAgpPeriodService _periodService;
     private readonly IAdvisorAccessService _advisorAccessService;
+    private readonly IParentAccessService _parentAccessService;
     private readonly IStudentRepository _studentRepository;
     private readonly ILogger<AGPController> _logger;
 
@@ -29,12 +30,14 @@ public class AGPController : ControllerBase
         IAGPService agpService,
         IAgpPeriodService periodService,
         IAdvisorAccessService advisorAccessService,
+        IParentAccessService parentAccessService,
         IStudentRepository studentRepository,
         ILogger<AGPController> logger)
     {
         _agpService = agpService;
         _periodService = periodService;
         _advisorAccessService = advisorAccessService;
+        _parentAccessService = parentAccessService;
         _studentRepository = studentRepository;
         _logger = logger;
     }
@@ -237,24 +240,39 @@ public class AGPController : ControllerBase
     /// </summary>
     /// <remarks>
     /// Danışmanlar sadece kendilerine atanmış öğrencilerin AGP kayıtlarını görüntüleyebilir.
+    /// Veliler sadece kendilerine bağlı öğrencilerin AGP kayıtlarını görüntüleyebilir.
     /// </remarks>
     [HttpGet("student/{studentId}")]
-    [RequirePermission(Permissions.AgpView)]
+    [RequirePermission(Permissions.AgpView, Permissions.ParentAgpView)]
     [ProducesResponseType(typeof(ApiResponse<IEnumerable<AGPDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<IEnumerable<AGPDto>>>> GetByStudent(int studentId)
     {
         try
         {
-            // Danışman erişim kontrolü
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!string.IsNullOrEmpty(userId))
             {
-                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
-                if (!canAccess)
+                // Veli erişim kontrolü
+                var isParent = await _parentAccessService.IsParentAsync(userId);
+                if (isParent)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden,
-                        ApiResponse<IEnumerable<AGPDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                    var canAccessAsParent = await _parentAccessService.CanAccessStudentAsync(userId, studentId);
+                    if (!canAccessAsParent)
+                    {
+                        return StatusCode(StatusCodes.Status403Forbidden,
+                            ApiResponse<IEnumerable<AGPDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                    }
+                }
+                else
+                {
+                    // Danışman erişim kontrolü
+                    var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
+                    if (!canAccess)
+                    {
+                        return StatusCode(StatusCodes.Status403Forbidden,
+                            ApiResponse<IEnumerable<AGPDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                    }
                 }
             }
 
@@ -550,22 +568,36 @@ public class AGPController : ControllerBase
     /// Get all periods for a student (across all AGPs)
     /// </summary>
     [HttpGet("student/{studentId}/periods")]
-    [RequirePermission(Permissions.AgpView)]
+    [RequirePermission(Permissions.AgpView, Permissions.ParentAgpView)]
     [ProducesResponseType(typeof(ApiResponse<List<AgpPeriodResponseDto>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<List<AgpPeriodResponseDto>>>> GetStudentPeriods(int studentId)
     {
         try
         {
-            // Danışman erişim kontrolü
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (!string.IsNullOrEmpty(userId))
             {
-                var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
-                if (!canAccess)
+                // Veli erişim kontrolü
+                var isParent = await _parentAccessService.IsParentAsync(userId);
+                if (isParent)
                 {
-                    return StatusCode(StatusCodes.Status403Forbidden,
-                        ApiResponse<List<AgpPeriodResponseDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                    var canAccessAsParent = await _parentAccessService.CanAccessStudentAsync(userId, studentId);
+                    if (!canAccessAsParent)
+                    {
+                        return StatusCode(StatusCodes.Status403Forbidden,
+                            ApiResponse<List<AgpPeriodResponseDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                    }
+                }
+                else
+                {
+                    // Danışman erişim kontrolü
+                    var canAccess = await _advisorAccessService.CanAccessStudentAsync(userId, studentId);
+                    if (!canAccess)
+                    {
+                        return StatusCode(StatusCodes.Status403Forbidden,
+                            ApiResponse<List<AgpPeriodResponseDto>>.ErrorResponse("Bu öğrencinin verilerine erişim yetkiniz bulunmamaktadır."));
+                    }
                 }
             }
 

@@ -3,6 +3,7 @@ using EduPortal.Application.DTOs.Parent;
 using EduPortal.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace EduPortal.API.Controllers;
 
@@ -53,15 +54,57 @@ public class ParentsController : ControllerBase
     }
 
     /// <summary>
+    /// Get current parent's own profile (for parent panel)
+    /// </summary>
+    [HttpGet("me")]
+    [ProducesResponseType(typeof(ApiResponse<ParentDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<ParentDto>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<ParentDto>>> GetMyProfile()
+    {
+        try
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(ApiResponse<ParentDto>.ErrorResponse("Kullanıcı kimliği bulunamadı"));
+            }
+
+            var parent = await _parentService.GetParentByUserIdAsync(userId);
+            if (parent == null)
+            {
+                return NotFound(ApiResponse<ParentDto>.ErrorResponse("Veli kaydı bulunamadı"));
+            }
+
+            return Ok(ApiResponse<ParentDto>.SuccessResponse(parent));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting current parent profile");
+            return StatusCode(500, ApiResponse<ParentDto>.ErrorResponse("Veli bilgisi alınırken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
     /// Get parent by ID
     /// </summary>
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [ProducesResponseType(typeof(ApiResponse<ParentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<ParentDto>), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ApiResponse<ParentDto>>> GetById(int id)
     {
         try
         {
+            // Veli kullanıcı sadece kendi kaydına erişebilir
+            var userType = User.FindFirstValue("UserType");
+            if (userType == "Parent")
+            {
+                var parentIdClaim = User.FindFirstValue("ParentId");
+                if (string.IsNullOrEmpty(parentIdClaim) || !int.TryParse(parentIdClaim, out var claimParentId) || claimParentId != id)
+                {
+                    return Forbid();
+                }
+            }
+
             var parent = await _parentService.GetParentByIdAsync(id);
             if (parent == null)
             {
@@ -74,6 +117,35 @@ public class ParentsController : ControllerBase
         {
             _logger.LogError(ex, "Error getting parent {ParentId}", id);
             return StatusCode(500, ApiResponse<ParentDto>.ErrorResponse("Veli alınırken bir hata oluştu"));
+        }
+    }
+
+    /// <summary>
+    /// Search parents by name, email
+    /// </summary>
+    [HttpGet("search")]
+    [Authorize(Roles = "Admin,Danışman,Kayıtçı")]
+    [ProducesResponseType(typeof(ApiResponse<PagedResponse<ParentWithStudentDto>>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<ApiResponse<PagedResponse<ParentWithStudentDto>>>> Search(
+        [FromQuery] string term,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        try
+        {
+            var (items, totalCount) = await _parentService.SearchAsync(term ?? "", pageNumber, pageSize);
+            var pagedResponse = new PagedResponse<ParentWithStudentDto>(
+                items.ToList(),
+                totalCount,
+                pageNumber,
+                pageSize);
+
+            return Ok(ApiResponse<PagedResponse<ParentWithStudentDto>>.SuccessResponse(pagedResponse));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error searching parents with term: {Term}", term);
+            return StatusCode(500, ApiResponse<PagedResponse<ParentWithStudentDto>>.ErrorResponse("Veli arama sırasında bir hata oluştu"));
         }
     }
 
@@ -136,7 +208,13 @@ public class ParentsController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ApiResponse<ParentDto>.ErrorResponse("Geçersiz veri"));
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+                var errorMessage = string.Join("; ", errors);
+                _logger.LogWarning("Parent update validation failed for ID {Id}: {Errors}", id, errorMessage);
+                return BadRequest(ApiResponse<ParentDto>.ErrorResponse($"Geçersiz veri: {errorMessage}"));
             }
 
             var parent = await _parentService.UpdateParentAsync(id, parentDto);
@@ -149,7 +227,7 @@ public class ParentsController : ControllerBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating parent {ParentId}", id);
-            return StatusCode(500, ApiResponse<ParentDto>.ErrorResponse("Veli güncellenirken bir hata oluştu"));
+            return StatusCode(500, ApiResponse<ParentDto>.ErrorResponse($"Veli güncellenirken bir hata oluştu: {ex.Message}"));
         }
     }
 
