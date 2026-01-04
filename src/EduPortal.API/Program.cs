@@ -1,5 +1,8 @@
 using AspNetCoreRateLimit;
+using EduPortal.API.Hubs;
 using EduPortal.API.Middleware;
+using EduPortal.API.Services;
+using EduPortal.Application.Interfaces.Messaging;
 using EduPortal.Application;
 using EduPortal.Application.Validators.Auth;
 using EduPortal.Domain.Entities;
@@ -53,6 +56,9 @@ builder.Services.AddScoped<DbContext>(sp => sp.GetRequiredService<ApplicationDbC
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 
+// Add HttpClient for Push Notifications
+builder.Services.AddHttpClient();
+
 // Add Infrastructure Services (Repositories)
 builder.Services.AddInfrastructure();
 
@@ -98,6 +104,21 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtSettings["Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(key),
         ClockSkew = TimeSpan.Zero
+    };
+
+    // SignalR için token'ı query string'den al
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 
@@ -167,6 +188,12 @@ builder.Services.AddControllers()
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddFluentValidationClientsideAdapters();
 builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
+
+// Add SignalR for real-time messaging
+builder.Services.AddSignalR();
+
+// Online status service (ChatHub uzerinden kullanici durumunu sorgular)
+builder.Services.AddSingleton<IOnlineStatusService, OnlineStatusService>();
 
 // Add Rate Limiting
 builder.Services.AddMemoryCache();
@@ -334,5 +361,8 @@ app.MapGet("/health", () => Results.Ok(new
 
 // 12. Endpoints
 app.MapControllers();
+
+// 13. SignalR Hub for real-time messaging
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();

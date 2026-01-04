@@ -81,4 +81,9 @@ public class ChatMessage : BaseEntity
     public virtual ChatMessage? ReplyToMessage { get; set; }
 
     public virtual ICollection<MessageReadReceipt> ReadReceipts { get; set; } = new List<MessageReadReceipt>();
+
+    /// <summary>
+    /// İletildi bilgileri (çift tik gri için)
+    /// </summary>
+    public virtual ICollection<MessageDeliveryReceipt> DeliveryReceipts { get; set; } = new List<MessageDeliveryReceipt>();
 }

@@ -71,6 +71,8 @@ public static class Permissions
     public const string MessagesView = "messages.view";
     public const string MessagesSend = "messages.send";
     public const string MessagesBroadcast = "messages.broadcast";
+    public const string MessagesAdminRead = "messages.admin-read";
+    public const string MessagesAccessLogs = "messages.access-logs";
 
     // Kullanıcı Yönetimi
     public const string UsersView = "users.view";
@@ -202,6 +204,8 @@ public static class Permissions
         { MessagesView, new PermissionInfo("Mesaj Görüntüle", "Mesajlar", "💬", 42) },
         { MessagesSend, new PermissionInfo("Mesaj Gönder", "Mesajlar", "💬", 43) },
         { MessagesBroadcast, new PermissionInfo("Toplu Mesaj Gönder", "Mesajlar", "💬", 44) },
+        { MessagesAdminRead, new PermissionInfo("Mesaj Oku (Admin)", "Mesajlar", "💬", 45) },
+        { MessagesAccessLogs, new PermissionInfo("Erişim Logları", "Mesajlar", "💬", 46) },
 
         // Kullanıcı Yönetimi
         { UsersView, new PermissionInfo("Kullanıcı Görüntüle", "Kullanıcı Yönetimi", "👤", 45) },

@@ -145,6 +145,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<ConversationParticipant> ConversationParticipants => Set<ConversationParticipant>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<MessageReadReceipt> MessageReadReceipts => Set<MessageReadReceipt>();
+    public DbSet<MessageDeliveryReceipt> MessageDeliveryReceipts => Set<MessageDeliveryReceipt>();
     public DbSet<AdminMessageAccessLog> AdminMessageAccessLogs => Set<AdminMessageAccessLog>();
     public DbSet<BroadcastMessage> BroadcastMessages => Set<BroadcastMessage>();
     public DbSet<BroadcastMessageRecipient> BroadcastMessageRecipients => Set<BroadcastMessageRecipient>();
@@ -1286,7 +1287,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(cp => cp.Conversation)
                 .WithMany(c => c.Participants)
                 .HasForeignKey(cp => cp.ConversationId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(cp => cp.User)
                 .WithMany()
@@ -1296,7 +1297,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(cp => cp.LastReadMessage)
                 .WithMany()
                 .HasForeignKey(cp => cp.LastReadMessageId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasIndex(cp => new { cp.ConversationId, cp.UserId }).IsUnique();
             entity.HasIndex(cp => cp.UserId);
@@ -1308,7 +1309,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(m => m.Conversation)
                 .WithMany(c => c.Messages)
                 .HasForeignKey(m => m.ConversationId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(m => m.Sender)
                 .WithMany()
@@ -1318,7 +1319,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(m => m.ReplyToMessage)
                 .WithMany()
                 .HasForeignKey(m => m.ReplyToMessageId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasIndex(m => m.ConversationId);
             entity.HasIndex(m => m.SentAt);
@@ -1331,7 +1332,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(r => r.Message)
                 .WithMany(m => m.ReadReceipts)
                 .HasForeignKey(r => r.MessageId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(r => r.User)
                 .WithMany()
@@ -1357,7 +1358,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(l => l.Message)
                 .WithMany()
                 .HasForeignKey(l => l.MessageId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.NoAction);
 
             entity.HasIndex(l => l.AdminUserId);
             entity.HasIndex(l => l.AccessedAt);
@@ -1381,7 +1382,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(r => r.BroadcastMessage)
                 .WithMany(b => b.Recipients)
                 .HasForeignKey(r => r.BroadcastMessageId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(r => r.User)
                 .WithMany()
@@ -1398,7 +1399,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasOne(p => p.User)
                 .WithMany()
                 .HasForeignKey(p => p.UserId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(p => p.UserId);
             entity.HasIndex(p => p.Endpoint).IsUnique();

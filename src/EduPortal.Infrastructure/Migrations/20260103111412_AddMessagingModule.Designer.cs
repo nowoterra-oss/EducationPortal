@@ -4,6 +4,7 @@ using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduPortal.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260103111412_AddMessagingModule")]
+    partial class AddMessagingModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3262,42 +3265,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.HasIndex("OriginalSentAt");
 
                     b.ToTable("MessageArchives");
-                });
-
-            modelBuilder.Entity("EduPortal.Domain.Entities.Messaging.MessageDeliveryReceipt", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DeliveredAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("MessageId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MessageId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("MessageDeliveryReceipts");
                 });
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Messaging.MessageReadReceipt", b =>
@@ -7419,25 +7386,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("EduPortal.Domain.Entities.Messaging.MessageDeliveryReceipt", b =>
-                {
-                    b.HasOne("EduPortal.Domain.Entities.Messaging.ChatMessage", "Message")
-                        .WithMany("DeliveryReceipts")
-                        .HasForeignKey("MessageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("EduPortal.Domain.Entities.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Message");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("EduPortal.Domain.Entities.Messaging.MessageReadReceipt", b =>
                 {
                     b.HasOne("EduPortal.Domain.Entities.Messaging.ChatMessage", "Message")
@@ -8439,8 +8387,6 @@ namespace EduPortal.Infrastructure.Migrations
 
             modelBuilder.Entity("EduPortal.Domain.Entities.Messaging.ChatMessage", b =>
                 {
-                    b.Navigation("DeliveryReceipts");
-
                     b.Navigation("ReadReceipts");
                 });
 

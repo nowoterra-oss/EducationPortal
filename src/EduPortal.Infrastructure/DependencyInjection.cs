@@ -1,7 +1,9 @@
 using EduPortal.Application.Interfaces;
+using EduPortal.Application.Interfaces.Messaging;
 using EduPortal.Application.Services.Interfaces;
 using EduPortal.Infrastructure.Repositories;
 using EduPortal.Infrastructure.Services;
+using EduPortal.Infrastructure.Services.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EduPortal.Infrastructure;
@@ -111,6 +113,15 @@ public static class DependencyInjection
 
         // Curriculum Progress Service
         services.AddScoped<ICurriculumProgressService, CurriculumProgressService>();
+
+        // Messaging Services (Site içi mesajlaşma)
+        services.AddSingleton<IContentModerationService, ContentModerationService>();
+        services.AddSingleton<IMessageEncryptionService, MessageEncryptionService>();
+        services.AddScoped<IMessagingAuthorizationService, MessagingAuthorizationService>();
+        services.AddScoped<IMessagingService, MessagingService>();
+        services.AddScoped<IBroadcastService, BroadcastService>();
+        services.AddScoped<IPushNotificationService, PushNotificationService>();
+        services.AddScoped<IAdminMessagingService, AdminMessagingService>();
 
         return services;
     }
