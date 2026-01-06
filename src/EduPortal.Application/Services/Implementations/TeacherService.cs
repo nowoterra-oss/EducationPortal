@@ -291,6 +291,55 @@ public class TeacherService : ITeacherService
                 }
             }
 
+            // Update Advisor Student Assignments (danışman öğrenci atamaları)
+            // NOT: Bu kod sadece YENİ öğrenci ekler, mevcut atamaları silmez
+            // Silme işlemi için ayrı endpoint kullanılmalıdır
+            if (dto.AdvisorStudentIds != null && dto.AdvisorStudentIds.Any())
+            {
+                // Mevcut aktif danışman atamalarını getir
+                var existingAssignments = await _dbContext.Set<StudentTeacherAssignment>()
+                    .Where(a => a.TeacherId == teacher.Id &&
+                                a.AssignmentType == AssignmentType.Advisor &&
+                                a.IsActive)
+                    .ToListAsync();
+
+                var existingStudentIds = existingAssignments.Select(a => a.StudentId).ToList();
+                var newStudentIds = dto.AdvisorStudentIds;
+
+                // Sadece yeni öğrencileri ekle (mevcut atamaları silme)
+                var toAdd = newStudentIds.Where(id => !existingStudentIds.Contains(id)).ToList();
+
+                foreach (var studentId in toAdd)
+                {
+                    // Önce pasif bir atama var mı kontrol et (reaktive edilebilir)
+                    var existingInactive = await _dbContext.Set<StudentTeacherAssignment>()
+                        .FirstOrDefaultAsync(a => a.TeacherId == teacher.Id &&
+                                                   a.StudentId == studentId &&
+                                                   a.AssignmentType == AssignmentType.Advisor &&
+                                                   !a.IsActive);
+
+                    if (existingInactive != null)
+                    {
+                        // Pasif atamayı reaktive et
+                        existingInactive.IsActive = true;
+                        existingInactive.EndDate = null;
+                        existingInactive.StartDate = DateTime.UtcNow;
+                    }
+                    else
+                    {
+                        // Yeni atama oluştur
+                        _dbContext.Set<StudentTeacherAssignment>().Add(new StudentTeacherAssignment
+                        {
+                            TeacherId = teacher.Id,
+                            StudentId = studentId,
+                            AssignmentType = AssignmentType.Advisor,
+                            StartDate = DateTime.UtcNow,
+                            IsActive = true
+                        });
+                    }
+                }
+            }
+
             // Update user phone number if provided
             if (!string.IsNullOrEmpty(dto.PhoneNumber))
             {

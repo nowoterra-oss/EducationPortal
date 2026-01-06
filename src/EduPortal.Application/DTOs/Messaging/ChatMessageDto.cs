@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace EduPortal.Application.DTOs.Messaging;
 
 public class ChatMessageDto
@@ -51,13 +53,22 @@ public class ChatMessageReplyDto
 public class SendMessageDto
 {
     public int ConversationId { get; set; }
+
+    [Required(ErrorMessage = "Mesaj içeriği gereklidir.")]
+    [MinLength(1, ErrorMessage = "Mesaj en az 1 karakter olmalıdır.")]
+    [MaxLength(4000, ErrorMessage = "Mesaj en fazla 4000 karakter olabilir.")]
     public string Content { get; set; } = string.Empty;
+
     public int? ReplyToMessageId { get; set; }
 }
 
 public class EditMessageDto
 {
     public int MessageId { get; set; }
+
+    [Required(ErrorMessage = "Mesaj içeriği gereklidir.")]
+    [MinLength(1, ErrorMessage = "Mesaj en az 1 karakter olmalıdır.")]
+    [MaxLength(4000, ErrorMessage = "Mesaj en fazla 4000 karakter olabilir.")]
     public string Content { get; set; } = string.Empty;
 }
 

@@ -61,16 +61,33 @@ public class MessagingService : IMessagingService
 
         var result = new List<ConversationListDto>();
 
+        // N+1 Query optimizasyonu: Tum conversation'lar icin okunmamis mesaj sayilarini tek sorguda al
+        var conversationIds = conversations.Select(cp => cp.ConversationId).ToList();
+        var participantData = conversations.ToDictionary(cp => cp.ConversationId, cp => new { cp.LastReadAt, cp.UserId });
+
+        var unreadCounts = await _context.ChatMessages
+            .Where(m => conversationIds.Contains(m.ConversationId) && m.SenderId != userId)
+            .GroupBy(m => m.ConversationId)
+            .Select(g => new
+            {
+                ConversationId = g.Key,
+                // Her conversation icin LastReadAt'e gore filtreleme yapmak icin tum mesajlari say
+                Messages = g.ToList()
+            })
+            .ToDictionaryAsync(x => x.ConversationId, x => x.Messages);
+
         foreach (var cp in conversations)
         {
             var conv = cp.Conversation;
             var lastMessage = conv.Messages.FirstOrDefault();
 
-            // Okunmamis mesaj sayisi
-            var unreadCount = await _context.ChatMessages
-                .CountAsync(m => m.ConversationId == conv.Id &&
-                                m.SentAt > (cp.LastReadAt ?? DateTime.MinValue) &&
-                                m.SenderId != userId);
+            // Okunmamis mesaj sayisi (onceden hesaplandi)
+            var unreadCount = 0;
+            if (unreadCounts.TryGetValue(conv.Id, out var messages))
+            {
+                var lastReadAt = cp.LastReadAt ?? DateTime.MinValue;
+                unreadCount = messages.Count(m => m.SentAt > lastReadAt);
+            }
 
             // Direct konusmada karsi tarafin bilgilerini al
             var displayName = conv.Title;
@@ -94,6 +111,11 @@ public class MessagingService : IMessagingService
             else if (conv.Type == ConversationType.CourseGroup)
             {
                 displayName = conv.Course?.CourseName ?? conv.Title;
+            }
+            else if (conv.Type == ConversationType.Broadcast)
+            {
+                // Broadcast/RoleGroup sohbetleri icin title'i kullan
+                displayName = conv.Title ?? "Duyuru";
             }
 
             // Yaziyor gostergesi
@@ -297,6 +319,13 @@ public class MessagingService : IMessagingService
 
     public async Task<ConversationDto> GetOrCreateDirectConversationAsync(string userId1, string userId2)
     {
+        // Yetki kontrolu - kullanici bu kisiye mesaj atabilir mi?
+        var (canMessage, reason) = await _authorizationService.CanMessageUserAsync(userId1, userId2);
+        if (!canMessage)
+        {
+            throw new InvalidOperationException(reason ?? "Bu kullanıcıya mesaj atamazsınız.");
+        }
+
         // Mevcut konusmayi bul
         var existingConversation = await _context.Conversations
             .Where(c => c.Type == ConversationType.Direct)
@@ -320,6 +349,12 @@ public class MessagingService : IMessagingService
 
     public async Task<ConversationDto> GetOrCreateGroupConversationAsync(int groupId, string userId)
     {
+        // Rol bazli grup kontrolu (1001-1005 arasi)
+        if (groupId >= RoleGroupStudents && groupId <= RoleGroupRegistrars)
+        {
+            return await GetOrCreateRoleGroupConversationAsync(groupId, userId);
+        }
+
         // Gruba erisim yetkisi kontrolu
         var (canMessage, reason) = await _authorizationService.CanMessageGroupAsync(userId, groupId);
         if (!canMessage)
@@ -520,6 +555,17 @@ public class MessagingService : IMessagingService
 
     public async Task<ChatMessageDto> SendMessageAsync(SendMessageDto dto, string senderUserId)
     {
+        // Mesaj icerigi kontrolu
+        if (string.IsNullOrWhiteSpace(dto.Content))
+        {
+            throw new InvalidOperationException("Mesaj içeriği boş olamaz.");
+        }
+
+        if (dto.Content.Length > 4000)
+        {
+            throw new InvalidOperationException("Mesaj en fazla 4000 karakter olabilir.");
+        }
+
         // Yetki kontrolu
         var (canMessage, reason) = await _authorizationService.CanMessageInConversationAsync(senderUserId, dto.ConversationId);
         if (!canMessage)
@@ -583,6 +629,17 @@ public class MessagingService : IMessagingService
 
     public async Task<ChatMessageDto> EditMessageAsync(EditMessageDto dto, string userId)
     {
+        // Mesaj icerigi kontrolu
+        if (string.IsNullOrWhiteSpace(dto.Content))
+        {
+            throw new InvalidOperationException("Mesaj içeriği boş olamaz.");
+        }
+
+        if (dto.Content.Length > 4000)
+        {
+            throw new InvalidOperationException("Mesaj en fazla 4000 karakter olabilir.");
+        }
+
         var message = await _context.ChatMessages
             .Include(m => m.Sender)
             .FirstOrDefaultAsync(m => m.Id == dto.MessageId);
@@ -918,7 +975,250 @@ public class MessagingService : IMessagingService
             });
         }
 
+        // Admin icin rol bazli gruplar ekle
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user != null)
+        {
+            var userRoles = await _userManager.GetRolesAsync(user);
+            if (userRoles.Contains("Admin"))
+            {
+                var roleGroups = await GetRoleBasedGroupsAsync();
+                result.Groups.AddRange(roleGroups);
+            }
+        }
+
         return result;
+    }
+
+    // Rol bazli grup sabitleri (100001-100005 arasi - StudentGroup ID'leriyle cakismamasi icin yuksek degerler)
+    public const int RoleGroupStudents = 100001;
+    public const int RoleGroupTeachers = 100002;
+    public const int RoleGroupParents = 100003;
+    public const int RoleGroupCounselors = 100004;
+    public const int RoleGroupRegistrars = 100005;
+
+    /// <summary>
+    /// Rol bazli grup konusmasini getirir veya olusturur (Admin icin broadcast)
+    /// </summary>
+    private async Task<ConversationDto> GetOrCreateRoleGroupConversationAsync(int roleGroupId, string userId)
+    {
+        // Admin kontrolu
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException("Kullanıcı bulunamadı.");
+        }
+
+        var userRoles = await _userManager.GetRolesAsync(user);
+        if (!userRoles.Contains("Admin"))
+        {
+            throw new InvalidOperationException("Bu gruba mesaj gönderme yetkiniz yok. Sadece Admin rol bazlı gruplara mesaj gönderebilir.");
+        }
+
+        // Grup adini ve hedef rol adini belirle
+        var (groupName, roleName) = roleGroupId switch
+        {
+            RoleGroupStudents => ("Öğrenciler", "Ogrenci"),
+            RoleGroupTeachers => ("Öğretmenler", "Ogretmen"),
+            RoleGroupParents => ("Veliler", "Veli"),
+            RoleGroupCounselors => ("Danışmanlar", "Danışman"),
+            RoleGroupRegistrars => ("Kayıtçılar", "Kayitci"),
+            _ => throw new InvalidOperationException("Geçersiz rol grubu.")
+        };
+
+        // Mevcut rol grubu konusmasi var mi? (Title ile eslestir)
+        var existingConversation = await _context.Conversations
+            .FirstOrDefaultAsync(c => c.Type == ConversationType.Broadcast && c.Title == groupName);
+
+        if (existingConversation != null)
+        {
+            // Kullanici zaten katilimci mi kontrol et
+            var existingParticipant = await _context.ConversationParticipants
+                .FirstOrDefaultAsync(cp => cp.ConversationId == existingConversation.Id && cp.UserId == userId);
+
+            if (existingParticipant == null)
+            {
+                // Admin'i katilimci olarak ekle
+                _context.ConversationParticipants.Add(new ConversationParticipant
+                {
+                    ConversationId = existingConversation.Id,
+                    UserId = userId,
+                    Role = ConversationParticipantRole.Owner,
+                    JoinedAt = DateTime.UtcNow,
+                    CreatedAt = DateTime.UtcNow
+                });
+                await _context.SaveChangesAsync();
+            }
+            else if (existingParticipant.LeftAt != null)
+            {
+                existingParticipant.LeftAt = null;
+                existingParticipant.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+
+            // Yeni eklenen kullanicilari da ekle (rol grubuna yeni katilan kullanicilar)
+            await SyncRoleGroupParticipantsAsync(existingConversation.Id, roleName, userId);
+
+            return (await GetConversationAsync(existingConversation.Id, userId))!;
+        }
+
+        // Yeni rol grubu konusmasi olustur
+        var conversation = new Conversation
+        {
+            Type = ConversationType.Broadcast,
+            Title = groupName,
+            MaxParticipants = 10000, // Cok fazla uye olabilir
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _context.Conversations.Add(conversation);
+        await _context.SaveChangesAsync();
+
+        // Sifreleme anahtari olustur
+        conversation.EncryptionKeyHash = _encryptionService.GenerateConversationKey(conversation.Id);
+
+        // Admin'i owner olarak ekle
+        _context.ConversationParticipants.Add(new ConversationParticipant
+        {
+            ConversationId = conversation.Id,
+            UserId = userId,
+            Role = ConversationParticipantRole.Owner,
+            JoinedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow
+        });
+
+        // Hedef roldeki tum kullanicilari katilimci olarak ekle
+        await AddRoleGroupParticipantsAsync(conversation.Id, roleName, userId);
+
+        await _context.SaveChangesAsync();
+
+        return (await GetConversationAsync(conversation.Id, userId))!;
+    }
+
+    /// <summary>
+    /// Rol grubundaki kullanicilari conversation'a ekler
+    /// </summary>
+    private async Task AddRoleGroupParticipantsAsync(int conversationId, string roleName, string adminUserId)
+    {
+        // Hedef roldeki kullanicilari al
+        var usersInRole = await _userManager.GetUsersInRoleAsync(roleName);
+
+        foreach (var roleUser in usersInRole)
+        {
+            // Admin'i tekrar ekleme
+            if (roleUser.Id == adminUserId) continue;
+
+            _context.ConversationParticipants.Add(new ConversationParticipant
+            {
+                ConversationId = conversationId,
+                UserId = roleUser.Id,
+                Role = ConversationParticipantRole.Participant,
+                JoinedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+    }
+
+    /// <summary>
+    /// Rol grubundaki yeni kullanicilari senkronize eder (mevcut conversation'a ekler)
+    /// </summary>
+    private async Task SyncRoleGroupParticipantsAsync(int conversationId, string roleName, string adminUserId)
+    {
+        // Hedef roldeki kullanicilari al
+        var usersInRole = await _userManager.GetUsersInRoleAsync(roleName);
+
+        // Mevcut katilimcilari al
+        var existingParticipantIds = await _context.ConversationParticipants
+            .Where(cp => cp.ConversationId == conversationId)
+            .Select(cp => cp.UserId)
+            .ToListAsync();
+
+        foreach (var roleUser in usersInRole)
+        {
+            // Admin'i veya zaten katilimci olani ekleme
+            if (roleUser.Id == adminUserId) continue;
+            if (existingParticipantIds.Contains(roleUser.Id)) continue;
+
+            _context.ConversationParticipants.Add(new ConversationParticipant
+            {
+                ConversationId = conversationId,
+                UserId = roleUser.Id,
+                Role = ConversationParticipantRole.Participant,
+                JoinedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Admin icin rol bazli gruplari getirir
+    /// </summary>
+    private async Task<List<ContactGroupDto>> GetRoleBasedGroupsAsync()
+    {
+        var groups = new List<ContactGroupDto>();
+
+        // 1. Ogrenciler Grubu
+        var studentCount = await _context.Students.CountAsync(s => !s.IsDeleted);
+        groups.Add(new ContactGroupDto
+        {
+            GroupId = RoleGroupStudents, // Pozitif ID'ler rol bazli gruplar icin
+            GroupName = "Öğrenciler",
+            GroupType = "RoleGroup",
+            MemberCount = studentCount,
+            ExistingConversationId = null
+        });
+
+        // 2. Ogretmenler Grubu
+        var teacherCount = await _context.Teachers.CountAsync(t => !t.IsDeleted);
+        groups.Add(new ContactGroupDto
+        {
+            GroupId = RoleGroupTeachers,
+            GroupName = "Öğretmenler",
+            GroupType = "RoleGroup",
+            MemberCount = teacherCount,
+            ExistingConversationId = null
+        });
+
+        // 3. Veliler Grubu
+        var parentCount = await _context.Parents.CountAsync(p => !p.IsDeleted);
+        groups.Add(new ContactGroupDto
+        {
+            GroupId = RoleGroupParents,
+            GroupName = "Veliler",
+            GroupType = "RoleGroup",
+            MemberCount = parentCount,
+            ExistingConversationId = null
+        });
+
+        // 4. Danismanlar Grubu (Ogrenciye atanmis ogretmenler)
+        var counselorCount = await _context.StudentTeacherAssignments
+            .Where(sta => sta.IsActive && !sta.IsDeleted && sta.AssignmentType == AssignmentType.Advisor)
+            .Select(sta => sta.TeacherId)
+            .Distinct()
+            .CountAsync();
+        groups.Add(new ContactGroupDto
+        {
+            GroupId = RoleGroupCounselors,
+            GroupName = "Danışmanlar",
+            GroupType = "RoleGroup",
+            MemberCount = counselorCount,
+            ExistingConversationId = null
+        });
+
+        // 5. Kayitcilar Grubu (Kayitci rolu olan kullanicilar)
+        var registrarUsers = await _userManager.GetUsersInRoleAsync("Kayitci");
+        groups.Add(new ContactGroupDto
+        {
+            GroupId = RoleGroupRegistrars,
+            GroupName = "Kayıtçılar",
+            GroupType = "RoleGroup",
+            MemberCount = registrarUsers.Count,
+            ExistingConversationId = null
+        });
+
+        return groups;
     }
 
     public async Task<ContactListDto> SearchContactsAsync(string userId, string searchTerm)
@@ -965,42 +1265,61 @@ public class MessagingService : IMessagingService
 
     public async Task<int> GetTotalUnreadCountAsync(string userId)
     {
+        // N+1 Query optimizasyonu: Tek sorguda tum okunmamis mesajlari say
         var participations = await _context.ConversationParticipants
             .Where(cp => cp.UserId == userId && cp.LeftAt == null)
+            .Select(cp => new { cp.ConversationId, cp.LastReadAt })
             .ToListAsync();
 
-        var totalUnread = 0;
-        foreach (var cp in participations)
+        if (!participations.Any())
         {
-            totalUnread += await _context.ChatMessages
-                .CountAsync(m => m.ConversationId == cp.ConversationId &&
-                                m.SentAt > (cp.LastReadAt ?? DateTime.MinValue) &&
-                                m.SenderId != userId);
+            return 0;
         }
+
+        var conversationIds = participations.Select(p => p.ConversationId).ToList();
+
+        // Tek sorguda tum mesajlari al ve memory'de filtrele
+        var allMessages = await _context.ChatMessages
+            .Where(m => conversationIds.Contains(m.ConversationId) && m.SenderId != userId)
+            .Select(m => new { m.ConversationId, m.SentAt })
+            .ToListAsync();
+
+        var participationDict = participations.ToDictionary(p => p.ConversationId, p => p.LastReadAt ?? DateTime.MinValue);
+
+        var totalUnread = allMessages.Count(m =>
+            participationDict.TryGetValue(m.ConversationId, out var lastReadAt) && m.SentAt > lastReadAt);
 
         return totalUnread;
     }
 
     public async Task<Dictionary<int, int>> GetUnreadCountsAsync(string userId)
     {
-        var result = new Dictionary<int, int>();
-
+        // N+1 Query optimizasyonu: Tek sorguda tum okunmamis mesaj sayilarini hesapla
         var participations = await _context.ConversationParticipants
             .Where(cp => cp.UserId == userId && cp.LeftAt == null)
+            .Select(cp => new { cp.ConversationId, cp.LastReadAt })
             .ToListAsync();
 
-        foreach (var cp in participations)
+        if (!participations.Any())
         {
-            var unread = await _context.ChatMessages
-                .CountAsync(m => m.ConversationId == cp.ConversationId &&
-                                m.SentAt > (cp.LastReadAt ?? DateTime.MinValue) &&
-                                m.SenderId != userId);
-
-            if (unread > 0)
-            {
-                result[cp.ConversationId] = unread;
-            }
+            return new Dictionary<int, int>();
         }
+
+        var conversationIds = participations.Select(p => p.ConversationId).ToList();
+        var participationDict = participations.ToDictionary(p => p.ConversationId, p => p.LastReadAt ?? DateTime.MinValue);
+
+        // Tek sorguda tum mesajlari al
+        var allMessages = await _context.ChatMessages
+            .Where(m => conversationIds.Contains(m.ConversationId) && m.SenderId != userId)
+            .Select(m => new { m.ConversationId, m.SentAt })
+            .ToListAsync();
+
+        // Memory'de grupla ve say
+        var result = allMessages
+            .Where(m => participationDict.TryGetValue(m.ConversationId, out var lastReadAt) && m.SentAt > lastReadAt)
+            .GroupBy(m => m.ConversationId)
+            .Where(g => g.Any())
+            .ToDictionary(g => g.Key, g => g.Count());
 
         return result;
     }

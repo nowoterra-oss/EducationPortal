@@ -18,5 +18,10 @@ public enum ConversationType
     /// <summary>
     /// Öğrenci grubu sohbeti
     /// </summary>
-    StudentGroup = 3
+    StudentGroup = 3,
+
+    /// <summary>
+    /// Rol bazli duyuru konusmasi (Admin -> Ogrenciler, Ogretmenler, vs.)
+    /// </summary>
+    Broadcast = 4
 }

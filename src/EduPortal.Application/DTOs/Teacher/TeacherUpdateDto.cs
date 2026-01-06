@@ -66,4 +66,10 @@ public class TeacherUpdateDto
     public List<TeacherCertificateDto>? Certificates { get; set; }
     public List<TeacherReferenceDto>? References { get; set; }
     public List<int>? WorkTypes { get; set; }
+
+    /// <summary>
+    /// Danışman olarak atanacak öğrenci ID'leri.
+    /// Bu liste gönderildiğinde, öğretmenin danışman atamaları bu listeye göre güncellenir.
+    /// </summary>
+    public List<int>? AdvisorStudentIds { get; set; }
 }

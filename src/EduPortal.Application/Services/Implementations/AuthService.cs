@@ -77,6 +77,12 @@ public class AuthService : IAuthService
             // Kullanıcı tipini ve entity ID'lerini belirle (entity tablolarından)
             await PopulateUserTypeAndIdsAsync(userDto, user.Id, roles);
 
+            // Kullanıcının eksik varsayılan yetkilerini senkronize et (yeni eklenen yetkiler için)
+            if (!string.IsNullOrEmpty(userDto.UserType) && userDto.UserType != "Admin")
+            {
+                await _permissionService.SyncMissingDefaultPermissionsAsync(user.Id, userDto.UserType);
+            }
+
             // Kullanıcının permission'larını al
             userDto.Permissions = await _permissionService.GetEffectivePermissionsAsync(user.Id);
 
@@ -303,6 +309,15 @@ public class AuthService : IAuthService
         if (user.CounselorId.HasValue)
         {
             claims.Add(new Claim("CounselorId", user.CounselorId.Value.ToString()));
+        }
+
+        // Add permissions to claims
+        if (user.Permissions != null)
+        {
+            foreach (var permission in user.Permissions)
+            {
+                claims.Add(new Claim("permission", permission));
+            }
         }
 
         var token = new JwtSecurityToken(

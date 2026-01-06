@@ -107,13 +107,9 @@ public static class Permissions
     public const string StudentProfile = "student.profile";
     public const string StudentPayments = "student.payments";
 
-    // Danışman Paneli Yetkileri
-    public const string CounselorDashboard = "counselor.dashboard";
-    public const string CounselorStudents = "counselor.students";
-    public const string CounselorSchedule = "counselor.schedule";
-    public const string CounselorReports = "counselor.reports";
-    public const string CounselorMessages = "counselor.messages";
-    public const string CounselorMeetings = "counselor.meetings";
+    // Danışman Öğretmen Yetkileri (Öğretmen paneli için)
+    public const string AdvisorStudentView = "advisor.student.view";
+    public const string AdvisorAgpView = "advisor.agp.view";
 
     // Veli Paneli Yetkileri
     public const string ParentDashboard = "parent.dashboard";
@@ -246,13 +242,9 @@ public static class Permissions
         { StudentProfile, new PermissionInfo("Profilim", "Öğrenci Paneli", "🎓", 107) },
         { StudentPayments, new PermissionInfo("Ödemelerim", "Öğrenci Paneli", "🎓", 108) },
 
-        // Danışman Paneli
-        { CounselorDashboard, new PermissionInfo("Ana Sayfa", "Danışman Paneli", "👨‍💼", 200) },
-        { CounselorStudents, new PermissionInfo("Öğrencilerim", "Danışman Paneli", "👨‍💼", 201) },
-        { CounselorSchedule, new PermissionInfo("Görüşme Takvimi", "Danışman Paneli", "👨‍💼", 202) },
-        { CounselorReports, new PermissionInfo("Raporlar", "Danışman Paneli", "👨‍💼", 203) },
-        { CounselorMessages, new PermissionInfo("Mesajlar", "Danışman Paneli", "👨‍💼", 204) },
-        { CounselorMeetings, new PermissionInfo("Görüşmeler", "Danışman Paneli", "👨‍💼", 205) },
+        // Danışman Öğretmen Yetkileri
+        { AdvisorStudentView, new PermissionInfo("Danışman Öğrenci Görüntüle", "Danışman Öğretmen", "👨‍🏫", 209) },
+        { AdvisorAgpView, new PermissionInfo("Danışman AGP Görüntüle", "Danışman Öğretmen", "👨‍🏫", 210) },
 
         // Veli Paneli
         { ParentDashboard, new PermissionInfo("Ana Sayfa", "Veli Paneli", "👪", 300) },
@@ -278,29 +270,19 @@ public static class Permissions
             },
             "teacher" or "ogretmen" => new List<string>
             {
-                // Öğrenci işlemleri
-                StudentsView,
-                // Ders yönetimi
-                CoursesView,
-                // Ders programı
-                SchedulingView,
-                // Ödevler
-                AssignmentsView, AssignmentsCreate, AssignmentsGrade,
-                // Sınavlar
-                ExamsView, ExamsCreate, ExamsGrade,
-                // Yoklama
-                AttendanceView, AttendanceCreate, AttendanceEdit,
-                // Duyurular
-                AnnouncementsView,
-                // Mesajlar
+                // Temel öğretmen yetkileri - Ödev yönetimi
+                AssignmentsCreate, AssignmentsGrade,
+                // Sınav yönetimi
+                ExamsCreate, ExamsGrade,
+                // Yoklama yönetimi
+                AttendanceCreate, AttendanceEdit,
+                // Mesajlaşma
                 MessagesView, MessagesSend,
-                // Grup dersleri
-                GroupLessonsView, GroupLessonsCreate, GroupLessonsEdit
-            },
-            "counselor" or "danışman" or "danisman" => new List<string>
-            {
-                CounselorDashboard, CounselorStudents, CounselorSchedule,
-                CounselorReports, CounselorMessages, CounselorMeetings
+                // Danışman erişimi (sadece danışmanı olduğu öğrencilere erişebilir)
+                AdvisorStudentView, AdvisorAgpView
+                // NOT: Aşağıdaki yetkiler varsayılan olarak VERİLMEZ, gerekirse admin tarafından manuel verilmeli:
+                // StudentsView, CoursesView, SchedulingView, GroupLessonsView,
+                // AssignmentsView, ExamsView, AttendanceView, AnnouncementsView, AgpView
             },
             "parent" or "veli" => new List<string>
             {

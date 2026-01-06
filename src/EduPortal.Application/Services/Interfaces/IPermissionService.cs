@@ -36,6 +36,7 @@ public interface IPermissionService
 
     // Default Permissions
     Task<ApiResponse<bool>> AssignDefaultPermissionsToUserAsync(string userId, string userType);
+    Task SyncMissingDefaultPermissionsAsync(string userId, string userType);
 
     // User Management for Permissions
     Task<UserSearchResultDto> GetAllUsersForPermissionAsync(string? searchTerm, string? userType, int pageNumber, int pageSize);

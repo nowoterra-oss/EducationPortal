@@ -1,5 +1,6 @@
 using EduPortal.Application.Interfaces;
 using EduPortal.Domain.Entities;
+using EduPortal.Domain.Enums;
 using EduPortal.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +9,8 @@ namespace EduPortal.Infrastructure.Services;
 
 /// <summary>
 /// Danışman erişim kontrolü servisi implementasyonu.
-/// Danışmanların sadece kendilerine atanmış öğrencilerin verilerine erişmesini sağlar.
+/// Öğretmenlerin (danışman olarak atanmış) sadece kendilerine atanmış öğrencilerin verilerine erişmesini sağlar.
+/// StudentTeacherAssignment tablosundaki AssignmentType.Advisor atamaları kullanılır.
 /// </summary>
 public class AdvisorAccessService : IAdvisorAccessService
 {
@@ -28,9 +30,17 @@ public class AdvisorAccessService : IAdvisorAccessService
 
     public async Task<bool> IsAdvisorAsync(string userId)
     {
-        // Danışman sistemi kaldırıldı - artık kimse danışman olarak değerlendirilmiyor
-        await Task.CompletedTask; // async imza için
-        return false;
+        // Kullanıcının öğretmen olup olmadığını ve danışman ataması olup olmadığını kontrol et
+        var teacher = await _teacherRepository.GetByUserIdAsync(userId);
+        if (teacher == null)
+            return false;
+
+        // Bu öğretmenin aktif danışman ataması var mı?
+        return await _context.StudentTeacherAssignments
+            .AnyAsync(sta => sta.TeacherId == teacher.Id &&
+                             sta.AssignmentType == AssignmentType.Advisor &&
+                             sta.IsActive &&
+                             !sta.IsDeleted);
     }
 
     public async Task<int?> GetAdvisorTeacherIdAsync(string userId)
@@ -42,7 +52,10 @@ public class AdvisorAccessService : IAdvisorAccessService
     public async Task<List<int>> GetAssignedStudentIdsAsync(int teacherId)
     {
         return await _context.StudentTeacherAssignments
-            .Where(sta => sta.TeacherId == teacherId && sta.IsActive && !sta.IsDeleted)
+            .Where(sta => sta.TeacherId == teacherId &&
+                          sta.AssignmentType == AssignmentType.Advisor &&
+                          sta.IsActive &&
+                          !sta.IsDeleted)
             .Select(sta => sta.StudentId)
             .Distinct()
             .ToListAsync();
@@ -50,15 +63,34 @@ public class AdvisorAccessService : IAdvisorAccessService
 
     public async Task<bool> CanAccessStudentAsync(string userId, int studentId)
     {
-        // Danışman sistemi kaldırıldı - tüm kullanıcılar tüm öğrencilere erişebilir
-        await Task.CompletedTask; // async imza için
-        return true;
+        // Kullanıcının öğretmen ID'sini al
+        var teacherId = await GetAdvisorTeacherIdAsync(userId);
+        if (teacherId == null)
+            return false;
+
+        // Bu öğretmenin bu öğrenciye danışman olarak atanıp atanmadığını kontrol et
+        return await _context.StudentTeacherAssignments
+            .AnyAsync(sta => sta.TeacherId == teacherId.Value &&
+                             sta.StudentId == studentId &&
+                             sta.AssignmentType == AssignmentType.Advisor &&
+                             sta.IsActive &&
+                             !sta.IsDeleted);
     }
 
     public async Task<bool> CanAccessStudentsAsync(string userId, IEnumerable<int> studentIds)
     {
-        // Danışman sistemi kaldırıldı - tüm kullanıcılar tüm öğrencilere erişebilir
-        await Task.CompletedTask; // async imza için
-        return true;
+        if (!studentIds.Any())
+            return true;
+
+        // Kullanıcının öğretmen ID'sini al
+        var teacherId = await GetAdvisorTeacherIdAsync(userId);
+        if (teacherId == null)
+            return false;
+
+        // Bu öğretmene danışman olarak atanmış öğrenci ID'lerini al
+        var assignedStudentIds = await GetAssignedStudentIdsAsync(teacherId.Value);
+
+        // İstenen tüm öğrencilerin atanmış olup olmadığını kontrol et
+        return studentIds.All(id => assignedStudentIds.Contains(id));
     }
 }

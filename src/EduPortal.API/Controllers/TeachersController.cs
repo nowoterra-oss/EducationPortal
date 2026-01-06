@@ -438,4 +438,48 @@ public class TeachersController : ControllerBase
             return StatusCode(500, ApiResponse<List<StudentTeacherAssignmentDto>>.ErrorResponse("Rehber öğrencileri getirilirken bir hata oluştu"));
         }
     }
+
+    /// <summary>
+    /// Öğretmenden danışman öğrenci atamasını kaldırır
+    /// </summary>
+    /// <param name="teacherId">Öğretmen ID</param>
+    /// <param name="studentId">Öğrenci ID</param>
+    /// <returns>Başarılı ise true</returns>
+    /// <response code="200">Atama başarıyla kaldırıldı</response>
+    /// <response code="404">Atama bulunamadı</response>
+    [HttpDelete("{teacherId}/advisor-students/{studentId}")]
+    [Authorize(Roles = "Admin,Kayitci")]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse<bool>), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ApiResponse<bool>>> RemoveAdvisorStudent(int teacherId, int studentId)
+    {
+        try
+        {
+            // Öğretmenin bu öğrenciye danışman atamasını bul
+            var assignments = await _assignmentService.GetByTeacherIdAsync(teacherId);
+            var assignment = assignments
+                .FirstOrDefault(a => a.StudentId == studentId &&
+                                     a.AssignmentType == AssignmentType.Advisor &&
+                                     a.IsActive);
+
+            if (assignment == null)
+            {
+                return NotFound(ApiResponse<bool>.ErrorResponse("Danışman ataması bulunamadı"));
+            }
+
+            // Deactivate the assignment
+            var result = await _assignmentService.DeactivateAsync(assignment.Id);
+            if (!result)
+            {
+                return NotFound(ApiResponse<bool>.ErrorResponse("Atama devre dışı bırakılamadı"));
+            }
+
+            return Ok(ApiResponse<bool>.SuccessResponse(true, "Danışman ataması başarıyla kaldırıldı"));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing advisor student. TeacherId: {TeacherId}, StudentId: {StudentId}", teacherId, studentId);
+            return StatusCode(500, ApiResponse<bool>.ErrorResponse("Danışman ataması kaldırılırken bir hata oluştu"));
+        }
+    }
 }

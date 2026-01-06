@@ -1233,5 +1233,70 @@ public class PermissionService : IPermissionService
         return "Other";
     }
 
+    /// <summary>
+    /// Login sırasında eksik varsayılan yetkileri senkronize eder.
+    /// Yeni eklenen yetkiler mevcut kullanıcılara otomatik olarak verilir.
+    /// </summary>
+    public async Task SyncMissingDefaultPermissionsAsync(string userId, string userType)
+    {
+        try
+        {
+            // Önce permission'ları senkronize et (yeni eklenenler için)
+            await SyncPermissionsAsync();
+
+            // Kullanıcı tipine göre varsayılan yetki kodlarını al
+            var defaultPermissionCodes = Permissions.GetDefaultPermissionsForUserType(userType);
+            if (!defaultPermissionCodes.Any())
+            {
+                return;
+            }
+
+            // Kodlara göre permission ID'lerini bul
+            var permissions = await _context.Permissions
+                .Where(p => defaultPermissionCodes.Contains(p.Code) && !p.IsDeleted && p.IsActive)
+                .ToListAsync();
+
+            if (!permissions.Any())
+            {
+                return;
+            }
+
+            // Mevcut kullanıcı yetkilerini kontrol et
+            var existingPermissionIds = await _context.UserPermissions
+                .Where(up => up.UserId == userId && !up.IsDeleted)
+                .Select(up => up.PermissionId)
+                .ToListAsync();
+
+            // Eksik yetkileri ekle
+            var addedCount = 0;
+            foreach (var permission in permissions)
+            {
+                if (!existingPermissionIds.Contains(permission.Id))
+                {
+                    var userPermission = new UserPermission
+                    {
+                        UserId = userId,
+                        PermissionId = permission.Id,
+                        IsGranted = true,
+                        GrantedAt = DateTime.UtcNow,
+                        Notes = $"Eksik varsayılan {userType} yetkisi otomatik eklendi"
+                    };
+                    await _context.UserPermissions.AddAsync(userPermission);
+                    addedCount++;
+                }
+            }
+
+            if (addedCount > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Login sırasında hata oluşursa log'la ama devam et
+            System.Diagnostics.Debug.WriteLine($"SyncMissingDefaultPermissionsAsync error: {ex.Message}");
+        }
+    }
+
     #endregion
 }

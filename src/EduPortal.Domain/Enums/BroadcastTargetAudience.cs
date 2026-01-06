@@ -11,5 +11,6 @@ public enum BroadcastTargetAudience
     Teachers = 2,
     Parents = 4,
     Counselors = 8,
-    All = Students | Teachers | Parents | Counselors
+    Registrars = 16,
+    All = Students | Teachers | Parents | Counselors | Registrars
 }

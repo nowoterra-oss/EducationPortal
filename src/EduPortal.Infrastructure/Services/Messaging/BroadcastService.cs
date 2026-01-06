@@ -154,6 +154,43 @@ public class BroadcastService : IBroadcastService
 
     public async Task<List<BroadcastMessageListDto>> GetBroadcastMessagesAsync(string userId, int page = 1, int pageSize = 20)
     {
+        // Admin kontrolu - Admin tum broadcast'leri gormeli
+        var user = await _userManager.FindByIdAsync(userId);
+        var userRoles = user != null ? await _userManager.GetRolesAsync(user) : new List<string>();
+        var isAdmin = userRoles.Contains("Admin");
+
+        if (isAdmin)
+        {
+            // Admin icin: Tum broadcast'leri getir (gonderen veya alici olarak)
+            var adminMessages = await _context.BroadcastMessages
+                .Include(b => b.Sender)
+                .Where(b => b.ExpiresAt == null || b.ExpiresAt > DateTime.UtcNow)
+                .OrderByDescending(b => b.SentAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return adminMessages.Select(b =>
+            {
+                var decrypted = _encryptionService.Decrypt(b.ContentEncrypted, BroadcastConversationId);
+
+                return new BroadcastMessageListDto
+                {
+                    Id = b.Id,
+                    SenderName = $"{b.Sender?.FirstName} {b.Sender?.LastName}".Trim(),
+                    TargetAudienceDisplay = GetAudienceDisplayName(b.TargetAudience),
+                    Title = b.Title,
+                    ContentPreview = decrypted.Length > 100 ? decrypted.Substring(0, 97) + "..." : decrypted,
+                    SentAt = b.SentAt,
+                    Priority = b.Priority,
+                    IsRead = b.SenderId == userId, // Gonderen icin okunmus say
+                    RecipientCount = b.RecipientCount,
+                    ReadCount = b.ReadCount
+                };
+            }).ToList();
+        }
+
+        // Normal kullanicilar icin: Sadece alici olduklari broadcast'leri getir
         var messages = await _context.BroadcastMessageRecipients
             .Include(r => r.BroadcastMessage)
                 .ThenInclude(b => b.Sender)
@@ -318,7 +355,7 @@ public class BroadcastService : IBroadcastService
         // Ogrenciler
         if (audience.HasFlag(BroadcastTargetAudience.Students))
         {
-            var students = await _userManager.GetUsersInRoleAsync("Student");
+            var students = await _userManager.GetUsersInRoleAsync("Ogrenci");
             foreach (var s in students)
             {
                 userIds.Add(s.Id);
@@ -328,7 +365,7 @@ public class BroadcastService : IBroadcastService
         // Ogretmenler
         if (audience.HasFlag(BroadcastTargetAudience.Teachers))
         {
-            var teachers = await _userManager.GetUsersInRoleAsync("Teacher");
+            var teachers = await _userManager.GetUsersInRoleAsync("Ogretmen");
             foreach (var t in teachers)
             {
                 userIds.Add(t.Id);
@@ -338,7 +375,7 @@ public class BroadcastService : IBroadcastService
         // Veliler
         if (audience.HasFlag(BroadcastTargetAudience.Parents))
         {
-            var parents = await _userManager.GetUsersInRoleAsync("Parent");
+            var parents = await _userManager.GetUsersInRoleAsync("Veli");
             foreach (var p in parents)
             {
                 userIds.Add(p.Id);
@@ -348,10 +385,20 @@ public class BroadcastService : IBroadcastService
         // Danismanlar
         if (audience.HasFlag(BroadcastTargetAudience.Counselors))
         {
-            var counselors = await _userManager.GetUsersInRoleAsync("Counselor");
+            var counselors = await _userManager.GetUsersInRoleAsync("Danışman");
             foreach (var c in counselors)
             {
                 userIds.Add(c.Id);
+            }
+        }
+
+        // Kayitcilar
+        if (audience.HasFlag(BroadcastTargetAudience.Registrars))
+        {
+            var registrars = await _userManager.GetUsersInRoleAsync("Kayitci");
+            foreach (var r in registrars)
+            {
+                userIds.Add(r.Id);
             }
         }
 
@@ -383,6 +430,9 @@ public class BroadcastService : IBroadcastService
 
         if (audience.HasFlag(BroadcastTargetAudience.Counselors))
             parts.Add("Danışmanlar");
+
+        if (audience.HasFlag(BroadcastTargetAudience.Registrars))
+            parts.Add("Kayıtçılar");
 
         return string.Join(", ", parts);
     }
