@@ -4,6 +4,7 @@ using EduPortal.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EduPortal.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260106164336_AddFinanceModule")]
+    partial class AddFinanceModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -3723,13 +3726,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("ApprovalDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ApprovedBy")
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -3758,21 +3754,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Property<int?>("PaymentId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PaymentMethod")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("ReceiptPath")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime?>("ReceiptUploadDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RejectionReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -3786,8 +3767,6 @@ namespace EduPortal.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApprovedBy");
 
                     b.HasIndex("PaymentId");
 
@@ -6021,9 +6000,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Property<DateTime?>("HireDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal?>("HourlyRate")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("IdentityNumber")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -6040,9 +6016,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<decimal?>("MonthlySalary")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("Nationality")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -6058,9 +6031,6 @@ namespace EduPortal.Infrastructure.Migrations
                     b.Property<string>("ProfilePhotoUrl")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("SalaryType")
-                        .HasColumnType("int");
 
                     b.Property<string>("Specialization")
                         .HasMaxLength(200)
@@ -7831,10 +7801,6 @@ namespace EduPortal.Infrastructure.Migrations
 
             modelBuilder.Entity("EduPortal.Domain.Entities.PaymentInstallment", b =>
                 {
-                    b.HasOne("EduPortal.Domain.Entities.ApplicationUser", "ApprovedByUser")
-                        .WithMany()
-                        .HasForeignKey("ApprovedBy");
-
                     b.HasOne("EduPortal.Domain.Entities.Payment", "Payment")
                         .WithMany()
                         .HasForeignKey("PaymentId");
@@ -7844,8 +7810,6 @@ namespace EduPortal.Infrastructure.Migrations
                         .HasForeignKey("StudentPaymentPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("ApprovedByUser");
 
                     b.Navigation("Payment");
 

@@ -8,6 +8,7 @@ public interface IStudentPaymentPlanService
     Task<StudentPaymentPlanDto?> GetByIdAsync(int id);
     Task<IEnumerable<StudentPaymentPlanDto>> GetByStudentIdAsync(int studentId);
     Task<StudentPaymentPlanDto?> GetActiveByStudentIdAsync(int studentId);
+    Task<IEnumerable<StudentPaymentPlanDto>> GetByParentIdAsync(int parentId);
     Task<StudentPaymentPlanDto> CreateAsync(CreateStudentPaymentPlanDto dto);
     Task<bool> CancelAsync(int id, string reason);
     Task<bool> CompleteAsync(int id);

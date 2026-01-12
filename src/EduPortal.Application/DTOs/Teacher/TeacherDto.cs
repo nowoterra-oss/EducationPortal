@@ -41,6 +41,11 @@ public class TeacherDto
     public List<TeacherCertificateDto>? Certificates { get; set; }
     public List<TeacherReferenceDto>? References { get; set; }
     public List<int>? WorkTypes { get; set; }
+
+    // Maaş Bilgileri
+    public decimal? MonthlySalary { get; set; }
+    public decimal? HourlyRate { get; set; }
+    public SalaryType SalaryType { get; set; }
 }
 
 public class TeacherAddressDto

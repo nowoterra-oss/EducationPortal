@@ -1,8 +1,10 @@
 using EduPortal.Application.Interfaces;
 using EduPortal.Application.Interfaces.Messaging;
 using EduPortal.Application.Services.Interfaces;
+using EduPortal.Infrastructure.BackgroundJobs;
 using EduPortal.Infrastructure.Repositories;
 using EduPortal.Infrastructure.Services;
+using EduPortal.Infrastructure.Services.Finance;
 using EduPortal.Infrastructure.Services.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -122,6 +124,14 @@ public static class DependencyInjection
         services.AddScoped<IBroadcastService, BroadcastService>();
         services.AddScoped<IPushNotificationService, PushNotificationService>();
         services.AddScoped<IAdminMessagingService, AdminMessagingService>();
+
+        // Finance Services (Ödeme sistemi)
+        services.AddScoped<IPaymentNotificationService, PaymentNotificationService>();
+        services.AddScoped<ITeacherSalaryService, TeacherSalaryService>();
+        services.AddScoped<IFinanceService, FinanceService>();
+
+        // Background Jobs
+        services.AddHostedService<PaymentReminderJob>();
 
         return services;
     }

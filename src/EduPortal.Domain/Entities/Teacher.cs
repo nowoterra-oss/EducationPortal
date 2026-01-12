@@ -62,6 +62,24 @@ public class Teacher : BaseEntity
     [MaxLength(500)]
     public string? CvUrl { get; set; }
 
+    // Maaş Bilgileri
+    /// <summary>
+    /// Aylık sabit maaş
+    /// </summary>
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? MonthlySalary { get; set; }
+
+    /// <summary>
+    /// Saatlik ücret
+    /// </summary>
+    [Column(TypeName = "decimal(18,2)")]
+    public decimal? HourlyRate { get; set; }
+
+    /// <summary>
+    /// Maaş tipi (Aylık/Saatlik)
+    /// </summary>
+    public SalaryType SalaryType { get; set; } = SalaryType.Monthly;
+
     // Navigation Properties
     [ForeignKey(nameof(BranchId))]
     public virtual Branch? Branch { get; set; }
@@ -85,4 +103,5 @@ public class Teacher : BaseEntity
     public virtual ICollection<TeacherCertificate> TeacherCertificates { get; set; } = new List<TeacherCertificate>();
     public virtual ICollection<TeacherReference> TeacherReferences { get; set; } = new List<TeacherReference>();
     public virtual ICollection<TeacherWorkType> TeacherWorkTypes { get; set; } = new List<TeacherWorkType>();
+    public virtual ICollection<TeacherSalary> Salaries { get; set; } = new List<TeacherSalary>();
 }

@@ -37,7 +37,12 @@
       "Bash(echo:*)",
       "Bash(printf:*)",
       "Bash(timeout /t 2 /nobreak)",
-      "Bash(ls -la \"c:\\workspace\\EducationPortal\\src\\EduPortal.Infrastructure\\Services\\Messaging\"\" 2>/dev/null || echo \"Directory not found \")"
+      "Bash(ls -la \"c:\\workspace\\EducationPortal\\src\\EduPortal.Infrastructure\\Services\\Messaging\"\" 2>/dev/null || echo \"Directory not found \")",
+      "Bash(cat:*)",
+      "Bash(xargs -I {} bash -c \"echo ''''=== {} ==='''' && head -40 ''''{}''''\")",
+      "Bash(dotnet ef migrations add:*)",
+      "Bash(sqlcmd -S \"45.143.4.64,1433\" -U sa -P \"DevStrongPass123!\" -d EduPortalDb -Q \"SELECT COUNT(*) AS TaksitSayisi FROM PaymentInstallments; SELECT COUNT(*) AS OgrenciPlanSayisi FROM StudentPaymentPlans; SELECT COUNT(*) AS PlanSablonSayisi FROM PaymentPlans;\")",
+      "Bash(sqlcmd -S \"45.143.4.64,1433\" -U sa -P \"DevStrongPass123!\" -d EduPortalDb -Q \"\n-- Önce taksitleri sil (foreign key constraint nedeniyle)\nDELETE FROM PaymentInstallments;\nPRINT ''PaymentInstallments silindi: '' + CAST(@@ROWCOUNT AS VARCHAR);\n\n-- Sonra öğrenci ödeme planlarını sil\nDELETE FROM StudentPaymentPlans;\nPRINT ''StudentPaymentPlans silindi: '' + CAST(@@ROWCOUNT AS VARCHAR);\n\n-- Kontrol\nSELECT COUNT(*) AS KalanTaksit FROM PaymentInstallments;\nSELECT COUNT(*) AS KalanOgrenciPlan FROM StudentPaymentPlans;\n\")"
     ]
   }
 }

@@ -32,6 +32,20 @@ public static class Permissions
     public const string PaymentsProcess = "payments.process";
     public const string PaymentsRefund = "payments.refund";
 
+    // Maaş Yönetimi
+    public const string SalariesView = "salaries.view";
+    public const string SalariesCreate = "salaries.create";
+    public const string SalariesProcess = "salaries.process";
+
+    // Finans Yönetimi
+    public const string FinanceView = "finance.view";
+    public const string FinanceCreate = "finance.create";
+    public const string FinanceEdit = "finance.edit";
+    public const string FinanceDelete = "finance.delete";
+
+    // Öğretmen Maaş Görüntüleme (Öğretmen Paneli)
+    public const string TeacherSalaryView = "teacher.salary.view";
+
     // Raporlar
     public const string ReportsView = "reports.view";
     public const string ReportsExport = "reports.export";
@@ -161,6 +175,20 @@ public static class Permissions
         { PaymentsProcess, new PermissionInfo("Ödeme İşle", "Ödemeler", "💰", 19) },
         { PaymentsRefund, new PermissionInfo("Ödeme İade", "Ödemeler", "💰", 20) },
 
+        // Maaş Yönetimi
+        { SalariesView, new PermissionInfo("Maaş Görüntüle", "Maaş Yönetimi", "💵", 63) },
+        { SalariesCreate, new PermissionInfo("Maaş Oluştur", "Maaş Yönetimi", "💵", 64) },
+        { SalariesProcess, new PermissionInfo("Maaş Öde", "Maaş Yönetimi", "💵", 65) },
+
+        // Finans Yönetimi
+        { FinanceView, new PermissionInfo("Finans Görüntüle", "Finans Yönetimi", "📈", 66) },
+        { FinanceCreate, new PermissionInfo("Finans Kaydı Oluştur", "Finans Yönetimi", "📈", 67) },
+        { FinanceEdit, new PermissionInfo("Finans Kaydı Düzenle", "Finans Yönetimi", "📈", 68) },
+        { FinanceDelete, new PermissionInfo("Finans Kaydı Sil", "Finans Yönetimi", "📈", 69) },
+
+        // Öğretmen Maaş Görüntüleme
+        { TeacherSalaryView, new PermissionInfo("Maaşlarım", "Öğretmen Paneli", "👨‍🏫", 211) },
+
         // Raporlar
         { ReportsView, new PermissionInfo("Rapor Görüntüle", "Raporlar", "📊", 21) },
         { ReportsExport, new PermissionInfo("Rapor Dışa Aktar", "Raporlar", "📊", 22) },
@@ -279,7 +307,9 @@ public static class Permissions
                 // Mesajlaşma
                 MessagesView, MessagesSend,
                 // Danışman erişimi (sadece danışmanı olduğu öğrencilere erişebilir)
-                AdvisorStudentView, AdvisorAgpView
+                AdvisorStudentView, AdvisorAgpView,
+                // Maaş görüntüleme
+                TeacherSalaryView
                 // NOT: Aşağıdaki yetkiler varsayılan olarak VERİLMEZ, gerekirse admin tarafından manuel verilmeli:
                 // StudentsView, CoursesView, SchedulingView, GroupLessonsView,
                 // AssignmentsView, ExamsView, AttendanceView, AnnouncementsView, AgpView

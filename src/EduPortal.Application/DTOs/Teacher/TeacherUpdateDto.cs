@@ -72,4 +72,22 @@ public class TeacherUpdateDto
     /// Bu liste gönderildiğinde, öğretmenin danışman atamaları bu listeye göre güncellenir.
     /// </summary>
     public List<int>? AdvisorStudentIds { get; set; }
+
+    // Maaş Bilgileri
+    /// <summary>
+    /// Aylık sabit maaş
+    /// </summary>
+    [Range(0, 1000000, ErrorMessage = "Maaş 0-1.000.000 arasında olmalıdır")]
+    public decimal? MonthlySalary { get; set; }
+
+    /// <summary>
+    /// Saatlik ücret
+    /// </summary>
+    [Range(0, 10000, ErrorMessage = "Saatlik ücret 0-10.000 arasında olmalıdır")]
+    public decimal? HourlyRate { get; set; }
+
+    /// <summary>
+    /// Maaş tipi (Aylık/Saatlik)
+    /// </summary>
+    public SalaryType? SalaryType { get; set; }
 }

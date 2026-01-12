@@ -19,4 +19,34 @@ public class PaymentInstallmentDto
     public int DaysOverdue { get; set; }
     public bool IsOverdue => Status == "Overdue";
     public bool IsUpcoming => DueDate <= DateTime.Now.AddDays(7) && Status == "Pending";
+
+    // Dekont alanları
+    public string? ReceiptPath { get; set; }
+    public DateTime? ReceiptUploadDate { get; set; }
+    public string? ApprovedBy { get; set; }
+    public string? ApprovedByName { get; set; }
+    public DateTime? ApprovalDate { get; set; }
+    public string? RejectionReason { get; set; }
+    public string? PaymentMethod { get; set; }
+}
+
+public class UploadReceiptDto
+{
+    public string? Notes { get; set; }
+}
+
+public class ApproveInstallmentDto
+{
+    public string? Notes { get; set; }
+}
+
+public class RejectInstallmentDto
+{
+    public required string Reason { get; set; }
+}
+
+public class CashPaymentDto
+{
+    public string? Notes { get; set; }
+    public string? PaymentMethod { get; set; } // cash, bank_transfer, pos, other
 }

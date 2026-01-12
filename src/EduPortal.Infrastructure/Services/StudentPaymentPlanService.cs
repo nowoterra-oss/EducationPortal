@@ -58,6 +58,27 @@ public class StudentPaymentPlanService : IStudentPaymentPlanService
         return plan != null ? MapToDto(plan) : null;
     }
 
+    public async Task<IEnumerable<StudentPaymentPlanDto>> GetByParentIdAsync(int parentId)
+    {
+        // Velinin çocuklarının ID'lerini bul
+        var studentIds = await _context.Set<StudentParent>()
+            .Where(sp => sp.ParentId == parentId)
+            .Select(sp => sp.StudentId)
+            .ToListAsync();
+
+        if (!studentIds.Any())
+            return Enumerable.Empty<StudentPaymentPlanDto>();
+
+        // Çocukların ödeme planlarını getir
+        return await _context.Set<StudentPaymentPlan>()
+            .Include(p => p.Student).ThenInclude(s => s.User)
+            .Include(p => p.PaymentPlan)
+            .Include(p => p.Installments)
+            .Where(p => studentIds.Contains(p.StudentId))
+            .Select(p => MapToDto(p))
+            .ToListAsync();
+    }
+
     public async Task<StudentPaymentPlanDto> CreateAsync(CreateStudentPaymentPlanDto dto)
     {
         var paymentPlan = await _context.PaymentPlans.FindAsync(dto.PaymentPlanId);

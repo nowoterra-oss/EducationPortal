@@ -152,6 +152,13 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<PushSubscription> PushSubscriptions => Set<PushSubscription>();
     public DbSet<MessageArchive> MessageArchives => Set<MessageArchive>();
 
+    // ===============================================
+    // FINANCE MODULE
+    // ===============================================
+    public DbSet<TeacherSalary> TeacherSalaries => Set<TeacherSalary>();
+    public DbSet<FinanceRecord> FinanceRecords => Set<FinanceRecord>();
+    public DbSet<RecurringExpense> RecurringExpenses => Set<RecurringExpense>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

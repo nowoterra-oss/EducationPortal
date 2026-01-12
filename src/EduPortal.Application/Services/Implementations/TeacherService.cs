@@ -197,6 +197,16 @@ public class TeacherService : ITeacherService
             if (dto.CvUrl != null)
                 teacher.CvUrl = dto.CvUrl;
 
+            // Maaş bilgilerini güncelle
+            if (dto.MonthlySalary.HasValue)
+                teacher.MonthlySalary = dto.MonthlySalary.Value;
+
+            if (dto.HourlyRate.HasValue)
+                teacher.HourlyRate = dto.HourlyRate.Value;
+
+            if (dto.SalaryType.HasValue)
+                teacher.SalaryType = dto.SalaryType.Value;
+
             // Update Address (one-to-one)
             if (dto.Address != null)
             {
