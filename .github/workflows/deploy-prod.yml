@@ -31,7 +31,7 @@ jobs:
 
             # Environment dosyası oluştur
             cat > .env.prod << EOF
-            DB_HOST=host.docker.internal
+            DB_HOST=mssql-prod
             DB_PORT=1433
             DB_NAME=EduPortalDb_Prod
             DB_USER=${{ secrets.DB_USER_PROD }}
@@ -45,9 +45,12 @@ jobs:
             docker compose -f docker-compose.prod.yml --env-file .env.prod down || true
             docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 
+            # Network'e bağla
+            docker network connect nwtsoft-network eduportal-api-prod 2>/dev/null || true
+
             # Health check bekle
             echo "Waiting for services to start..."
-            sleep 60
+            sleep 30
 
             # Health check
             curl -f http://127.0.0.1:8080/health && echo "✅ Prod Deployment successful!" || echo "⚠️ Health check failed"

@@ -31,8 +31,8 @@ jobs:
 
             # Environment dosyası oluştur
             cat > .env.dev << EOF
-            DB_HOST=host.docker.internal
-            DB_PORT=1434
+            DB_HOST=mssql-dev
+            DB_PORT=1433
             DB_NAME=EduPortalDb_Dev
             DB_USER=${{ secrets.DB_USER_DEV }}
             DB_PASSWORD=${{ secrets.DB_PASSWORD_DEV }}
@@ -45,9 +45,12 @@ jobs:
             docker compose -f docker-compose.dev.yml --env-file .env.dev down || true
             docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
 
+            # Network'e bağla
+            docker network connect nwtsoft-network eduportal-api-dev 2>/dev/null || true
+
             # Health check bekle
             echo "Waiting for services to start..."
-            sleep 60
+            sleep 30
 
             # Health check
             curl -f http://127.0.0.1:8081/health && echo "✅ Dev Deployment successful!" || echo "⚠️ Health check failed"
