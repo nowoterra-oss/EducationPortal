@@ -32,7 +32,7 @@ jobs:
           # Environment dosyası oluştur
           cat > .env.prod << EOF
           MSSQL_SA_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_HOST=127.0.0.1
+          DB_HOST=mssql-test
           DB_PORT=1433
           DB_NAME=EduPortalDb
           DB_USER=sa
@@ -45,6 +45,9 @@ jobs:
           docker compose -f docker-compose.test.yml --env-file .env.prod down || true
           docker compose -f docker-compose.test.yml --env-file .env.prod up -d --build
           
+          # Health check bekle
+          echo "Waiting for services to start..."
+          sleep 45
+          
           # Health check
-          sleep 30
-          curl -f http://127.0.0.1:8080/health || echo "Health check failed"
+          curl -f http://127.0.0.1:8080/health && echo "✅ Deployment successful!" || echo "⚠️ Health check failed"
