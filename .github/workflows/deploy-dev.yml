@@ -1,0 +1,53 @@
+name: Deploy to Development
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/eduportal-dev
+
+            # Repo'yu çek veya klonla
+            if [ -d ".git" ]; then
+              git pull origin develop
+            else
+              git clone -b develop https://github.com/nowoterra-oss/EducationPortal.git .
+            fi
+
+            # Environment dosyası oluştur
+            cat > .env.dev << EOF
+            DB_HOST=host.docker.internal
+            DB_PORT=1434
+            DB_NAME=EduPortalDb_Dev
+            DB_USER=${{ secrets.DB_USER_DEV }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD_DEV }}
+            JWT_KEY=${{ secrets.JWT_KEY }}
+            JWT_ISSUER=EduPortalAPI
+            JWT_AUDIENCE=EduPortalClient
+            EOF
+
+            # Docker Compose ile deploy
+            docker compose -f docker-compose.dev.yml --env-file .env.dev down || true
+            docker compose -f docker-compose.dev.yml --env-file .env.dev up -d --build
+
+            # Health check bekle
+            echo "Waiting for services to start..."
+            sleep 60
+
+            # Health check
+            curl -f http://127.0.0.1:8081/health && echo "✅ Dev Deployment successful!" || echo "⚠️ Health check failed"
