@@ -2,7 +2,7 @@ name: Deploy to Development
 
 on:
   push:
-    branches: [develop]
+    branches: [dev]
   workflow_dispatch:
 
 jobs:
@@ -24,9 +24,9 @@ jobs:
 
             # Repo'yu çek veya klonla
             if [ -d ".git" ]; then
-              git pull origin develop
+              git pull origin dev
             else
-              git clone -b develop https://github.com/nowoterra-oss/EducationPortal.git .
+              git clone -b dev https://github.com/nowoterra-oss/EducationPortal.git .
             fi
 
             # Environment dosyası oluştur
