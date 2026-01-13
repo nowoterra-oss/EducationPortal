@@ -109,11 +109,12 @@ public class PaymentInstallmentsController : ControllerBase
     /// Taksit için dekont yükler (Veli)
     /// </summary>
     [HttpPost("{id}/upload-receipt")]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<PaymentInstallmentDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<PaymentInstallmentDto>), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ApiResponse<PaymentInstallmentDto>>> UploadReceipt(
         int id,
-        [FromForm] IFormFile file,
+    IFormFile file,
         [FromForm] string? notes)
     {
         try
