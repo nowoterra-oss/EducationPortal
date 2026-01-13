@@ -26,11 +26,12 @@ public static class DbInitializer
         // Veritabanında veri varsa seed etme (ama test kullanıcılarını her zaman kontrol et)
         var hasExistingData = await context.Branches.AnyAsync();
 
-        // Test kullanıcılarını her zaman kontrol et ve eksik olanları oluştur
+        // Test kullanıcılarını ve finans verilerini her zaman kontrol et
         if (hasExistingData)
         {
             await SeedTestUsersAsync(userManager, context);
-            Console.WriteLine("Database already seeded. Only checked test users.");
+            await SeedFinanceTestDataAsync(context);
+            Console.WriteLine("Database already seeded. Checked test users and finance data.");
             return;
         }
 
@@ -47,6 +48,7 @@ public static class DbInitializer
         await SeedPaymentPlansAsync(context);
         await SeedServicePackagesAsync(context);
         await SeedEmailTemplatesAsync(context);
+        await SeedFinanceTestDataAsync(context);
 
         Console.WriteLine("✅ Database seeded successfully with comprehensive data!");
     }
@@ -1724,5 +1726,216 @@ public static class DbInitializer
         }
 
         await context.SaveChangesAsync();
+    }
+
+    private static async Task SeedFinanceTestDataAsync(ApplicationDbContext context)
+    {
+        // Tekrarlayan giderler ekle
+        if (!await context.RecurringExpenses.AnyAsync())
+        {
+            var branch = await context.Branches.FirstOrDefaultAsync();
+            var branchId = branch?.Id;
+
+            var recurringExpenses = new List<RecurringExpense>
+            {
+                new RecurringExpense
+                {
+                    Title = "Ofis Kirası",
+                    Description = "Aylık ofis kira ödemesi",
+                    Category = FinanceCategory.Kira,
+                    Amount = 25000,
+                    RecurrenceType = RecurrenceType.Aylik,
+                    RecurrenceDay = 1,
+                    StartDate = new DateTime(2025, 1, 1),
+                    NextDueDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1).AddMonths(1),
+                    IsActive = true,
+                    BranchId = branchId
+                },
+                new RecurringExpense
+                {
+                    Title = "İnternet Faturası",
+                    Description = "Aylık internet ve telefon faturası",
+                    Category = FinanceCategory.Fatura,
+                    Amount = 1500,
+                    RecurrenceType = RecurrenceType.Aylik,
+                    RecurrenceDay = 15,
+                    StartDate = new DateTime(2025, 1, 1),
+                    NextDueDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 15).AddMonths(DateTime.Now.Day > 15 ? 1 : 0),
+                    IsActive = true,
+                    BranchId = branchId
+                },
+                new RecurringExpense
+                {
+                    Title = "Temizlik Hizmeti",
+                    Description = "Haftalık temizlik hizmeti ödemesi",
+                    Category = FinanceCategory.Bakim,
+                    Amount = 2000,
+                    RecurrenceType = RecurrenceType.Haftalik,
+                    RecurrenceDay = 1,
+                    StartDate = new DateTime(2025, 1, 1),
+                    NextDueDate = DateTime.Now.Date.AddDays((7 - (int)DateTime.Now.DayOfWeek + 1) % 7 + 1),
+                    IsActive = true,
+                    BranchId = branchId
+                },
+                new RecurringExpense
+                {
+                    Title = "Elektrik Faturası",
+                    Description = "Aylık elektrik faturası",
+                    Category = FinanceCategory.Fatura,
+                    Amount = 3500,
+                    RecurrenceType = RecurrenceType.Aylik,
+                    RecurrenceDay = 20,
+                    StartDate = new DateTime(2025, 1, 1),
+                    NextDueDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 20).AddMonths(DateTime.Now.Day > 20 ? 1 : 0),
+                    IsActive = true,
+                    BranchId = branchId
+                },
+                new RecurringExpense
+                {
+                    Title = "Su Faturası",
+                    Description = "Aylık su faturası",
+                    Category = FinanceCategory.Fatura,
+                    Amount = 800,
+                    RecurrenceType = RecurrenceType.Aylik,
+                    RecurrenceDay = 25,
+                    StartDate = new DateTime(2025, 1, 1),
+                    NextDueDate = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 25).AddMonths(DateTime.Now.Day > 25 ? 1 : 0),
+                    IsActive = true,
+                    BranchId = branchId
+                }
+            };
+
+            await context.RecurringExpenses.AddRangeAsync(recurringExpenses);
+            await context.SaveChangesAsync();
+            Console.WriteLine("✓ Recurring expenses seeded");
+        }
+
+        // Finans kayıtları ekle (hem gelir hem gider)
+        if (!await context.FinanceRecords.Where(f => f.Type == FinanceType.Gider).AnyAsync())
+        {
+            var branch = await context.Branches.FirstOrDefaultAsync();
+            var branchId = branch?.Id;
+            var today = DateTime.Today;
+
+            var financeRecords = new List<FinanceRecord>
+            {
+                // Gider kayıtları
+                new FinanceRecord
+                {
+                    Type = FinanceType.Gider,
+                    Category = FinanceCategory.Kira,
+                    Title = $"{today.AddMonths(1):MMMM yyyy} Kirası",
+                    Description = "Gelecek ay ofis kirası",
+                    Amount = 25000,
+                    TransactionDate = new DateTime(today.Year, today.Month, 1).AddMonths(1),
+                    PaymentMethod = PaymentMethod.Havale,
+                    BranchId = branchId
+                },
+                new FinanceRecord
+                {
+                    Type = FinanceType.Gider,
+                    Category = FinanceCategory.Fatura,
+                    Title = $"{today:MMMM yyyy} Elektrik Faturası",
+                    Description = "Bu ay elektrik faturası",
+                    Amount = 3500,
+                    TransactionDate = today.AddDays(-5),
+                    PaymentMethod = PaymentMethod.Havale,
+                    BranchId = branchId
+                },
+                new FinanceRecord
+                {
+                    Type = FinanceType.Gider,
+                    Category = FinanceCategory.Malzeme,
+                    Title = "Kırtasiye Malzemeleri",
+                    Description = "Sınıflar için kırtasiye malzemesi alımı",
+                    Amount = 2500,
+                    TransactionDate = today.AddDays(-10),
+                    PaymentMethod = PaymentMethod.Kredi,
+                    BranchId = branchId
+                },
+                new FinanceRecord
+                {
+                    Type = FinanceType.Gider,
+                    Category = FinanceCategory.Bakim,
+                    Title = "Klima Bakım",
+                    Description = "Yıllık klima bakım ve temizliği",
+                    Amount = 1800,
+                    TransactionDate = today.AddDays(-15),
+                    PaymentMethod = PaymentMethod.Nakit,
+                    BranchId = branchId
+                },
+                new FinanceRecord
+                {
+                    Type = FinanceType.Gider,
+                    Category = FinanceCategory.DigerGider,
+                    Title = "Güvenlik Sistemi",
+                    Description = "Güvenlik kamerası yenileme",
+                    Amount = 8500,
+                    TransactionDate = today.AddDays(-20),
+                    PaymentMethod = PaymentMethod.Havale,
+                    BranchId = branchId
+                }
+            };
+
+            await context.FinanceRecords.AddRangeAsync(financeRecords);
+            await context.SaveChangesAsync();
+            Console.WriteLine("✓ Finance records (expenses) seeded");
+        }
+
+        // Gecikmiş öğretmen maaşları ekle
+        var teachers = await context.Teachers.Take(3).ToListAsync();
+        if (teachers.Any())
+        {
+            var today = DateTime.Today;
+            var lastMonth = today.AddMonths(-1);
+            var twoMonthsAgo = today.AddMonths(-2);
+
+            foreach (var teacher in teachers)
+            {
+                // Geçmiş aylarda bekleyen (gecikmiş) maaş var mı kontrol et
+                var hasOverdueSalary = await context.TeacherSalaries
+                    .AnyAsync(s => s.TeacherId == teacher.Id &&
+                                   s.Status == SalaryStatus.Bekliyor &&
+                                   s.DueDate < today &&
+                                   !s.IsDeleted);
+
+                if (!hasOverdueSalary)
+                {
+                    // 2 ay önceki gecikmiş maaş
+                    var overdueSalary1 = new TeacherSalary
+                    {
+                        TeacherId = teacher.Id,
+                        BaseSalary = teacher.MonthlySalary ?? 15000,
+                        Bonus = 0,
+                        Deduction = 0,
+                        Year = twoMonthsAgo.Year,
+                        Month = twoMonthsAgo.Month,
+                        DueDate = new DateTime(twoMonthsAgo.Year, twoMonthsAgo.Month, DateTime.DaysInMonth(twoMonthsAgo.Year, twoMonthsAgo.Month)),
+                        Status = SalaryStatus.Bekliyor,
+                        Description = "Gecikmiş maaş - test verisi"
+                    };
+
+                    // 1 ay önceki gecikmiş maaş
+                    var overdueSalary2 = new TeacherSalary
+                    {
+                        TeacherId = teacher.Id,
+                        BaseSalary = teacher.MonthlySalary ?? 15000,
+                        Bonus = 500,
+                        Deduction = 0,
+                        Year = lastMonth.Year,
+                        Month = lastMonth.Month,
+                        DueDate = new DateTime(lastMonth.Year, lastMonth.Month, DateTime.DaysInMonth(lastMonth.Year, lastMonth.Month)),
+                        Status = SalaryStatus.Bekliyor,
+                        Description = "Gecikmiş maaş - test verisi"
+                    };
+
+                    await context.TeacherSalaries.AddAsync(overdueSalary1);
+                    await context.TeacherSalaries.AddAsync(overdueSalary2);
+                }
+            }
+
+            await context.SaveChangesAsync();
+            Console.WriteLine("✓ Overdue teacher salaries seeded");
+        }
     }
 }

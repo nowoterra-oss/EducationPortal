@@ -1,7 +1,9 @@
 using AspNetCoreRateLimit;
+using EduPortal.API.HealthChecks;
 using EduPortal.API.Hubs;
 using EduPortal.API.Middleware;
 using EduPortal.API.Services;
+using EduPortal.Application.Common;
 using EduPortal.Application.Interfaces.Messaging;
 using EduPortal.Application;
 using EduPortal.Application.Validators.Auth;
@@ -12,13 +14,16 @@ using EduPortal.Infrastructure.Data;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 using System.Text;
-using Microsoft.Extensions.FileProviders;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -182,7 +187,13 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
     });
+
+// Add Response Caching
+builder.Services.AddResponseCaching();
 
 // Add FluentValidation
 builder.Services.AddFluentValidationAutoValidation();
@@ -204,6 +215,12 @@ builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>()
 builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
 builder.Services.AddInMemoryRateLimiting();
 
+// Add Health Checks
+builder.Services.AddHealthChecks()
+    .AddCheck<DatabaseHealthCheck>("database", tags: new[] { "db", "sql" })
+    .AddCheck<SignalRHealthCheck>("signalr", tags: new[] { "signalr", "realtime" })
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy("Application is running"), tags: new[] { "self" });
+
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -212,17 +229,33 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "EduPortal API",
         Version = "v1",
-        Description = "Education Portal Backend API"
+        Description = "Eğitim Yönetim Sistemi API Dokümantasyonu",
+        Contact = new OpenApiContact
+        {
+            Name = "EduPortal Team",
+            Email = "support@eduportal.com"
+        },
+        License = new OpenApiLicense
+        {
+            Name = "Proprietary"
+        }
     });
 
     // IMPORTANT: Prevent schema ID collisions
     c.CustomSchemaIds(type => type.FullName!.Replace(".", "_"));
 
+    // XML comments for API documentation
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath);
+    }
 
     // JWT configuration for Swagger
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Bearer {token}\"",
+        Description = "JWT Authorization header. Örnek: \"Bearer {token}\"",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -273,7 +306,10 @@ app.UseSecurityHeaders();
 // 2. Request Logging (early - to capture all requests)
 app.UseRequestLogging();
 
-// 3. Exception Handlers
+// 3. Global Exception Handler (catches all unhandled exceptions)
+app.UseGlobalExceptionHandler();
+
+// 4. Validation Exception Handler
 app.UseValidationExceptionHandler();
 
 // 4. HTTPS Redirection (before other middleware in production)
@@ -350,14 +386,54 @@ app.UseAuthorization();
 // 10. Audit Middleware (after auth, to capture user info)
 app.UseMiddleware<AuditMiddleware>();
 
-// 11. Health Check Endpoint
-app.MapGet("/health", () => Results.Ok(new
+// 11. Health Check Endpoints
+app.MapHealthChecks("/health", new HealthCheckOptions
 {
-    status = "healthy",
-    timestamp = DateTime.UtcNow,
-    environment = app.Environment.EnvironmentName,
-    version = "1.0.0"
-})).AllowAnonymous();
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            timestamp = DateTime.UtcNow,
+            environment = app.Environment.EnvironmentName,
+            version = "1.0.0",
+            totalDuration = report.TotalDuration.TotalMilliseconds,
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString(),
+                description = e.Value.Description,
+                duration = e.Value.Duration.TotalMilliseconds,
+                tags = e.Value.Tags
+            })
+        }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        await context.Response.WriteAsync(result);
+    }
+}).AllowAnonymous();
+
+// Simple health check for load balancers
+app.MapGet("/health/live", () => Results.Ok(new { status = "healthy" })).AllowAnonymous();
+
+// Ready check (includes all dependencies)
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("db") || check.Tags.Contains("signalr"),
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var result = JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            checks = report.Entries.Select(e => new
+            {
+                name = e.Key,
+                status = e.Value.Status.ToString()
+            })
+        }, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        await context.Response.WriteAsync(result);
+    }
+}).AllowAnonymous();
 
 // 12. Endpoints
 app.MapControllers();
