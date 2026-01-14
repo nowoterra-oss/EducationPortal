@@ -40,12 +40,16 @@ jobs:
             ENVEOF
 
             echo "🗄️ Running database migration..."
-            # Migration'ı geçici bir container'da çalıştır (mssql-prod'a localhost üzerinden erişebilir)
+            # mssql-prod container'ının network'ünü bul
+            MSSQL_NETWORK=$(docker inspect mssql-prod --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' | head -1)
+            echo "Using network: $MSSQL_NETWORK"
+
+            # Migration'ı geçici bir container'da çalıştır (mssql-prod ile aynı network'te)
             docker run --rm \
-              --network host \
+              --network "$MSSQL_NETWORK" \
               -v $(pwd):/app \
               -w /app \
-              -e ConnectionStrings__ConnectionString="Server=127.0.0.1,1433;Database=EduPortalDb_Prod;User Id=${{ secrets.DB_USER_PROD }};Password=${{ secrets.DB_PASSWORD_PROD }};Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True" \
+              -e ConnectionStrings__ConnectionString="Server=mssql-prod,1433;Database=EduPortalDb_Prod;User Id=${{ secrets.DB_USER_PROD }};Password=${{ secrets.DB_PASSWORD_PROD }};Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True" \
               mcr.microsoft.com/dotnet/sdk:8.0 \
               bash -c "dotnet restore && dotnet tool install --global dotnet-ef && export PATH=\"\$PATH:/root/.dotnet/tools\" && dotnet ef database update --project src/EduPortal.Infrastructure/EduPortal.Infrastructure.csproj --startup-project src/EduPortal.API/EduPortal.API.csproj --verbose"
 
