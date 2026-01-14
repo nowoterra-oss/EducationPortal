@@ -10,54 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy and Migrate via SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy and Migrate
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -e
             cd /opt/eduportal
 
-            echo "📥 Pulling latest code..."
+            # Repo'yu çek veya klonla
             if [ -d ".git" ]; then
               git pull origin main
             else
               git clone https://github.com/nowoterra-oss/EducationPortal.git .
             fi
 
-            echo "🔧 Creating environment file..."
-            cat > .env.prod << 'ENVEOF'
-            DB_HOST=mssql-prod
-            DB_PORT=1433
-            DB_NAME=EduPortalDb_Prod
-            DB_USER=${{ secrets.DB_USER_PROD }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }}
-            JWT_KEY=${{ secrets.JWT_KEY }}
-            JWT_ISSUER=EduPortalAPI
-            JWT_AUDIENCE=EduPortalClient
-            ENVEOF
+            # Migration'ı sunucu içinde çalıştır (container üzerinden)
+            docker compose -f docker-compose.prod.yml run --rm api-prod \
+              dotnet ef database update \
+              --project /app/src/EduPortal.Infrastructure/EduPortal.Infrastructure.csproj \
+              --no-build
 
-            echo "🗄️ Running database migration..."
-            # Migration'ı geçici bir container'da çalıştır (mssql-prod ile aynı network'te)
-            docker run --rm \
-              --network nwtsoft-network \
-              -v $(pwd):/app \
-              -w /app \
-              -e ConnectionStrings__ConnectionString="Server=mssql-prod,1433;Database=EduPortalDb_Prod;User Id=${{ secrets.DB_USER_PROD }};Password=${{ secrets.DB_PASSWORD_PROD }};Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True" \
-              mcr.microsoft.com/dotnet/sdk:8.0 \
-              bash -c "dotnet restore && dotnet tool install --global dotnet-ef && export PATH=\"\$PATH:/root/.dotnet/tools\" && dotnet ef database update --project src/EduPortal.Infrastructure/EduPortal.Infrastructure.csproj --startup-project src/EduPortal.API/EduPortal.API.csproj --verbose"
+            # Docker Compose ile deploy
+            docker compose -f docker-compose.prod.yml down || true
+            docker compose -f docker-compose.prod.yml up -d --build
 
-            echo "🐳 Deploying with Docker Compose..."
-            docker compose -f docker-compose.prod.yml --env-file .env.prod down || true
-            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
-
-            # Network'e bağla
-            docker network connect nwtsoft-network eduportal-api-prod 2>/dev/null || true
-
-            echo "⏳ Waiting for services to start..."
+            # Health check bekle
+            echo "Waiting for services to start..."
             sleep 30
 
-            echo "🏥 Running health check..."
-            curl -f http://127.0.0.1:8080/health && echo "✅ Prod Deployment successful!" || echo "⚠️ Health check failed"
+            curl -f http://127.0.0.1:8080/health && echo "✅ Deployment successful!" || echo "⚠️ Health check failed"
