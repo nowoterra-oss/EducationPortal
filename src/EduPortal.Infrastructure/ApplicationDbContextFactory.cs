@@ -12,9 +12,13 @@ namespace EduPortal.Infrastructure.Data
             // API projesinin klasör yoluna git
             var basePath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), @"..\EduPortal.API"));
 
+            var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development";
+
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(basePath)
                 .AddJsonFile("appsettings.json", optional: false)
+                .AddJsonFile($"appsettings.{environment}.json", optional: true)
+                .AddEnvironmentVariables()
                 .Build();
 
             var connectionString = configuration.GetConnectionString("ConnectionString");

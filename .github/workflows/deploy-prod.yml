@@ -6,8 +6,36 @@ on:
   workflow_dispatch:
 
 jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Install EF Core Tools
+        run: dotnet tool install --global dotnet-ef
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Run Database Migration
+        env:
+          ConnectionStrings__ConnectionString: ${{ secrets.PROD_CONNECTION_STRING }}
+        run: |
+          dotnet ef database update \
+            --project src/EduPortal.Infrastructure/EduPortal.Infrastructure.csproj \
+            --startup-project src/EduPortal.API/EduPortal.API.csproj \
+            --verbose
+
   deploy:
     runs-on: ubuntu-latest
+    needs: migrate
 
     steps:
       - name: Checkout code
