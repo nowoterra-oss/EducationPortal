@@ -286,7 +286,7 @@ var app = builder.Build();
 //     var services = scope.ServiceProvider;
 //     try
 //     {
-//         await DbInitializer.InitializeAsync(services);
+//         await DbInitializer.InitializeAsync(services); 
 //     }
 //     catch (Exception ex)
 //     {
