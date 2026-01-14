@@ -13,12 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy and Migrate
+      - name: Deploy to Server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: DB_USER_PROD,DB_PASSWORD_PROD,JWT_KEY
           script: |
             cd /opt/eduportal
 
@@ -29,18 +30,31 @@ jobs:
               git clone https://github.com/nowoterra-oss/EducationPortal.git .
             fi
 
-            # Migration'ı sunucu içinde çalıştır (container üzerinden)
-            docker compose -f docker-compose.prod.yml run --rm api-prod \
-              dotnet ef database update \
-              --project /app/src/EduPortal.Infrastructure/EduPortal.Infrastructure.csproj \
-              --no-build
+            # .env.prod dosyasını oluştur
+            cat > .env.prod << EOF
+            DB_HOST=mssql-prod
+            DB_PORT=1433
+            DB_NAME=EduPortalDb_Prod
+            DB_USER=${DB_USER_PROD}
+            DB_PASSWORD=${DB_PASSWORD_PROD}
+            JWT_KEY=${JWT_KEY}
+            JWT_ISSUER=EduPortalAPI
+            JWT_AUDIENCE=EduPortalClient
+            EOF
 
-            # Docker Compose ile deploy
-            docker compose -f docker-compose.prod.yml down || true
-            docker compose -f docker-compose.prod.yml up -d --build
+            # Docker Compose ile build ve deploy
+            docker compose -f docker-compose.prod.yml --env-file .env.prod down || true
+            docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+
+            # MSSQL'i aynı network'e bağla
+            docker network connect eduportal-prod_default mssql-prod 2>/dev/null || true
 
             # Health check bekle
             echo "Waiting for services to start..."
             sleep 30
 
             curl -f http://127.0.0.1:8080/health && echo "✅ Deployment successful!" || echo "⚠️ Health check failed"
+        env:
+          DB_USER_PROD: ${{ secrets.DB_USER_PROD }}
+          DB_PASSWORD_PROD: ${{ secrets.DB_PASSWORD_PROD }}
+          JWT_KEY: ${{ secrets.JWT_KEY }}
