@@ -40,13 +40,9 @@ jobs:
             ENVEOF
 
             echo "🗄️ Running database migration..."
-            # mssql-prod container'ının network'ünü bul
-            MSSQL_NETWORK=$(docker inspect mssql-prod --format '{{range $k, $v := .NetworkSettings.Networks}}{{$k}}{{end}}' | head -1)
-            echo "Using network: $MSSQL_NETWORK"
-
             # Migration'ı geçici bir container'da çalıştır (mssql-prod ile aynı network'te)
             docker run --rm \
-              --network "$MSSQL_NETWORK" \
+              --network nwtsoft-network \
               -v $(pwd):/app \
               -w /app \
               -e ConnectionStrings__ConnectionString="Server=mssql-prod,1433;Database=EduPortalDb_Prod;User Id=${{ secrets.DB_USER_PROD }};Password=${{ secrets.DB_PASSWORD_PROD }};Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True" \
