@@ -47,7 +47,7 @@ jobs:
               -w /app \
               -e ConnectionStrings__ConnectionString="Server=127.0.0.1,1433;Database=EduPortalDb_Prod;User Id=${{ secrets.DB_USER_PROD }};Password=${{ secrets.DB_PASSWORD_PROD }};Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True" \
               mcr.microsoft.com/dotnet/sdk:8.0 \
-              bash -c "dotnet tool install --global dotnet-ef && export PATH=\"\$PATH:/root/.dotnet/tools\" && dotnet ef database update --project src/EduPortal.Infrastructure/EduPortal.Infrastructure.csproj --startup-project src/EduPortal.API/EduPortal.API.csproj --verbose"
+              bash -c "dotnet restore && dotnet tool install --global dotnet-ef && export PATH=\"\$PATH:/root/.dotnet/tools\" && dotnet ef database update --project src/EduPortal.Infrastructure/EduPortal.Infrastructure.csproj --startup-project src/EduPortal.API/EduPortal.API.csproj --verbose"
 
             echo "🐳 Deploying with Docker Compose..."
             docker compose -f docker-compose.prod.yml --env-file .env.prod down || true
